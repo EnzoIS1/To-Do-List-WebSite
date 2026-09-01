@@ -1,36 +1,16 @@
 import { Outlet } from 'react-router-dom'
-import Sidebar from './Sidebar'
-import { useReminders } from '../../data/useReminders'
-import { useAuth } from '../../auth/AuthProvider'
+import Rail from './Rail'
 
+/**
+ * La coque commune : le rail étroit à gauche, la page à droite.
+ * Le tableau de bord occupe toute la hauteur de la fenêtre et chaque panneau
+ * défile pour son compte — d'où le `height: 100vh` côté CSS.
+ */
 export default function AppShell() {
-  const { reminders, marquerVu } = useReminders()
-  const { signOut } = useAuth()
-
   return (
     <div className="coque">
-      <Sidebar />
-
-      <div className="colonne-principale">
-        <header className="barre-haute">
-          {reminders.length > 0 && (
-            <div className="rappels" role="status">
-              <strong>{reminders.length}</strong>{' '}
-              {reminders.length > 1 ? 'rappels' : 'rappel'} :{' '}
-              {reminders.map((r) => (
-                <button key={r.id} className="puce-rappel" onClick={() => marquerVu(r.id)}>
-                  {r.tasks.title} ✕
-                </button>
-              ))}
-            </div>
-          )}
-          <button className="lien" onClick={signOut}>Se déconnecter</button>
-        </header>
-
-        <main className="contenu">
-          <Outlet />
-        </main>
-      </div>
+      <Rail />
+      <Outlet />
     </div>
   )
 }

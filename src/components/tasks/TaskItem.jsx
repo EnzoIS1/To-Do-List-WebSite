@@ -1,6 +1,6 @@
 import { formatRelative, isPast } from '../../lib/dates'
 
-export default function TaskItem({ tache, onCocher, onSupprimer }) {
+export default function TaskItem({ tache, etiquette, onCocher, onSupprimer }) {
   const enRetard = tache.due_date && !tache.is_done && isPast(tache.due_date)
 
   return (
@@ -12,12 +12,11 @@ export default function TaskItem({ tache, onCocher, onSupprimer }) {
           onChange={() => onCocher(tache)}
         />
         <span className="titre">{tache.title}</span>
-        {tache.quantity && <span className="quantite">{tache.quantity}</span>}
       </label>
 
-      {tache.due_date && (
-        <span className="echeance">{formatRelative(tache.due_date)}</span>
-      )}
+      {etiquette && <span className="etiquette">{etiquette}</span>}
+      {tache.quantity && <span className="quantite">{tache.quantity}</span>}
+      {tache.due_date && <span className="echeance">{formatRelative(tache.due_date)}</span>}
 
       <button className="supprimer" onClick={() => onSupprimer(tache.id)} aria-label="Supprimer">
         ✕

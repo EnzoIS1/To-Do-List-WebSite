@@ -41,6 +41,13 @@ export function useCategories() {
     return { data, error }
   }, [user])
 
+  const modifier = useCallback(async (id, champs) => {
+    const { data, error } = await supabase
+      .from('categories').update(champs).eq('id', id).select().single()
+    if (!error) setCategories((c) => c.map((x) => (x.id === id ? data : x)))
+    return { data, error }
+  }, [])
+
   const supprimer = useCallback(async (id) => {
     // Les tâches ne sont pas supprimées : la clé étrangère est en
     // `on delete set null`, elles se retrouvent simplement sans catégorie.
@@ -49,5 +56,5 @@ export function useCategories() {
     return { error }
   }, [])
 
-  return { categories, arbre, loading, error, recharger, creer, supprimer }
+  return { categories, arbre, loading, error, recharger, creer, modifier, supprimer }
 }

@@ -4,8 +4,17 @@ import { useEffect, useState } from 'react'
  * Ajout rapide d'une tâche. Le champ date est un <input type="date"> :
  * il produit et consomme directement des chaînes 'AAAA-MM-JJ', exactement
  * le format de la colonne due_date. Aucune conversion, aucun fuseau.
+ *
+ * `sansDate` masque le champ d'échéance, pour les panneaux où une date n'a
+ * pas de sens : la liste de courses et la boîte de réception.
  */
-export default function QuickAdd({ onCreer, dateParDefaut = null, categoryId = null }) {
+export default function QuickAdd({
+  onCreer,
+  dateParDefaut = null,
+  categoryId = null,
+  sansDate = false,
+  placeholder = 'Ajouter une tâche…',
+}) {
   const [titre, setTitre] = useState('')
   const [date, setDate] = useState(dateParDefaut ?? '')
 
@@ -26,7 +35,7 @@ export default function QuickAdd({ onCreer, dateParDefaut = null, categoryId = n
     if (!propre) return
     await onCreer({
       title: propre,
-      due_date: date || null,
+      due_date: sansDate ? null : (date || null),
       category_id: categoryId,
     })
     setTitre('')
@@ -37,16 +46,18 @@ export default function QuickAdd({ onCreer, dateParDefaut = null, categoryId = n
       <input
         value={titre}
         onChange={(e) => setTitre(e.target.value)}
-        placeholder="Ajouter une tâche…"
+        placeholder={placeholder}
         aria-label="Titre de la tâche"
       />
-      <input
-        type="date"
-        value={date}
-        onChange={(e) => setDate(e.target.value)}
-        aria-label="Échéance"
-      />
-      <button type="submit">Ajouter</button>
+      {!sansDate && (
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          aria-label="Échéance"
+        />
+      )}
+      <button type="submit" aria-label="Ajouter">+</button>
     </form>
   )
 }
