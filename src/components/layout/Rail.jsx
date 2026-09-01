@@ -1,13 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { useAuth } from '../../auth/AuthProvider'
 
 /**
  * La barre étroite de gauche du croquis : la marque en haut,
  * Paramètres et Compte en bas.
  */
 export default function Rail() {
-  const { signOut } = useAuth()
-
   return (
     <nav className="rail" aria-label="Navigation principale">
       <NavLink to="/" className="rail-marque" title="Tableau de bord" aria-label="Tableau de bord">
@@ -24,10 +21,10 @@ export default function Rail() {
           <span className="rail-texte">Paramètres</span>
         </NavLink>
 
-        <button type="button" className="rail-lien" onClick={signOut}>
-          <span aria-hidden="true">⏻</span>
+        <NavLink to="/compte" className="rail-lien">
+          <span aria-hidden="true">☺</span>
           <span className="rail-texte">Compte</span>
-        </button>
+        </NavLink>
       </div>
     </nav>
   )

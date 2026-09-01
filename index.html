@@ -6,6 +6,19 @@
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <meta name="color-scheme" content="light dark" />
     <title>Ma To Do List</title>
+    <script>
+      /*
+       * Applique le thème enregistré AVANT le premier rendu.
+       * Sans ce script, le site s'affiche une fraction de seconde dans le
+       * thème du système avant que React ne rétablisse le choix de
+       * l'utilisateur : un clignotement blanc désagréable en mode sombre.
+       */
+      try {
+        var t = localStorage.getItem('todo-theme')
+        if (t === 'sombre') document.documentElement.setAttribute('data-theme', 'dark')
+        else if (t === 'clair') document.documentElement.setAttribute('data-theme', 'light')
+      } catch (e) { /* stockage refusé : on garde le thème du système */ }
+    </script>
   </head>
   <body>
     <!--
@@ -23,7 +36,7 @@
         <pre style="background:#eff3ee;padding:.75rem 1rem;border-radius:6px">npm install
 npm run dev</pre>
         <p>Puis ouvre l'adresse que Vite affiche — elle se termine par
-        <code>/site-todo/</code>, pas par la racine du serveur.</p>
+        <code>/To-Do-List-WebSite/</code>, pas par la racine du serveur.</p>
       </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>

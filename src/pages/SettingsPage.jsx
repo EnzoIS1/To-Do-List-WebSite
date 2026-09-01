@@ -1,15 +1,20 @@
 import { Link } from 'react-router-dom'
-import { useAuth } from '../auth/AuthProvider'
 import { useCategories } from '../data/useCategories'
+import { useTheme } from '../theme/ThemeProvider'
+
+const OPTIONS_THEME = [
+  { valeur: 'clair',   nom: 'Clair',   aide: 'Toujours le fond blanc.' },
+  { valeur: 'sombre',  nom: 'Sombre',  aide: 'Toujours le fond sombre.' },
+  { valeur: 'systeme', nom: 'Système', aide: 'Suit le réglage de ton ordinateur.' },
+]
 
 /**
- * Paramètres. La couleur d'une catégorie se change ici, et elle se répercute
- * partout : la pastille de la carte, le liseré du panneau, les pastilles du
- * calendrier. Tout lit la même colonne `categories.color`.
+ * Paramètres : l'apparence et les catégories.
+ * Tout ce qui touche au compte est passé dans la page Compte.
  */
 export default function SettingsPage() {
-  const { user, signOut } = useAuth()
   const { arbre, modifier, supprimer, creer } = useCategories()
+  const { theme, setTheme } = useTheme()
 
   function ajouter(parent = null) {
     const name = window.prompt(
@@ -32,10 +37,36 @@ export default function SettingsPage() {
       <header className="entete-page">
         <div>
           <h1>Paramètres</h1>
-          <p className="sous-titre">Connecté en tant que {user?.email}</p>
+          <p className="sous-titre">Apparence et catégories</p>
         </div>
         <Link to="/" className="bouton-doux">← Tableau de bord</Link>
       </header>
+
+      <section>
+        <h2>Thème</h2>
+        <p className="aide">Ton choix est retenu sur cet appareil.</p>
+
+        <div className="choix-theme" role="radiogroup" aria-label="Thème du site">
+          {OPTIONS_THEME.map((o) => (
+            <button
+              key={o.valeur}
+              type="button"
+              role="radio"
+              aria-checked={theme === o.valeur}
+              className={`carte-theme${theme === o.valeur ? ' actif' : ''}`}
+              onClick={() => setTheme(o.valeur)}
+            >
+              <span className={`apercu-theme apercu-${o.valeur}`} aria-hidden="true">
+                <span className="apercu-barre" />
+                <span className="apercu-ligne" />
+                <span className="apercu-ligne courte" />
+              </span>
+              <span className="carte-theme-nom">{o.nom}</span>
+              <span className="carte-theme-aide">{o.aide}</span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <section>
         <h2>Couleurs des catégories</h2>
@@ -96,11 +127,6 @@ export default function SettingsPage() {
         <button className="bouton-doux" onClick={() => ajouter(null)}>
           + Créer une catégorie
         </button>
-      </section>
-
-      <section>
-        <h2>Compte</h2>
-        <button className="bouton-doux" onClick={signOut}>Se déconnecter</button>
       </section>
     </main>
   )

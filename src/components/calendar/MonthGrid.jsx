@@ -2,13 +2,17 @@ import { monthGrid, monthOf, isToday } from '../../lib/dates'
 
 const JOURS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
 
+/** Nombre de tâches visibles dans une case au repos. Au-delà : « +2 tâches ». */
+const APERCU = 3
+
 /**
  * Grille mensuelle de 6 semaines. Chaque case porte les tâches dont
  * due_date vaut ce jour — d'où l'intérêt d'avoir stocké un `date` et non
  * un horodatage : la comparaison est une simple égalité de chaînes.
  *
- * `couleurDe` donne la teinte de la catégorie d'une tâche, pour que la couleur
- * choisie dans les paramètres se retrouve jusque dans le calendrier.
+ * La case sélectionnée s'agrandit vers le bas et passe par-dessus les
+ * suivantes pour montrer sa liste entière (voir `.case.selectionne` dans
+ * global.css : align-self: start + height: auto + z-index).
  */
 export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, couleurDe }) {
   const jours = monthGrid(mois.year, mois.month)
@@ -28,23 +32,28 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
       <div className="grille">
         {jours.map((jour) => {
           const duJour = parJour[jour] ?? []
+          const choisi = jour === jourChoisi
           const horsMois = monthOf(jour).month !== mois.month
+          const visibles = choisi ? duJour : duJour.slice(0, APERCU)
+          const cachees = duJour.length - visibles.length
+
           const classes = [
             'case',
             horsMois ? 'hors-mois' : '',
             isToday(jour) ? 'aujourdhui' : '',
-            jour === jourChoisi ? 'selectionne' : '',
+            choisi ? 'selectionne' : '',
           ].filter(Boolean).join(' ')
 
           return (
             <button
               key={jour}
               className={classes}
-              aria-current={jour === jourChoisi ? 'date' : undefined}
+              aria-current={choisi ? 'date' : undefined}
               onClick={() => onJourClique?.(jour)}
             >
               <span className="numero">{Number(jour.slice(8, 10))}</span>
-              {duJour.slice(0, 3).map((t) => (
+
+              {visibles.map((t) => (
                 <span
                   key={t.id}
                   className={`mini-tache${t.is_done ? ' faite' : ''}`}
@@ -53,7 +62,12 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
                   {t.title}
                 </span>
               ))}
-              {duJour.length > 3 && <span className="reste">+{duJour.length - 3}</span>}
+
+              {cachees > 0 && (
+                <span className="reste">
+                  +{cachees} {cachees > 1 ? 'tâches' : 'tâche'}
+                </span>
+              )}
             </button>
           )
         })}

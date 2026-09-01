@@ -53,7 +53,7 @@ button { font: inherit; cursor: pointer; }
 .tableau {
   display: grid;
   grid-template-columns: minmax(0, 1.85fr) minmax(300px, 1fr);
-  grid-template-rows: minmax(240px, 1.05fr) minmax(240px, 1fr);
+  grid-template-rows: minmax(220px, 1.45fr) minmax(200px, 1fr);
   grid-template-areas:
     "calendrier categories"
     "bas        categories";
@@ -76,6 +76,7 @@ button { font: inherit; cursor: pointer; }
 /* ══ Panneau générique ══ */
 .panneau {
   --teinte: var(--accent);
+  height: 100%;   /* ← sans ça, le panneau ne remplit pas sa case de grille */
   display: flex; flex-direction: column; min-height: 0;
   background: var(--surface); border: 1px solid var(--trait);
   border-radius: var(--rayon); overflow: hidden;
@@ -126,7 +127,29 @@ button { font: inherit; cursor: pointer; }
 .case.hors-mois { opacity: .4; }
 .case.aujourdhui { border-color: var(--accent); }
 .case.aujourdhui .numero { color: var(--accent); font-weight: 700; }
-.case.selectionne { background: var(--accent-doux); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+/*
+ * La case du jour choisi s'agrandit vers le bas et recouvre les suivantes.
+ * `align-self: start` la décroche de la hauteur imposée par sa ligne de
+ * grille, `height: auto` la laisse grandir avec son contenu, et le z-index
+ * la fait passer au-dessus. Au-delà de 300 px elle défile pour son compte.
+ */
+.case.selectionne {
+  align-self: start;
+  height: auto;
+  min-height: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  position: relative;
+  z-index: 20;
+  background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent), var(--ombre);
+  padding: 5px 6px;
+  gap: 3px;
+}
+/* Une fois la case ouverte, les titres n'ont plus à être tronqués. */
+.case.selectionne .mini-tache { white-space: normal; overflow: visible; }
+.case.selectionne .numero { font-size: 12px; font-weight: 700; color: var(--accent); }
 .numero { font-size: 11px; color: var(--discret); font-variant-numeric: tabular-nums; }
 .mini-tache {
   --teinte: var(--accent);
@@ -137,7 +160,10 @@ button { font: inherit; cursor: pointer; }
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .mini-tache.faite { opacity: .45; text-decoration: line-through; }
-.reste { font-size: 10px; color: var(--discret); }
+.reste {
+  font-size: 10px; color: var(--discret); font-weight: 600;
+  margin-top: auto; padding-top: 1px;
+}
 
 /* ══ Tâches ══ */
 .liste-taches { list-style: none; margin: 0; padding: 0; }
@@ -236,6 +262,49 @@ input[type="color"] {
 }
 .nom-categorie:hover { border-color: var(--trait); }
 .nom-categorie:focus { border-color: var(--accent); outline: none; background: var(--fond); }
+
+/* ══ Choix du thème ══ */
+.choix-theme { display: flex; gap: var(--gap-m); flex-wrap: wrap; margin: var(--gap-m) 0; }
+.carte-theme {
+  display: flex; flex-direction: column; gap: 4px; align-items: flex-start;
+  width: 168px; padding: 10px; text-align: left;
+  background: var(--surface); border: 1px solid var(--trait);
+  border-radius: var(--rayon); color: var(--texte);
+}
+.carte-theme:hover { border-color: var(--accent); }
+.carte-theme.actif { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.carte-theme-nom { font-weight: 600; font-size: 14px; }
+.carte-theme-aide { font-size: 11.5px; color: var(--discret); }
+
+/* Les aperçus gardent des couleurs fixes : ils doivent montrer à quoi
+   ressemble chaque thème, quel que soit le thème actif. */
+.apercu-theme {
+  width: 100%; height: 54px; border-radius: 4px; margin-bottom: 4px;
+  border: 1px solid var(--trait); padding: 7px; display: flex;
+  flex-direction: column; gap: 5px; overflow: hidden;
+}
+.apercu-barre { height: 7px; width: 42%; border-radius: 2px; }
+.apercu-ligne { height: 5px; width: 100%; border-radius: 2px; }
+.apercu-ligne.courte { width: 62%; }
+.apercu-clair { background: #f6f8f5; }
+.apercu-clair .apercu-barre { background: #14614e; }
+.apercu-clair .apercu-ligne { background: #dce3dc; }
+.apercu-sombre { background: #101512; }
+.apercu-sombre .apercu-barre { background: #6fcba6; }
+.apercu-sombre .apercu-ligne { background: #2a342e; }
+.apercu-systeme { background: linear-gradient(105deg, #f6f8f5 0 50%, #101512 50% 100%); }
+.apercu-systeme .apercu-barre { background: linear-gradient(105deg, #14614e 0 50%, #6fcba6 50% 100%); }
+.apercu-systeme .apercu-ligne { background: linear-gradient(105deg, #dce3dc 0 50%, #2a342e 50% 100%); }
+
+/* ══ Fiche du compte ══ */
+.fiche { margin: var(--gap-m) 0 0; display: flex; flex-direction: column; gap: 1px; max-width: 460px; }
+.fiche > div {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--gap-m);
+  padding: 10px 12px; background: var(--surface);
+  border: 1px solid var(--trait); border-radius: var(--rayon);
+}
+.fiche dt { font-size: 13px; color: var(--discret); }
+.fiche dd { margin: 0; font-weight: 500; }
 
 /* ══ Connexion ══ */
 .ecran-connexion { max-width: 340px; margin: 12vh auto; padding: 0 var(--gap-l); }
