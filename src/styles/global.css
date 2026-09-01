@@ -305,7 +305,19 @@ input[type="color"] {
 .creer-categorie:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-doux); }
 
 /* ══ Paramètres ══ */
-.page-reglages { padding: var(--gap-xl) var(--gap-l); max-width: 780px; overflow: auto; }
+/*
+ * Le `max-width` était posé sur l'élément qui porte aussi `overflow: auto`.
+ * Résultat : la page ne faisait que 780 px de large dans une fenêtre de 1866,
+ * et sa barre de défilement se retrouvait en plein milieu de l'écran au lieu
+ * du bord. Le conteneur qui défile doit occuper toute la largeur ; c'est le
+ * contenu, à l'intérieur, qui est limité à une largeur lisible.
+ */
+.page-reglages {
+  padding: var(--gap-xl) var(--gap-l);
+  height: 100%;
+  overflow: auto;
+}
+.page-reglages > * { max-width: 900px; margin-inline: auto; }
 .entete-page { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--gap-m); margin-bottom: var(--gap-xl); }
 .page-reglages section + section { margin-top: var(--gap-xl); }
 .page-reglages h2 { font-size: 16px; margin-bottom: var(--gap-xs); }
