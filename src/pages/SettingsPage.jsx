@@ -14,7 +14,7 @@ const OPTIONS_THEME = [
  */
 export default function SettingsPage() {
   const { arbre, modifier, supprimer, creer } = useCategories()
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, accent, setAccent, accents } = useTheme()
 
   function ajouter(parent = null) {
     const name = window.prompt(
@@ -65,6 +65,52 @@ export default function SettingsPage() {
               <span className="carte-theme-aide">{o.aide}</span>
             </button>
           ))}
+        </div>
+      </section>
+
+      <section>
+        <h2>Couleur d'accent</h2>
+        <p className="aide">
+          La teinte des boutons, des compteurs et des éléments actifs. Chaque
+          couleur est automatiquement assombrie en thème clair et éclaircie en
+          thème sombre, pour rester lisible sur les deux fonds.
+        </p>
+
+        <div className="choix-accent">
+          <button
+            type="button"
+            className={`pastille-accent defaut${!accent ? ' actif' : ''}`}
+            onClick={() => setAccent(null)}
+            title="Couleur d'origine du thème"
+            aria-pressed={!accent}
+          >
+            <span className="pastille-accent-rond" />
+            <span className="pastille-accent-nom">D'origine</span>
+          </button>
+
+          {accents.map((a) => (
+            <button
+              key={a.base}
+              type="button"
+              className={`pastille-accent${accent === a.base ? ' actif' : ''}`}
+              onClick={() => setAccent(a.base)}
+              title={a.nom}
+              aria-pressed={accent === a.base}
+            >
+              <span className="pastille-accent-rond" style={{ background: a.base }} />
+              <span className="pastille-accent-nom">{a.nom}</span>
+            </button>
+          ))}
+
+          <label className="pastille-accent libre" title="Choisir librement">
+            <input
+              type="color"
+              value={accent ?? '#BB86FC'}
+              onChange={(e) => setAccent(e.target.value)}
+              aria-label="Couleur d'accent personnalisée"
+            />
+            <span className="pastille-accent-nom">Au choix</span>
+          </label>
         </div>
       </section>
 

@@ -10,6 +10,9 @@ const APERCU = 3
  * due_date vaut ce jour — d'où l'intérêt d'avoir stocké un `date` et non
  * un horodatage : la comparaison est une simple égalité de chaînes.
  *
+ * En haut à droite de chaque case, un compteur « faites / total » donne
+ * l'avancement du jour d'un coup d'œil.
+ *
  * La case sélectionnée s'agrandit vers le bas et passe par-dessus les
  * suivantes pour montrer sa liste entière (voir `.case.selectionne` dans
  * global.css : align-self: start + height: auto + z-index).
@@ -32,6 +35,7 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
       <div className="grille">
         {jours.map((jour) => {
           const duJour = parJour[jour] ?? []
+          const faites = duJour.filter((t) => t.is_done).length
           const choisi = jour === jourChoisi
           const horsMois = monthOf(jour).month !== mois.month
           const visibles = choisi ? duJour : duJour.slice(0, APERCU)
@@ -51,7 +55,17 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
               aria-current={choisi ? 'date' : undefined}
               onClick={() => onJourClique?.(jour)}
             >
-              <span className="numero">{Number(jour.slice(8, 10))}</span>
+              <span className="tete-case">
+                <span className="numero">{Number(jour.slice(8, 10))}</span>
+                {duJour.length > 0 && (
+                  <span
+                    className={`compteur-jour${faites === duJour.length ? ' tout-fait' : ''}`}
+                    title={`${faites} tâche(s) faite(s) sur ${duJour.length}`}
+                  >
+                    {faites}/{duJour.length}
+                  </span>
+                )}
+              </span>
 
               {visibles.map((t) => (
                 <span

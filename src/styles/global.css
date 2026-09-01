@@ -52,7 +52,9 @@ button { font: inherit; cursor: pointer; }
 /* ══ Tableau de bord ══ */
 .tableau {
   display: grid;
-  grid-template-columns: minmax(0, 1.85fr) minmax(300px, 1fr);
+  /* La colonne de droite a été réduite de 20 % au profit de la gauche :
+     elle passait de 35 % à 28 % de la largeur. */
+  grid-template-columns: minmax(0, 2.56fr) minmax(250px, 1fr);
   grid-template-rows: minmax(220px, 1.45fr) minmax(200px, 1fr);
   grid-template-areas:
     "calendrier categories"
@@ -107,6 +109,12 @@ button { font: inherit; cursor: pointer; }
 }
 .compteur-alerte { background: var(--alerte-douce); color: var(--alerte); }
 .nav-mois { display: flex; align-items: center; gap: 4px; }
+.mois-courant {
+  min-width: 8.5em; text-align: center; font-size: 13px; font-weight: 600;
+  color: var(--texte); letter-spacing: -.005em;
+}
+.mois-courant::first-letter { text-transform: uppercase; }
+.bouton-aujourdhui { margin-top: 3px; padding: 2px 8px; font-size: 12px; }
 .nav-mois button:not(.bouton-doux) {
   width: 24px; height: 24px; border-radius: var(--rayon);
   border: 1px solid var(--trait); background: var(--surface); color: var(--texte-doux);
@@ -150,14 +158,21 @@ button { font: inherit; cursor: pointer; }
 /* Une fois la case ouverte, les titres n'ont plus à être tronqués. */
 .case.selectionne .mini-tache { white-space: normal; overflow: visible; }
 .case.selectionne .numero { font-size: 12px; font-weight: 700; color: var(--accent); }
+.tete-case { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
 .numero { font-size: 11px; color: var(--discret); font-variant-numeric: tabular-nums; }
+.compteur-jour {
+  font-size: 9.5px; font-weight: 700; font-variant-numeric: tabular-nums;
+  padding: 0 4px; border-radius: 7px; line-height: 1.5;
+  background: var(--surface-2); color: var(--discret);
+}
+.compteur-jour.tout-fait { background: var(--accent-doux); color: var(--accent); }
 /* `--eclaircir` vaut 0 % en thème clair et 55 % en sombre : la couleur de
    catégorie reste elle-même sur fond blanc, et s'éclaircit sur fond noir. */
 .mini-tache {
   --teinte: var(--accent);
   --teinte-lisible: color-mix(in srgb, #fff var(--eclaircir), var(--teinte));
   font-size: 10.5px; line-height: 1.35; border-radius: 3px; padding: 0 4px;
-  background: color-mix(in srgb, var(--teinte-lisible) 16%, transparent);
+  background: color-mix(in srgb, var(--teinte-lisible) 34%, transparent);
   color: var(--teinte-lisible);
   border-left: 2px solid var(--teinte-lisible);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -181,6 +196,29 @@ button { font: inherit; cursor: pointer; }
 .tache.faite .titre { text-decoration: line-through; color: var(--discret); }
 .tache.en-retard .echeance { color: var(--alerte); font-weight: 600; }
 .echeance { font-size: 11.5px; color: var(--discret); white-space: nowrap; }
+.bouton-echeance {
+  font-size: 11.5px; white-space: nowrap; color: var(--texte-doux);
+  background: none; border: 1px solid transparent; border-radius: 4px; padding: 2px 6px;
+}
+.bouton-echeance:hover { border-color: var(--trait); background: var(--surface-2); color: var(--accent); }
+/* « + date » reste visible mais discret : c'est le geste principal dans la
+   prise de note, le cacher au survol le rendrait introuvable. */
+.bouton-echeance.vide { color: var(--discret); border-color: var(--trait); border-style: dashed; }
+.bouton-echeance.vide:hover { color: var(--accent); border-style: solid; }
+.tache.en-retard .bouton-echeance { color: var(--alerte); font-weight: 600; }
+.champ-echeance {
+  font: inherit; font-size: 11.5px; padding: 1px 4px; color-scheme: inherit;
+  border: 1px solid var(--accent); border-radius: 4px;
+  background: var(--fond); color: var(--texte);
+}
+.choix-categorie {
+  font: inherit; font-size: 11px; max-width: 8.5em; padding: 1px 4px;
+  border: 1px solid transparent; border-radius: 4px;
+  background: none; color: var(--discret);
+}
+.choix-categorie:hover, .choix-categorie:focus {
+  border-color: var(--trait); background: var(--surface-2); color: var(--texte-doux);
+}
 .etiquette, .quantite {
   font-size: 10.5px; color: var(--discret); background: var(--surface-2);
   border: 1px solid var(--trait); border-radius: 3px; padding: 0 5px; white-space: nowrap;
@@ -199,6 +237,11 @@ button { font: inherit; cursor: pointer; }
 .ajout-rapide input[type="text"], .ajout-rapide input:not([type]) { flex: 1; }
 .ajout-rapide input:first-child { flex: 1; }
 .ajout-rapide input:focus { border-color: var(--accent); outline: none; }
+.ajout-rapide select {
+  font: inherit; font-size: 12.5px; max-width: 9em; padding: 5px 6px;
+  border: 1px solid var(--trait); border-radius: var(--rayon);
+  background: var(--fond); color: var(--texte-doux);
+}
 .ajout-rapide button {
   padding: 0 12px; border: 0; border-radius: var(--rayon);
   background: var(--accent); color: var(--fond); font-weight: 700; font-size: 15px;
@@ -221,18 +264,33 @@ button { font: inherit; cursor: pointer; }
   background: color-mix(in srgb, var(--teinte-lisible) 8%, var(--surface));
 }
 .carte-tete h3 { flex: 1; color: var(--texte); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.carte-tete .compteur { background: color-mix(in srgb, var(--teinte-lisible) 18%, transparent); color: var(--teinte-lisible); }
+.carte-tete .compteur { background: color-mix(in srgb, var(--teinte-lisible) 28%, transparent); color: var(--teinte-lisible); }
 .pastille { width: 9px; height: 9px; border-radius: 50%; background: var(--teinte-lisible, var(--teinte)); flex: none; }
 .bouton-reglage {
   border: 1px solid var(--trait); background: var(--surface); color: var(--discret);
   width: 26px; height: 22px; border-radius: 4px; line-height: 1;
 }
 .bouton-reglage:hover { border-color: var(--teinte-lisible); color: var(--teinte-lisible); }
-.carte-reglages {
-  display: flex; align-items: center; gap: var(--gap-m); flex-wrap: wrap;
-  padding: var(--gap-s) var(--gap-m); border-bottom: 1px solid var(--trait);
-  background: var(--surface-2);
+/*
+ * Menu du bouton « ⋯ ». Il est en `position: fixed` — coordonnées calculées
+ * en JavaScript depuis le bouton — parce que la carte et la colonne ont
+ * chacune un `overflow` qui découperait un menu positionné en absolu.
+ */
+.menu-flottant {
+  position: fixed; z-index: 1000; min-width: 210px;
+  display: flex; flex-direction: column; padding: 4px;
+  background: var(--surface); border: 1px solid var(--trait);
+  border-radius: var(--rayon); box-shadow: var(--ombre);
 }
+.menu-ligne {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--gap-m);
+  width: 100%; padding: 7px 10px; text-align: left; font-size: 13px;
+  background: none; border: 0; border-radius: 4px; color: var(--texte-doux);
+}
+.menu-ligne:hover { background: var(--surface-2); color: var(--texte); }
+.menu-ligne.danger { color: var(--alerte); }
+.menu-ligne.danger:hover { background: var(--alerte-douce); }
+.menu-trait { border: 0; border-top: 1px solid var(--trait); margin: 4px 6px; }
 .champ-couleur { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--texte-doux); }
 input[type="color"] {
   width: 30px; height: 24px; padding: 0; border: 1px solid var(--trait);
@@ -300,6 +358,24 @@ input[type="color"] {
 .apercu-systeme { background: linear-gradient(105deg, #f6f8f5 0 50%, #121212 50% 100%); }
 .apercu-systeme .apercu-barre { background: linear-gradient(105deg, #14614e 0 50%, #BB86FC 50% 100%); }
 .apercu-systeme .apercu-ligne { background: linear-gradient(105deg, #dce3dc 0 50%, #3A363E 50% 100%); }
+
+/* ══ Choix de la couleur d'accent ══ */
+.choix-accent { display: flex; gap: var(--gap-s); flex-wrap: wrap; margin: var(--gap-m) 0; }
+.pastille-accent {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  width: 74px; padding: 8px 4px; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--trait); border-radius: var(--rayon);
+  color: var(--texte-doux); font-size: 11.5px;
+}
+.pastille-accent:hover { border-color: var(--accent); }
+.pastille-accent.actif { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.pastille-accent-rond {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 1px solid rgba(128, 128, 128, .35);
+}
+.pastille-accent.defaut .pastille-accent-rond { background: var(--accent); }
+.pastille-accent.libre input[type="color"] { width: 26px; height: 26px; border-radius: 50%; padding: 0; }
+.pastille-accent-nom { line-height: 1.2; text-align: center; }
 
 /* ══ Fiche du compte ══ */
 .fiche { margin: var(--gap-m) 0 0; display: flex; flex-direction: column; gap: 1px; max-width: 460px; }

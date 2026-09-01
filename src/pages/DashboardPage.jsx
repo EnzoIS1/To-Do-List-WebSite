@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTasks } from '../data/useTasks'
 import { useCategories } from '../data/useCategories'
 import CalendarPanel from '../components/dashboard/CalendarPanel'
@@ -6,7 +6,7 @@ import TodayPanel from '../components/dashboard/TodayPanel'
 import ShoppingPanel from '../components/dashboard/ShoppingPanel'
 import InboxPanel from '../components/dashboard/InboxPanel'
 import CategoryColumn from '../components/categories/CategoryColumn'
-import { today, monthOf, monthOf as moisDe } from '../lib/dates'
+import { today, monthOf } from '../lib/dates'
 
 /** La catégorie « Courses » est reconnue par son nom, sans colonne dédiée. */
 const estCategorieCourses = (c) => c.name.trim().toLowerCase().startsWith('course')
@@ -23,8 +23,12 @@ export default function DashboardPage() {
   const [mois, setMois] = useState(monthOf(today()))
   const [jourChoisi, setJourChoisi] = useState(today())
 
-  const { tasks, loading, creer, cocher, supprimer } = useTasks({ includeDone: true })
-  const { arbre, categories, creer: creerCategorie, modifier: modifierCategorie } = useCategories()
+  const { tasks, loading, creer, modifier: modifierTache, cocher, supprimer } =
+    useTasks({ includeDone: true })
+  const {
+    arbre, categories,
+    creer: creerCategorie, modifier: modifierCategorie, supprimer: supprimerCategorie,
+  } = useCategories()
 
   const categorieCourses = categories.find(estCategorieCourses)
   // Courses a son propre panneau au centre : inutile de la répéter à droite.
@@ -34,10 +38,22 @@ export default function DashboardPage() {
   const couleurDe = (tache) =>
     categories.find((c) => c.id === tache.category_id)?.color ?? 'var(--discret)'
 
+  /**
+   * Liste à plat pour les menus déroulants, avec le chemin complet :
+   * « Études › Maths » plutôt qu'un « Maths » orphelin.
+   */
+  const choixCategories = useMemo(
+    () => arbre.flatMap((racine) => [
+      { id: racine.id, name: racine.name, chemin: racine.name },
+      ...racine.enfants.map((e) => ({ id: e.id, name: e.name, chemin: `${racine.name} › ${e.name}` })),
+    ]),
+    [arbre]
+  )
+
   /** Cliquer un jour du mois voisin fait aussi basculer la vue sur ce mois. */
   function choisirJour(jour) {
     setJourChoisi(jour)
-    const m = moisDe(jour)
+    const m = monthOf(jour)
     if (m.year !== mois.year || m.month !== mois.month) setMois(m)
   }
 
@@ -74,6 +90,8 @@ export default function DashboardPage() {
           creer={creer}
           cocher={cocher}
           supprimer={supprimer}
+          dater={modifierTache}
+          categories={choixCategories}
         />
 
         <div className="pile-secondaire">
@@ -92,6 +110,8 @@ export default function DashboardPage() {
             creer={creer}
             cocher={cocher}
             supprimer={supprimer}
+            ranger={modifierTache}
+            categories={choixCategories}
           />
         </div>
       </div>
@@ -105,8 +125,10 @@ export default function DashboardPage() {
           cocher={cocher}
           supprimer={supprimer}
           modifier={modifierCategorie}
+          dater={modifierTache}
           creerCategorie={() => demanderNouvelleCategorie(null)}
           creerSousCategorie={(parent) => demanderNouvelleCategorie(parent)}
+          supprimerCategorie={(categorie) => supprimerCategorie(categorie.id)}
         />
       </div>
     </div>

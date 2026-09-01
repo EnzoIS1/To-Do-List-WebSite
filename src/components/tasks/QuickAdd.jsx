@@ -5,25 +5,26 @@ import { useEffect, useState } from 'react'
  * il produit et consomme directement des chaînes 'AAAA-MM-JJ', exactement
  * le format de la colonne due_date. Aucune conversion, aucun fuseau.
  *
- * `sansDate` masque le champ d'échéance, pour les panneaux où une date n'a
- * pas de sens : la liste de courses et la boîte de réception.
+ * `sansDate` masque le champ d'échéance (liste de courses).
+ * `categories` ajoute un choix de catégorie, pour ranger dès la saisie.
  */
 export default function QuickAdd({
   onCreer,
   dateParDefaut = null,
   categoryId = null,
   sansDate = false,
+  categories = null,
   placeholder = 'Ajouter une tâche…',
 }) {
   const [titre, setTitre] = useState('')
   const [date, setDate] = useState(dateParDefaut ?? '')
+  const [categorie, setCategorie] = useState(categoryId ?? '')
 
   /**
    * ⚠️ Sans cet effet, le champ date reste bloqué sur la valeur du tout premier
    * rendu. `useState(dateParDefaut)` ne lit son argument qu'au montage du
    * composant : les rendus suivants l'ignorent complètement. Dans le calendrier,
-   * le composant se monte avec la date du jour, et cliquer sur un autre jour ne
-   * changeait donc rien — toutes les tâches partaient à la date d'aujourd'hui.
+   * cliquer sur un autre jour ne changeait donc rien.
    */
   useEffect(() => {
     setDate(dateParDefaut ?? '')
@@ -36,7 +37,7 @@ export default function QuickAdd({
     await onCreer({
       title: propre,
       due_date: sansDate ? null : (date || null),
-      category_id: categoryId,
+      category_id: categories ? (categorie || null) : categoryId,
     })
     setTitre('')
   }
@@ -49,6 +50,20 @@ export default function QuickAdd({
         placeholder={placeholder}
         aria-label="Titre de la tâche"
       />
+
+      {categories && (
+        <select
+          value={categorie}
+          onChange={(e) => setCategorie(e.target.value)}
+          aria-label="Catégorie"
+        >
+          <option value="">Sans catégorie</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.chemin ?? c.name}</option>
+          ))}
+        </select>
+      )}
+
       {!sansDate && (
         <input
           type="date"
@@ -57,6 +72,7 @@ export default function QuickAdd({
           aria-label="Échéance"
         />
       )}
+
       <button type="submit" aria-label="Ajouter">+</button>
     </form>
   )

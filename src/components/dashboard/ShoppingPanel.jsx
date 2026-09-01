@@ -9,13 +9,13 @@ import QuickAdd from '../tasks/QuickAdd'
  * catégorie « Courses », sans échéance. La catégorie est reconnue par son nom
  * — si tu la renommes, adapte `estCategorieCourses` dans DashboardPage.
  */
-export default function ShoppingPanel({ categorie, taches, loading, creer, cocher, supprimer, onCreerCategorie }) {
+export default function ShoppingPanel({
+  categorie, taches, loading, creer, cocher, supprimer, onCreerCategorie,
+}) {
   if (!categorie) {
     return (
       <Panneau titre="Liste de courses">
-        <p className="etat-vide">
-          Aucune catégorie « Courses » pour l'instant.
-        </p>
+        <p className="etat-vide">Aucune catégorie « Courses » pour l'instant.</p>
         <button className="bouton-doux" onClick={onCreerCategorie}>
           Créer la catégorie Courses
         </button>

@@ -9,7 +9,11 @@ export default function Panneau({ titre, sousTitre, action, accent, children, pi
       <header className="panneau-tete">
         <div className="panneau-titres">
           <h2>{titre}</h2>
-          {sousTitre && <p className="panneau-sous-titre">{sousTitre}</p>}
+          {sousTitre && (
+            typeof sousTitre === 'string'
+              ? <p className="panneau-sous-titre">{sousTitre}</p>
+              : sousTitre
+          )}
         </div>
         {action}
       </header>

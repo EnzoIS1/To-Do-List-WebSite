@@ -7,8 +7,8 @@ import CategoryCard from './CategoryCard'
  * Le bouton de création reste collé en bas, toujours atteignable.
  */
 export default function CategoryColumn({
-  arbre, taches, loading, creer, cocher, supprimer, modifier,
-  creerCategorie, creerSousCategorie,
+  arbre, taches, loading, creer, cocher, supprimer, modifier, dater,
+  creerCategorie, creerSousCategorie, supprimerCategorie,
 }) {
   return (
     <div className="colonne-categories">
@@ -29,7 +29,9 @@ export default function CategoryColumn({
             cocher={cocher}
             supprimer={supprimer}
             modifier={modifier}
+            dater={dater}
             creerSousCategorie={creerSousCategorie}
+            supprimerCategorie={supprimerCategorie}
           />
         ))}
       </div>
