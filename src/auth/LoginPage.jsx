@@ -8,18 +8,34 @@ export default function LoginPage() {
   const [motDePasse, setMotDePasse] = useState('')
   const [nom, setNom] = useState('')
   const [erreur, setErreur] = useState(null)
+  const [info, setInfo] = useState(null)
   const [enCours, setEnCours] = useState(false)
 
   async function envoyer(e) {
     e.preventDefault()
     setErreur(null)
+    setInfo(null)
     setEnCours(true)
-    const { error } =
-      mode === 'connexion'
-        ? await signIn(email, motDePasse)
-        : await signUp(email, motDePasse, nom)
+
+    if (mode === 'connexion') {
+      const { error } = await signIn(email, motDePasse)
+      setEnCours(false)
+      if (error) setErreur(error.message)
+      // En cas de succès, la session change et RedirectIfAuth s'occupe
+      // d'emmener l'utilisateur vers son espace. Rien à faire ici.
+      return
+    }
+
+    const { data, error } = await signUp(email, motDePasse, nom)
     setEnCours(false)
-    if (error) setErreur(error.message)
+    if (error) { setErreur(error.message); return }
+
+    // Si la confirmation par e-mail est activée dans Supabase, aucune session
+    // n'est créée tant que le lien n'a pas été cliqué. Sans ce message,
+    // l'inscription paraîtrait n'avoir aucun effet.
+    if (!data?.session) {
+      setInfo("Compte créé. Ouvre l'e-mail de confirmation qu'on vient de t'envoyer, puis reviens te connecter.")
+    }
   }
 
   return (
@@ -52,6 +68,7 @@ export default function LoginPage() {
         </label>
 
         {erreur && <p role="alert" className="erreur">{erreur}</p>}
+        {info && <p role="status" className="info">{info}</p>}
 
         <button type="submit" disabled={enCours}>
           {enCours ? 'Un instant…' : mode === 'connexion' ? 'Se connecter' : 'Créer le compte'}
@@ -60,7 +77,11 @@ export default function LoginPage() {
 
       <button
         type="button" className="lien"
-        onClick={() => { setMode(mode === 'connexion' ? 'inscription' : 'connexion'); setErreur(null) }}
+        onClick={() => {
+          setMode(mode === 'connexion' ? 'inscription' : 'connexion')
+          setErreur(null)
+          setInfo(null)
+        }}
       >
         {mode === 'connexion' ? 'Créer un compte' : 'J\'ai déjà un compte'}
       </button>

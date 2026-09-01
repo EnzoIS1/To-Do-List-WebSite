@@ -14,6 +14,7 @@ h2 { font-size: 18px; margin: var(--gap-l) 0 var(--gap-s); }
 .sous-titre { color: var(--discret); margin: 0 0 var(--gap-l); }
 .etat, .etat-vide { color: var(--discret); }
 .erreur { color: var(--alerte); }
+.info { color: var(--accent); background: var(--accent-doux); padding: var(--gap-s) var(--gap-m); border-radius: var(--rayon); }
 
 button { font: inherit; cursor: pointer; }
 .lien {

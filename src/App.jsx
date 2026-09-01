@@ -1,6 +1,7 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthProvider'
 import RequireAuth from './auth/RequireAuth'
+import RedirectIfAuth from './auth/RedirectIfAuth'
 import LoginPage from './auth/LoginPage'
 import AppShell from './components/layout/AppShell'
 import TodayPage from './pages/TodayPage'
@@ -18,13 +19,21 @@ import SettingsPage from './pages/SettingsPage'
  * Le workflow de déploiement copie déjà index.html en 404.html, donc le jour
  * où les URLs propres t'importent, il suffit de remplacer HashRouter par
  * BrowserRouter avec basename={import.meta.env.BASE_URL}.
+ *
+ * Les deux routes sont gardées symétriquement : RequireAuth interdit les pages
+ * privées aux visiteurs, RedirectIfAuth interdit l'écran de connexion aux
+ * personnes déjà connectées. Sans cette seconde garde, une connexion réussie
+ * laisse l'utilisateur devant le formulaire, sans le moindre message.
  */
 export default function App() {
   return (
     <AuthProvider>
       <HashRouter>
         <Routes>
-          <Route path="/connexion" element={<LoginPage />} />
+          <Route
+            path="/connexion"
+            element={<RedirectIfAuth><LoginPage /></RedirectIfAuth>}
+          />
           <Route
             path="/"
             element={<RequireAuth><AppShell /></RequireAuth>}
