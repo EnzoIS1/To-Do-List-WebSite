@@ -13,6 +13,14 @@
   --alerte-douce: #f5e8de;
   --ombre: 0 10px 28px rgba(22, 32, 27, .16);
 
+  /*
+   * Les couleurs de catégorie sont choisies par l'utilisateur et sont souvent
+   * foncées. Sur fond clair elles se lisent telles quelles ; sur fond sombre
+   * il faut les éclaircir, sinon un vert bouteille devient illisible.
+   * Cette variable dit de combien les éclaircir : 0 % en clair, 55 % en sombre.
+   */
+  --eclaircir: 0%;
+
   /* Espacements */
   --gap-xs: 4px;
   --gap-s: 8px;
@@ -27,43 +35,53 @@
 }
 
 /*
- * Trois états, pas deux.
+ * ── Thème sombre ──
+ *
+ * Palette fournie par Enzo. Elle est cohérente et pas choisie au hasard :
+ * #1F1B24 est exactement #121212 recouvert de 8 % du violet #BB86FC, ce qui
+ * est la façon dont Material Design construit ses surfaces surélevées.
+ * Les autres niveaux sont dérivés avec la même méthode : 12 % pour les
+ * en-têtes, 18 % pour les pastilles.
+ *
+ * Trois états, pas deux :
  * 1. Aucun attribut data-theme = « Système » : c'est la règle @media qui décide.
  * 2. data-theme="light" doit gagner même si le système est sombre — d'où le :not().
  * 3. data-theme="dark" doit gagner même si le système est clair.
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --fond: #101512;
-    --surface: #171e1a;
-    --surface-2: #1e2621;
-    --texte: #e9efea;
-    --texte-doux: #c2cec7;
-    --discret: #8b9a92;
-    --trait: #2a342e;
-    --accent: #6fcba6;
-    --accent-doux: #1a2a23;
-    --alerte: #db9463;
-    --alerte-douce: #2b2018;
-    --ombre: 0 10px 28px rgba(0, 0, 0, .5);
+    --fond: #121212;
+    --surface: #1F1B24;
+    --surface-2: #26202E;
+    --texte: #E6E1E9;
+    --texte-doux: #CAC4D0;
+    --discret: #938F99;
+    --trait: #3A363E;
+    --accent: #BB86FC;
+    --accent-doux: #30273C;
+    --alerte: #CF6679;
+    --alerte-douce: #2E1F21;
+    --ombre: 0 10px 28px rgba(0, 0, 0, .6);
+    --eclaircir: 55%;
 
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --fond: #101512;
-  --surface: #171e1a;
-  --surface-2: #1e2621;
-  --texte: #e9efea;
-  --texte-doux: #c2cec7;
-  --discret: #8b9a92;
-  --trait: #2a342e;
-  --accent: #6fcba6;
-  --accent-doux: #1a2a23;
-  --alerte: #db9463;
-  --alerte-douce: #2b2018;
-  --ombre: 0 10px 28px rgba(0, 0, 0, .5);
+  --fond: #121212;
+  --surface: #1F1B24;
+  --surface-2: #26202E;
+  --texte: #E6E1E9;
+  --texte-doux: #CAC4D0;
+  --discret: #938F99;
+  --trait: #3A363E;
+  --accent: #BB86FC;
+  --accent-doux: #30273C;
+  --alerte: #CF6679;
+  --alerte-douce: #2E1F21;
+  --ombre: 0 10px 28px rgba(0, 0, 0, .6);
+  --eclaircir: 55%;
 
   color-scheme: dark;
 }

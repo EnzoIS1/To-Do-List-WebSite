@@ -151,12 +151,15 @@ button { font: inherit; cursor: pointer; }
 .case.selectionne .mini-tache { white-space: normal; overflow: visible; }
 .case.selectionne .numero { font-size: 12px; font-weight: 700; color: var(--accent); }
 .numero { font-size: 11px; color: var(--discret); font-variant-numeric: tabular-nums; }
+/* `--eclaircir` vaut 0 % en thème clair et 55 % en sombre : la couleur de
+   catégorie reste elle-même sur fond blanc, et s'éclaircit sur fond noir. */
 .mini-tache {
   --teinte: var(--accent);
+  --teinte-lisible: color-mix(in srgb, #fff var(--eclaircir), var(--teinte));
   font-size: 10.5px; line-height: 1.35; border-radius: 3px; padding: 0 4px;
-  background: color-mix(in srgb, var(--teinte) 16%, transparent);
-  color: var(--teinte);
-  border-left: 2px solid var(--teinte);
+  background: color-mix(in srgb, var(--teinte-lisible) 16%, transparent);
+  color: var(--teinte-lisible);
+  border-left: 2px solid var(--teinte-lisible);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .mini-tache.faite { opacity: .45; text-decoration: line-through; }
@@ -206,24 +209,25 @@ button { font: inherit; cursor: pointer; }
 .pile-categories { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: var(--gap-s); }
 .carte-categorie {
   --teinte: var(--accent);
+  --teinte-lisible: color-mix(in srgb, #fff var(--eclaircir), var(--teinte));
   display: flex; flex-direction: column; flex: none;
   background: var(--surface); border: 1px solid var(--trait);
-  border-left: 3px solid var(--teinte); border-radius: var(--rayon);
+  border-left: 3px solid var(--teinte-lisible); border-radius: var(--rayon);
   overflow: hidden;
 }
 .carte-tete {
   display: flex; align-items: center; gap: var(--gap-s);
   padding: 8px var(--gap-m); border-bottom: 1px solid var(--trait);
-  background: color-mix(in srgb, var(--teinte) 8%, var(--surface));
+  background: color-mix(in srgb, var(--teinte-lisible) 8%, var(--surface));
 }
 .carte-tete h3 { flex: 1; color: var(--texte); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.carte-tete .compteur { background: color-mix(in srgb, var(--teinte) 18%, transparent); color: var(--teinte); }
-.pastille { width: 9px; height: 9px; border-radius: 50%; background: var(--teinte); flex: none; }
+.carte-tete .compteur { background: color-mix(in srgb, var(--teinte-lisible) 18%, transparent); color: var(--teinte-lisible); }
+.pastille { width: 9px; height: 9px; border-radius: 50%; background: var(--teinte-lisible, var(--teinte)); flex: none; }
 .bouton-reglage {
   border: 1px solid var(--trait); background: var(--surface); color: var(--discret);
   width: 26px; height: 22px; border-radius: 4px; line-height: 1;
 }
-.bouton-reglage:hover { border-color: var(--teinte); color: var(--teinte); }
+.bouton-reglage:hover { border-color: var(--teinte-lisible); color: var(--teinte-lisible); }
 .carte-reglages {
   display: flex; align-items: center; gap: var(--gap-m); flex-wrap: wrap;
   padding: var(--gap-s) var(--gap-m); border-bottom: 1px solid var(--trait);
@@ -251,6 +255,7 @@ input[type="color"] {
 .reglage-categories ul { list-style: none; padding-left: var(--gap-l); }
 .ligne-categorie {
   --teinte: var(--accent);
+  --teinte-lisible: color-mix(in srgb, #fff var(--eclaircir), var(--teinte));
   display: flex; align-items: center; gap: var(--gap-s);
   padding: 7px 10px; border: 1px solid var(--trait); border-left: 3px solid var(--teinte);
   border-radius: var(--rayon); background: var(--surface); margin-bottom: 5px;
@@ -289,12 +294,12 @@ input[type="color"] {
 .apercu-clair { background: #f6f8f5; }
 .apercu-clair .apercu-barre { background: #14614e; }
 .apercu-clair .apercu-ligne { background: #dce3dc; }
-.apercu-sombre { background: #101512; }
-.apercu-sombre .apercu-barre { background: #6fcba6; }
-.apercu-sombre .apercu-ligne { background: #2a342e; }
-.apercu-systeme { background: linear-gradient(105deg, #f6f8f5 0 50%, #101512 50% 100%); }
-.apercu-systeme .apercu-barre { background: linear-gradient(105deg, #14614e 0 50%, #6fcba6 50% 100%); }
-.apercu-systeme .apercu-ligne { background: linear-gradient(105deg, #dce3dc 0 50%, #2a342e 50% 100%); }
+.apercu-sombre { background: #121212; }
+.apercu-sombre .apercu-barre { background: #BB86FC; }
+.apercu-sombre .apercu-ligne { background: #3A363E; }
+.apercu-systeme { background: linear-gradient(105deg, #f6f8f5 0 50%, #121212 50% 100%); }
+.apercu-systeme .apercu-barre { background: linear-gradient(105deg, #14614e 0 50%, #BB86FC 50% 100%); }
+.apercu-systeme .apercu-ligne { background: linear-gradient(105deg, #dce3dc 0 50%, #3A363E 50% 100%); }
 
 /* ══ Fiche du compte ══ */
 .fiche { margin: var(--gap-m) 0 0; display: flex; flex-direction: column; gap: 1px; max-width: 460px; }
