@@ -1,0 +1,14 @@
+node_modules/
+dist/
+dist-ssr/
+
+# Les vraies valeurs d'environnement ne sont jamais commitées
+.env.local
+.env.*.local
+
+.vite/
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.idea/

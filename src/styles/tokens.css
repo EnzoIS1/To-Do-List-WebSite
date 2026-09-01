@@ -1,0 +1,40 @@
+:root {
+  /* Couleurs — reprises du document d'architecture, à ajuster librement */
+  --fond: #f6f8f5;
+  --surface: #ffffff;
+  --surface-2: #eff3ee;
+  --texte: #16201b;
+  --texte-doux: #3e4b44;
+  --discret: #6e7c74;
+  --trait: #dce3dc;
+  --accent: #14614e;
+  --accent-doux: #e1ede6;
+  --alerte: #9c5227;
+  --alerte-douce: #f5e8de;
+
+  /* Espacements */
+  --gap-xs: 4px;
+  --gap-s: 8px;
+  --gap-m: 16px;
+  --gap-l: 24px;
+  --gap-xl: 40px;
+
+  --rayon: 6px;
+  --police: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #101512;
+    --surface: #171e1a;
+    --surface-2: #1e2621;
+    --texte: #e9efea;
+    --texte-doux: #c2cec7;
+    --discret: #8b9a92;
+    --trait: #2a342e;
+    --accent: #6fcba6;
+    --accent-doux: #1a2a23;
+    --alerte: #db9463;
+    --alerte-douce: #2b2018;
+  }
+}
