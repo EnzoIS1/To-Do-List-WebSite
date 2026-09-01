@@ -14,6 +14,17 @@ export default function CalendarPage() {
   const { tasks, loading, creer, cocher, supprimer } = useTasks({ includeDone: true })
   const duJour = tasks.filter((t) => t.due_date === jourChoisi)
 
+  /**
+   * Cliquer un jour qui déborde sur le mois voisin fait aussi basculer la vue :
+   * sinon le jour sélectionné est affiché en gris dans un coin de la grille,
+   * et on ne comprend pas où on se trouve.
+   */
+  function choisirJour(jour) {
+    setJourChoisi(jour)
+    const m = monthOf(jour)
+    if (m.year !== mois.year || m.month !== mois.month) setMois(m)
+  }
+
   return (
     <>
       <header className="entete-mois">
@@ -22,7 +33,12 @@ export default function CalendarPage() {
         <button onClick={() => setMois(shiftMonth(mois, 1))} aria-label="Mois suivant">→</button>
       </header>
 
-      <MonthGrid mois={mois} taches={tasks} onJourClique={setJourChoisi} />
+      <MonthGrid
+        mois={mois}
+        taches={tasks}
+        jourChoisi={jourChoisi}
+        onJourClique={choisirJour}
+      />
 
       <section className="panneau-jour">
         <h2>{formatLong(jourChoisi)}</h2>

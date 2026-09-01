@@ -7,7 +7,7 @@ const JOURS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
  * due_date vaut ce jour — d'où l'intérêt d'avoir stocké un `date` et non
  * un horodatage : la comparaison est une simple égalité de chaînes.
  */
-export default function MonthGrid({ mois, taches, onJourClique }) {
+export default function MonthGrid({ mois, taches, jourChoisi, onJourClique }) {
   const jours = monthGrid(mois.year, mois.month)
 
   const parJour = taches.reduce((acc, t) => {
@@ -26,10 +26,18 @@ export default function MonthGrid({ mois, taches, onJourClique }) {
         {jours.map((jour) => {
           const duJour = parJour[jour] ?? []
           const horsMois = monthOf(jour).month !== mois.month
+          const classes = [
+            'case',
+            horsMois ? 'hors-mois' : '',
+            isToday(jour) ? 'aujourdhui' : '',
+            jour === jourChoisi ? 'selectionne' : '',
+          ].filter(Boolean).join(' ')
+
           return (
             <button
               key={jour}
-              className={`case${horsMois ? ' hors-mois' : ''}${isToday(jour) ? ' aujourdhui' : ''}`}
+              className={classes}
+              aria-current={jour === jourChoisi ? 'date' : undefined}
               onClick={() => onJourClique?.(jour)}
             >
               <span className="numero">{Number(jour.slice(8, 10))}</span>
