@@ -6,7 +6,7 @@ import RedirectIfAuth from './auth/RedirectIfAuth'
 import LoginPage from './auth/LoginPage'
 import AppShell from './components/layout/AppShell'
 import DashboardPage from './pages/DashboardPage'
-import EcranSoir from './pages/mobile/EcranSoir'
+import EcranTaches from './pages/mobile/EcranTaches'
 import EcranCalendrier from './pages/mobile/EcranCalendrier'
 import EcranListes from './pages/mobile/EcranListes'
 import SettingsPage from './pages/SettingsPage'
@@ -24,7 +24,7 @@ import { useEstTelephone } from './lib/useEcran'
  * 390 px sans devenir une page à faire défiler sans fin.
  */
 function Accueil() {
-  return useEstTelephone() ? <EcranSoir /> : <DashboardPage />
+  return useEstTelephone() ? <EcranTaches /> : <DashboardPage />
 }
 
 /** Sur grand écran, ces routes n'ont pas lieu d'être : tout est déjà à l'écran. */

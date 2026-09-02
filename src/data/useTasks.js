@@ -19,7 +19,7 @@ import { useAuth } from '../auth/AuthProvider'
  * @param {boolean} [filtres.includeDone=false]
  */
 export function useTasks(filtres = {}) {
-  const { dueOn, dueBefore, categoryId, includeDone = false } = filtres
+  const { dueOn, dueBefore, categoryId, includeDone = false, archiveApresJours = null } = filtres
   const { user } = useAuth()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -36,6 +36,18 @@ export function useTasks(filtres = {}) {
       .order('created_at', { ascending: true })
 
     if (!includeDone) requete = requete.eq('is_done', false)
+
+    /*
+     * Archivage : une tâche terminée depuis plus longtemps que le délai
+     * choisi n'est plus demandée du tout. Rien n'est supprimé — la ligne
+     * reste en base et réapparaît si le délai est rallongé. C'est un filtre
+     * de lecture, pas un effacement, et il allège la réponse du serveur.
+     */
+    if (archiveApresJours) {
+      const seuil = new Date()
+      seuil.setDate(seuil.getDate() - archiveApresJours)
+      requete = requete.or(`is_done.eq.false,completed_at.gte.${seuil.toISOString()}`)
+    }
     if (dueOn) requete = requete.eq('due_date', dueOn)
     if (dueBefore) requete = requete.lte('due_date', dueBefore)
     if (categoryId) requete = requete.eq('category_id', categoryId)
@@ -44,7 +56,7 @@ export function useTasks(filtres = {}) {
     setError(error)
     setTasks(data ?? [])
     setLoading(false)
-  }, [user, dueOn, dueBefore, categoryId, includeDone])
+  }, [user, dueOn, dueBefore, categoryId, includeDone, archiveApresJours])
 
   useEffect(() => { recharger() }, [recharger])
 

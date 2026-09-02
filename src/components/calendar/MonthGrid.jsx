@@ -1,19 +1,43 @@
 import { monthGrid, monthOf, isToday } from '../../lib/dates'
 
-const JOURS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-const POINTS_MAX = 4
+const JOURS = [
+  { court: 'L', long: 'Lundi' },
+  { court: 'M', long: 'Mardi' },
+  { court: 'M', long: 'Mercredi' },
+  { court: 'J', long: 'Jeudi' },
+  { court: 'V', long: 'Vendredi' },
+  { court: 'S', long: 'Samedi' },
+  { court: 'D', long: 'Dimanche' },
+]
 
 /**
- * Grille mensuelle de 6 semaines. Chaque case porte les tâches dont
- * due_date vaut ce jour — la comparaison est une simple égalité de chaînes,
- * puisque la colonne est un `date` et non un horodatage.
+ * Grille mensuelle de six semaines.
  *
- * Au repos, une case montre des PASTILLES de couleur, pas des titres : les
- * titres se lisaient déjà dans le panneau du jour et dans la catégorie, ce
- * qui faisait apparaître la même tâche trois fois à l'écran. La case ouverte,
- * elle, affiche la liste complète.
+ * Chaque case affiche le NOM des tâches du jour, précédé d'un filet à la
+ * couleur de leur catégorie — les pastilles ne disaient pas assez : on voyait
+ * qu'il se passait quelque chose sans savoir quoi. Au-delà de ce que la case
+ * peut tenir, un « +2 autres » complète le compte, et ouvrir la case donne la
+ * liste entière.
+ *
+ * La comparaison des jours est une simple égalité de chaînes 'AAAA-MM-JJ',
+ * puisque `due_date` est un `date` en base et non un horodatage.
+ *
+ * `apercuMax` vaut deux : c'est ce qui tient dans une case à la hauteur par
+ * défaut du panneau sans que le texte soit coupé en deux. Au-delà,
+ * « +3 autres » reste plus lisible qu'une pile de titres tronqués.
+ *
+ * `mode` vaut 'noms' sur grand écran et 'barres' sur téléphone. Ce n'est pas
+ * un choix esthétique mais une mesure : sur 390 px de large, une case de
+ * calendrier fait 44 px et ne peut afficher que cinq caractères — « Sortir
+ * les poubelles » devient « Sort… », ce qui n'apprend rien. En mode 'barres',
+ * chaque tâche est un filet à la couleur de sa catégorie, et les noms
+ * complets se lisent dans l'agenda sous la grille — y compris pour le jour
+ * sélectionné, dont la case reste en filets : l'élargir ne lui donnerait
+ * pas un pixel de plus en largeur.
  */
-export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, couleurDe }) {
+export default function MonthGrid({
+  mois, taches, jourChoisi, onJourClique, couleurDe, apercuMax = 2, mode = 'noms',
+}) {
   const jours = monthGrid(mois.year, mois.month)
 
   const parJour = taches.reduce((acc, t) => {
@@ -25,7 +49,12 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
   return (
     <div className="calendrier">
       <div className="entete-jours">
-        {JOURS.map((j, i) => <span key={i}>{j}</span>)}
+        {JOURS.map((j, i) => (
+          <span key={i}>
+            <span className="jour-long">{j.long}</span>
+            <span className="jour-court">{j.court}</span>
+          </span>
+        ))}
       </div>
 
       <div className="grille">
@@ -34,6 +63,17 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
           const faites = duJour.filter((t) => t.is_done).length
           const choisi = jour === jourChoisi
           const horsMois = monthOf(jour).month !== mois.month
+          /*
+           * La ligne « +N autres » compte comme une ligne : quand il y a plus
+           * de tâches que la case ne peut en montrer, on affiche une tâche de
+           * moins pour lui laisser la place. Sans ça, la dernière était coupée
+           * en deux au ras du bord.
+           */
+          const deborde = duJour.length > apercuMax
+          const visibles = choisi
+            ? duJour
+            : duJour.slice(0, deborde ? Math.max(1, apercuMax - 1) : apercuMax)
+          const cachees = duJour.length - visibles.length
 
           const classes = [
             'case',
@@ -47,7 +87,7 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
               key={jour}
               className={classes}
               aria-current={choisi ? 'date' : undefined}
-              aria-label={`${jour} — ${duJour.length} tâche(s)`}
+              aria-label={`${jour}, ${duJour.length} tâche${duJour.length > 1 ? 's' : ''}`}
               onClick={() => onJourClique?.(jour)}
             >
               <span className="tete-case">
@@ -55,38 +95,42 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
                 {duJour.length > 0 && (
                   <span
                     className={`compteur-jour${faites === duJour.length ? ' tout-fait' : ''}`}
-                    title={`${faites} faite(s) sur ${duJour.length}`}
+                    title={`${faites} faite${faites > 1 ? 's' : ''} sur ${duJour.length}`}
                   >
                     {faites}/{duJour.length}
                   </span>
                 )}
               </span>
 
-              {choisi ? (
-                duJour.map((t) => (
-                  <span
-                    key={t.id}
-                    className={`mini-tache${t.is_done ? ' faite' : ''}`}
-                    style={couleurDe ? { '--teinte': couleurDe(t) } : undefined}
-                  >
-                    {t.title}
-                  </span>
-                ))
+              {mode === 'barres' ? (
+                <span className="barres-jour">
+                  {duJour.slice(0, 4).map((t) => (
+                    <span
+                      key={t.id}
+                      className={`barre-tache${t.is_done ? ' faite' : ''}`}
+                      style={couleurDe ? { '--teinte': couleurDe(t) } : undefined}
+                      title={t.title}
+                    />
+                  ))}
+                </span>
               ) : (
-                duJour.length > 0 && (
-                  <span className="pastilles-jour">
-                    {duJour.slice(0, POINTS_MAX).map((t) => (
-                      <span
-                        key={t.id}
-                        className={`point-tache${t.is_done ? ' faite' : ''}`}
-                        style={couleurDe ? { '--teinte': couleurDe(t) } : undefined}
-                      />
-                    ))}
-                    {duJour.length > POINTS_MAX && (
-                      <span className="reste">+{duJour.length - POINTS_MAX}</span>
-                    )}
-                  </span>
-                )
+                <span className="evenements">
+                  {visibles.map((t) => (
+                    <span
+                      key={t.id}
+                      className={`evenement${t.is_done ? ' faite' : ''}`}
+                      style={couleurDe ? { '--teinte': couleurDe(t) } : undefined}
+                      title={t.title}
+                    >
+                      {t.title}
+                    </span>
+                  ))}
+                  {cachees > 0 && (
+                    <span className="reste">
+                      +{cachees} autre{cachees > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </span>
               )}
             </button>
           )

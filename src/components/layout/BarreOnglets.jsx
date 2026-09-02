@@ -8,7 +8,7 @@ import { NavLink } from 'react-router-dom'
  * des téléphones sans bouton d'accueil) via env(safe-area-inset-bottom).
  */
 const ONGLETS = [
-  { to: '/', fin: true, nom: 'Ce soir', icone: 'check' },
+  { to: '/', fin: true, nom: 'Tâches', icone: 'check' },
   { to: '/calendrier', nom: 'Calendrier', icone: 'calendrier' },
   { to: '/listes', nom: 'Listes', icone: 'liste' },
   { to: '/reglages', nom: 'Réglages', icone: 'reglages' },

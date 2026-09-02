@@ -1,20 +1,27 @@
 import Panneau from './Panneau'
 import MonthGrid from '../calendar/MonthGrid'
+import FiltreCategories from '../calendar/FiltreCategories'
 import { formatMonth, shiftMonth, monthOf, today } from '../../lib/dates'
 
 /**
- * Le bouton « Aujourd'hui » est passé à gauche, à côté du titre, et le mois
- * a pris sa place entre les deux flèches : on lit « ← Septembre 2026 → »,
- * ce qui dit tout de suite à quoi servent les flèches.
+ * Le panneau calendrier : le mois entre les flèches, « Aujourd'hui » près du
+ * titre, et le filtre de catégories sous l'en-tête.
  */
-export default function CalendarPanel({ mois, setMois, jourChoisi, onJourClique, taches, couleurDe }) {
+export default function CalendarPanel({
+  mois, setMois, jourChoisi, onJourClique, taches, couleurDe,
+  arbre, categoriesActives, setCategoriesActives,
+}) {
   const revenirAujourdhui = () => { setMois(monthOf(today())); onJourClique(today()) }
 
   return (
     <Panneau
       titre="Calendrier"
       className="panneau-calendrier"
-      sousTitre={<button className="bouton-doux bouton-aujourdhui" onClick={revenirAujourdhui}>Aujourd'hui</button>}
+      sousTitre={
+        <button className="bouton-doux bouton-aujourdhui" onClick={revenirAujourdhui}>
+          Aujourd'hui
+        </button>
+      }
       action={
         <div className="nav-mois">
           <button onClick={() => setMois(shiftMonth(mois, -1))} aria-label="Mois précédent">←</button>
@@ -23,6 +30,11 @@ export default function CalendarPanel({ mois, setMois, jourChoisi, onJourClique,
         </div>
       }
     >
+      <FiltreCategories
+        categories={arbre}
+        actives={categoriesActives}
+        onChange={setCategoriesActives}
+      />
       <MonthGrid
         mois={mois}
         taches={taches}

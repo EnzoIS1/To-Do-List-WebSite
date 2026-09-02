@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useCategories } from '../data/useCategories'
 import { useTheme } from '../theme/ThemeProvider'
+import { useDonnees } from '../data/DonneesProvider'
+import { DELAIS_ARCHIVAGE } from '../lib/useReglage'
 
 const OPTIONS_THEME = [
   { valeur: 'clair',   nom: 'Clair',   aide: 'Toujours le fond blanc.' },
@@ -15,6 +17,7 @@ const OPTIONS_THEME = [
 export default function SettingsPage() {
   const { arbre, modifier, supprimer, creer } = useCategories()
   const { theme, setTheme, accent, setAccent, accents } = useTheme()
+  const { delaiArchivage, setDelaiArchivage } = useDonnees()
 
   function ajouter(parent = null) {
     const name = window.prompt(
@@ -63,6 +66,32 @@ export default function SettingsPage() {
               </span>
               <span className="carte-theme-nom">{o.nom}</span>
               <span className="carte-theme-aide">{o.aide}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2>Tâches terminées</h2>
+        <p className="aide">
+          Passé ce délai, une tâche terminée quitte l'affichage. <strong>Elle
+          n'est pas supprimée</strong> : elle reste dans ta base et réapparaît
+          si tu rallonges le délai. Le site cesse simplement de la demander,
+          ce qui allège les chargements.
+        </p>
+
+        <div className="choix-delai" role="radiogroup" aria-label="Délai d'archivage">
+          {DELAIS_ARCHIVAGE.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              role="radio"
+              aria-checked={delaiArchivage === d.id}
+              className={`carte-delai${delaiArchivage === d.id ? ' actif' : ''}`}
+              onClick={() => setDelaiArchivage(d.id)}
+            >
+              <span className="carte-delai-nom">{d.nom}</span>
+              <span className="carte-delai-aide">{d.aide}</span>
             </button>
           ))}
         </div>

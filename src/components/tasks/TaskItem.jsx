@@ -6,7 +6,7 @@ import { formatRelative, isPast } from '../../lib/dates'
  * un clic ouvre un champ date, et le choix est enregistré immédiatement.
  * Une tâche sans date affiche un discret « + date » plutôt que rien du tout.
  */
-export default function TaskItem({ tache, etiquette, onCocher, onSupprimer, onDater, categories }) {
+export default function TaskItem({ tache, teinte, etiquette, onCocher, onSupprimer, onDater, categories }) {
   const [editionDate, setEditionDate] = useState(false)
   const champ = useRef(null)
 
@@ -23,13 +23,28 @@ export default function TaskItem({ tache, etiquette, onCocher, onSupprimer, onDa
   }
 
   return (
-    <li className={`tache${tache.is_done ? ' faite' : ''}${enRetard ? ' en-retard' : ''}`}>
+    <li
+      className={`tache${tache.is_done ? ' faite' : ''}${enRetard ? ' en-retard' : ''}`}
+      style={teinte ? { '--teinte': teinte } : undefined}
+    >
       <label>
-        <input
-          type="checkbox"
-          checked={tache.is_done}
-          onChange={() => onCocher(tache)}
-        />
+        {/*
+          La case à cocher du navigateur est conservée puis masquée, et
+          habillée par le <span>. Un cercle redessiné avec un simple <div>
+          perdrait le clavier, la touche Espace et les lecteurs d'écran.
+        */}
+        <span className="coche">
+          <input
+            type="checkbox"
+            checked={tache.is_done}
+            onChange={() => onCocher(tache)}
+          />
+          <span className="marque" aria-hidden="true">
+            <svg viewBox="0 0 16 16">
+              <path d="M2.5 8.4l3.6 3.6L13.5 4.4" />
+            </svg>
+          </span>
+        </span>
         <span className="titre">{tache.title}</span>
       </label>
 

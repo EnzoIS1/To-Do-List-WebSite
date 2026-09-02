@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo } from 'react'
 import { useTasks } from './useTasks'
 import { useCategories } from './useCategories'
+import { useReglage, joursDArchivage } from '../lib/useReglage'
 
 const DonneesContext = createContext(null)
 
@@ -15,7 +16,11 @@ export const estCategorieCourses = (c) => c.name.trim().toLowerCase().startsWith
  * d'onglet. Ici tout le monde lit la même liste et filtre ce qui le concerne.
  */
 export function DonneesProvider({ children }) {
-  const taches = useTasks({ includeDone: true })
+  const [delaiArchivage, setDelaiArchivage] = useReglage('todo-archivage', 'mois')
+  const taches = useTasks({
+    includeDone: true,
+    archiveApresJours: joursDArchivage(delaiArchivage),
+  })
   const categories = useCategories()
 
   const value = useMemo(() => {
@@ -41,8 +46,12 @@ export function DonneesProvider({ children }) {
       supprimerCategorie: categories.supprimer,
       couleurDe: (tache) =>
         plates.find((c) => c.id === tache.category_id)?.color ?? 'var(--discret)',
+      nomCategorieDe: (tache) =>
+        plates.find((c) => c.id === tache.category_id)?.name ?? null,
+      delaiArchivage,
+      setDelaiArchivage,
     }
-  }, [taches, categories])
+  }, [taches, categories, delaiArchivage, setDelaiArchivage])
 
   return <DonneesContext.Provider value={value}>{children}</DonneesContext.Provider>
 }

@@ -13,6 +13,9 @@
   --alerte: #9c5227;
   --alerte-douce: #f5e8de;
   --ombre: 0 10px 28px rgba(22, 32, 27, .16);
+  --fond-page: #EBEEE9;
+  --surface-rail: #FFFFFF;
+  --ombre-panneau: 0 1px 2px rgba(22, 32, 27, .07);
 
   /*
    * Les couleurs de catégorie sont choisies par l'utilisateur et sont souvent
@@ -30,6 +33,9 @@
   --gap-xl: 40px;
 
   --rayon: 6px;
+  /* Les angles adoucis des panneaux et du cadre : plus généreux que les
+     petits éléments, c'est ce qui donne l'allure « tableau de bord ». */
+  --rayon-panneau: 12px;
   --police: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   color-scheme: light;
@@ -63,6 +69,9 @@
     --alerte: #CF6679;
     --alerte-douce: #2E1F21;
     --ombre: 0 10px 28px rgba(0, 0, 0, .6);
+    --fond-page: #0A0A0A;
+    --surface-rail: #1A1620;
+    --ombre-panneau: 0 1px 2px rgba(0, 0, 0, .45);
     --eclaircir: 55%;
 
     color-scheme: dark;
@@ -82,6 +91,9 @@
   --alerte: #CF6679;
   --alerte-douce: #2E1F21;
   --ombre: 0 10px 28px rgba(0, 0, 0, .6);
+  --fond-page: #0A0A0A;
+  --surface-rail: #1A1620;
+  --ombre-panneau: 0 1px 2px rgba(0, 0, 0, .45);
   --eclaircir: 55%;
 
   color-scheme: dark;
