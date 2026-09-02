@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import TaskList from '../tasks/TaskList'
-import QuickAdd from '../tasks/QuickAdd'
 
 /**
  * Une catégorie racine et ses sous-catégories, en une seule carte.
@@ -10,8 +9,8 @@ import QuickAdd from '../tasks/QuickAdd'
  * ferme au clic à côté, à la touche Échap, et rend le focus au bouton.
  */
 export default function CategoryCard({
-  categorie, taches, loading, creer, cocher, supprimer, modifier, dater,
-  creerSousCategorie, supprimerCategorie,
+  categorie, taches, loading, cocher, supprimer, modifier, dater,
+  creerSousCategorie, supprimerCategorie, onReplier,
 }) {
   const [menu, setMenu] = useState(null)   // null = fermé, sinon { top, right }
   const menuRef = useRef(null)
@@ -77,6 +76,9 @@ export default function CategoryCard({
         <span className="pastille" />
         <h3>{categorie.name}</h3>
         <span className="compteur">{restantes}</span>
+        {onReplier && (
+          <button type="button" className="bouton-reglage" onClick={onReplier} aria-label="Replier">–</button>
+        )}
 
         <button
           ref={bouton}
@@ -148,7 +150,6 @@ export default function CategoryCard({
         />
       </div>
 
-      <QuickAdd onCreer={creer} categoryId={categorie.id} sansDate />
     </section>
   )
 }

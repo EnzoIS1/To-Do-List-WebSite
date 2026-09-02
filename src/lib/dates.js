@@ -107,3 +107,13 @@ export function formatRelative(key) {
   if (n < 0) return `en retard de ${-n} jours`
   return `dans ${n} jours`
 }
+
+/**
+ * « Ce soir » après 17 h, « Aujourd'hui » avant.
+ *
+ * Enzo ouvre le site en rentrant des cours, mais figer « Ce soir » dans le
+ * titre sonnerait faux le matin. Le titre suit donc l'heure.
+ */
+export function titreDuMoment() {
+  return new Date().getHours() >= 17 ? 'Ce soir' : "Aujourd'hui"
+}

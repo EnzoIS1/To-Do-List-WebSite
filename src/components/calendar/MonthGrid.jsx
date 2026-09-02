@@ -1,21 +1,17 @@
 import { monthGrid, monthOf, isToday } from '../../lib/dates'
 
 const JOURS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-
-/** Nombre de tâches visibles dans une case au repos. Au-delà : « +2 tâches ». */
-const APERCU = 3
+const POINTS_MAX = 4
 
 /**
  * Grille mensuelle de 6 semaines. Chaque case porte les tâches dont
- * due_date vaut ce jour — d'où l'intérêt d'avoir stocké un `date` et non
- * un horodatage : la comparaison est une simple égalité de chaînes.
+ * due_date vaut ce jour — la comparaison est une simple égalité de chaînes,
+ * puisque la colonne est un `date` et non un horodatage.
  *
- * En haut à droite de chaque case, un compteur « faites / total » donne
- * l'avancement du jour d'un coup d'œil.
- *
- * La case sélectionnée s'agrandit vers le bas et passe par-dessus les
- * suivantes pour montrer sa liste entière (voir `.case.selectionne` dans
- * global.css : align-self: start + height: auto + z-index).
+ * Au repos, une case montre des PASTILLES de couleur, pas des titres : les
+ * titres se lisaient déjà dans le panneau du jour et dans la catégorie, ce
+ * qui faisait apparaître la même tâche trois fois à l'écran. La case ouverte,
+ * elle, affiche la liste complète.
  */
 export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, couleurDe }) {
   const jours = monthGrid(mois.year, mois.month)
@@ -38,8 +34,6 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
           const faites = duJour.filter((t) => t.is_done).length
           const choisi = jour === jourChoisi
           const horsMois = monthOf(jour).month !== mois.month
-          const visibles = choisi ? duJour : duJour.slice(0, APERCU)
-          const cachees = duJour.length - visibles.length
 
           const classes = [
             'case',
@@ -53,6 +47,7 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
               key={jour}
               className={classes}
               aria-current={choisi ? 'date' : undefined}
+              aria-label={`${jour} — ${duJour.length} tâche(s)`}
               onClick={() => onJourClique?.(jour)}
             >
               <span className="tete-case">
@@ -60,27 +55,38 @@ export default function MonthGrid({ mois, taches, jourChoisi, onJourClique, coul
                 {duJour.length > 0 && (
                   <span
                     className={`compteur-jour${faites === duJour.length ? ' tout-fait' : ''}`}
-                    title={`${faites} tâche(s) faite(s) sur ${duJour.length}`}
+                    title={`${faites} faite(s) sur ${duJour.length}`}
                   >
                     {faites}/{duJour.length}
                   </span>
                 )}
               </span>
 
-              {visibles.map((t) => (
-                <span
-                  key={t.id}
-                  className={`mini-tache${t.is_done ? ' faite' : ''}`}
-                  style={couleurDe ? { '--teinte': couleurDe(t) } : undefined}
-                >
-                  {t.title}
-                </span>
-              ))}
-
-              {cachees > 0 && (
-                <span className="reste">
-                  +{cachees} {cachees > 1 ? 'tâches' : 'tâche'}
-                </span>
+              {choisi ? (
+                duJour.map((t) => (
+                  <span
+                    key={t.id}
+                    className={`mini-tache${t.is_done ? ' faite' : ''}`}
+                    style={couleurDe ? { '--teinte': couleurDe(t) } : undefined}
+                  >
+                    {t.title}
+                  </span>
+                ))
+              ) : (
+                duJour.length > 0 && (
+                  <span className="pastilles-jour">
+                    {duJour.slice(0, POINTS_MAX).map((t) => (
+                      <span
+                        key={t.id}
+                        className={`point-tache${t.is_done ? ' faite' : ''}`}
+                        style={couleurDe ? { '--teinte': couleurDe(t) } : undefined}
+                      />
+                    ))}
+                    {duJour.length > POINTS_MAX && (
+                      <span className="reste">+{duJour.length - POINTS_MAX}</span>
+                    )}
+                  </span>
+                )
               )}
             </button>
           )

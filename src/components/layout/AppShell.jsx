@@ -1,16 +1,25 @@
 import { Outlet } from 'react-router-dom'
 import Rail from './Rail'
+import BarreOnglets from './BarreOnglets'
+import { DonneesProvider } from '../../data/DonneesProvider'
+import { useEstTelephone } from '../../lib/useEcran'
 
 /**
- * La coque commune : le rail étroit à gauche, la page à droite.
- * Le tableau de bord occupe toute la hauteur de la fenêtre et chaque panneau
- * défile pour son compte — d'où le `height: 100vh` côté CSS.
+ * La coque commune. Sur grand écran, le rail étroit à gauche ; sur téléphone,
+ * la barre d'onglets en bas. Les données sont chargées une fois pour les deux.
  */
 export default function AppShell() {
+  const telephone = useEstTelephone()
+
   return (
-    <div className="coque">
-      <Rail />
-      <Outlet />
-    </div>
+    <DonneesProvider>
+      <div className={telephone ? 'coque-telephone' : 'coque'}>
+        {!telephone && <Rail />}
+        <main className="zone-page">
+          <Outlet />
+        </main>
+        {telephone && <BarreOnglets />}
+      </div>
+    </DonneesProvider>
   )
 }
