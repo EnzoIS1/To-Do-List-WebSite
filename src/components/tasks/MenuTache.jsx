@@ -183,12 +183,12 @@ export default function MenuTache({ tache, ancre, onFermer }) {
                       {r.auto ? ' · automatique' : ''}</em>
                   </span>
                   <button
-                    type="button" className="lien danger"
+                    type="button" className="bouton-fin danger"
                     onClick={() => (r.auto
                       ? basculerRappelAuto(tache, false)
                       : supprimerRappel(r.id))}
                   >
-                    retirer
+                    Retirer
                   </button>
                 </li>
               ))}

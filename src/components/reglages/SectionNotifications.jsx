@@ -8,6 +8,7 @@ import {
   cleVapidValide, CLE_VAPID, cleDeLAbonnement, reabonner,
 } from '../../lib/push'
 import { formatLong } from '../../lib/dates'
+import AideNotifications from './AideNotifications'
 
 const HEURES = Array.from({ length: 24 }, (_, h) => h)
 
@@ -194,6 +195,10 @@ export default function SectionNotifications() {
       {message && (
         <p className={message.ton === 'ok' ? 'info' : 'erreur'}>{message.texte}</p>
       )}
+
+      {/* Le mode d'emploi, replié : trois autorisations à donner à trois
+          endroits différents, et une condition propre à iOS. */}
+      <AideNotifications />
     </section>
   )
 }

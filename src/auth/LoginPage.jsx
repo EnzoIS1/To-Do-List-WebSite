@@ -76,7 +76,7 @@ export default function LoginPage() {
       </form>
 
       <button
-        type="button" className="lien"
+        type="button" className="bouton-fin"
         onClick={() => {
           setMode(mode === 'connexion' ? 'inscription' : 'connexion')
           setErreur(null)

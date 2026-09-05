@@ -54,19 +54,20 @@ export default function LigneRappel({ rappel, tache, compact = false }) {
       </div>
 
       <div className="rappel-actions">
-        <button type="button" className="bouton-doux" onClick={() => cocher(tache)}>
+        {/* L'action principale, donc la seule qui soit pleine. */}
+        <button type="button" className="bouton-plein" onClick={() => cocher(tache)}>
           Fait
         </button>
         {!rappel.seen_at && (
           <button
-            type="button" className="lien"
+            type="button" className="bouton-fin"
             onClick={() => marquerRappelVu(rappel.id)}
             title="Ranger ce rappel sans toucher à la tâche"
           >
             Écarter
           </button>
         )}
-        <button type="button" className="lien danger" onClick={retirer}
+        <button type="button" className="bouton-fin danger" onClick={retirer}
           title="Supprimer le rappel lui-même">
           Retirer
         </button>

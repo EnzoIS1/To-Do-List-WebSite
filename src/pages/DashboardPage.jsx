@@ -192,7 +192,7 @@ export default function DashboardPage() {
           </div>
           <button
             type="button"
-            className="lien"
+            className="bouton-fin"
             onClick={() => { reinitialiserDisposition(); setMasques([]) }}
           >
             Disposition d'origine

@@ -27,8 +27,54 @@ h3 { font-size: 14px; margin: 0; }
 .info { color: var(--accent); background: var(--accent-doux); padding: var(--gap-s) var(--gap-m); border-radius: var(--rayon); }
 
 button { font: inherit; cursor: pointer; }
-.lien { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; font-size: 13px; }
-.lien.danger { color: var(--alerte); }
+/* ══ Le bouton discret ══
+   Il s'appelait `.lien` et il en avait l'air : du texte souligné, en
+   couleur d'accent, sans bordure. C'était une fausse piste — « Écarter »,
+   « Retirer », « Supprimer » ne mènent nulle part, ils AGISSENT. Et la
+   cible ne faisait que la hauteur du texte, ce qui se rate au doigt.
+
+   C'est maintenant un vrai bouton : une pastille, une bordure, 30 px de
+   haut, et le rouge réservé à ce qui détruit — visible au repos, pas
+   seulement au survol, parce qu'un téléphone ne survole rien. */
+.bouton-fin {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 30px; padding: 4px 12px;
+  border: 1px solid var(--trait); border-radius: 999px;
+  background: var(--surface); color: var(--texte-doux);
+  font-size: 12.5px; font-weight: 600; line-height: 1;
+  text-decoration: none; white-space: nowrap;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+.bouton-fin:hover:not(:disabled) {
+  background: var(--accent-doux); border-color: var(--accent); color: var(--accent);
+}
+.bouton-fin:disabled { opacity: .5; cursor: not-allowed; }
+/* L'action principale d'une ligne : pleine, même pastille, même hauteur.
+   Elle était en `.bouton-doux` — un rectangle gris à côté de deux
+   pastilles, ce qui donnait trois formes pour trois actions voisines. */
+.bouton-plein {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 30px; padding: 4px 14px;
+  border: 1px solid var(--accent); border-radius: 999px;
+  background: var(--accent); color: var(--fond);
+  font-size: 12.5px; font-weight: 600; line-height: 1; white-space: nowrap;
+  transition: filter .15s ease;
+}
+.bouton-plein:hover:not(:disabled) { filter: brightness(1.1); }
+.bouton-plein:disabled { opacity: .5; cursor: not-allowed; }
+.coque-telephone .bouton-plein { min-height: 34px; padding: 5px 16px; }
+
+.bouton-fin.danger {
+  color: var(--alerte); border-color: color-mix(in srgb, var(--alerte) 40%, transparent);
+}
+.bouton-fin.danger:hover:not(:disabled) {
+  background: var(--alerte-douce); border-color: var(--alerte); color: var(--alerte);
+}
+/* Sur une ligne de rappel, le fond de la carte est déjà coloré : le bouton
+   se pose dessus sans son propre fond, sinon ça fait trois plans. */
+.rappel .bouton-fin { background: color-mix(in srgb, var(--surface) 55%, transparent); }
+/* Au doigt, 30 px c'est court. */
+.coque-telephone .bouton-fin { min-height: 34px; padding: 5px 14px; }
 .bouton-doux {
   background: var(--surface-2); color: var(--texte-doux);
   border: 1px solid var(--trait); border-radius: var(--rayon);
@@ -1241,3 +1287,62 @@ input[type="color"] {
    pointillé — elle n'existe pas en base, et rien ne s'y règle. */
 .categorie-repliee.sans-categorie { border-style: dashed; }
 .categorie-repliee.sans-categorie .categorie-nom { color: var(--texte-doux); font-style: italic; }
+
+/* ══ L'aide « comment activer les notifications » ══
+   Repliée par défaut : elle ne sert qu'une fois, et une page de réglages
+   noyée sous du mode d'emploi devient illisible. Ouverte, elle prend la
+   forme des trois cas — chaque appareil a ses étapes, pas une liste
+   commune pleine de « si vous êtes sur… ». */
+.aide-notifs { margin-top: var(--gap-m); }
+.bouton-aide {
+  width: 100%; display: flex; align-items: center; gap: var(--gap-m);
+  padding: 11px var(--gap-m); text-align: left;
+  background: var(--surface-2); border: 1px solid var(--trait);
+  border-radius: var(--rayon-panneau); color: var(--texte);
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.bouton-aide:hover { border-color: var(--accent); background: var(--accent-doux); }
+.bouton-aide[aria-expanded="true"] {
+  border-color: var(--accent);
+  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+}
+.bouton-aide-marque {
+  flex: none; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--accent); color: var(--fond); font-weight: 700; font-size: 14px;
+}
+.bouton-aide-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.bouton-aide-texte strong { font-size: 13.5px; font-weight: 600; }
+.bouton-aide-texte span { font-size: 12px; color: var(--texte-doux); }
+.bouton-aide-fleche { flex: none; color: var(--discret); font-size: 12px; }
+
+.aide-corps {
+  padding: var(--gap-m);
+  border: 1px solid var(--accent); border-top: 0;
+  border-radius: 0 0 var(--rayon-panneau) var(--rayon-panneau);
+  background: var(--surface);
+}
+.aide-corps .segments { margin-bottom: var(--gap-m); }
+.aide-intro { font-size: 12.5px; color: var(--texte-doux); margin: 0 0 var(--gap-m); }
+
+/* Les étapes sont numérotées à la main : le numéro doit être une pastille
+   alignée sur la première ligne, ce qu'un compteur de <ol> ne sait pas
+   faire proprement quand le texte passe à la ligne. */
+.aide-etapes { list-style: none; margin: 0; padding: 0; counter-reset: none; }
+.aide-etapes li {
+  display: flex; gap: var(--gap-s); align-items: flex-start;
+  font-size: 13px; line-height: 1.5; padding: 7px 0;
+}
+.aide-etapes li + li { border-top: 1px solid var(--trait); }
+.aide-numero {
+  flex: none; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--accent-doux); color: var(--accent);
+  font-size: 11.5px; font-weight: 700;
+}
+.aide-souci, .aide-rappel-final {
+  font-size: 12.5px; line-height: 1.5; margin: var(--gap-m) 0 0;
+  padding: 9px var(--gap-m); border-radius: var(--rayon);
+}
+.aide-souci { background: var(--alerte-douce); color: var(--texte); }
+.aide-rappel-final { background: var(--surface-2); color: var(--texte-doux); }

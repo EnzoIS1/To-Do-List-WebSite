@@ -170,8 +170,8 @@ export default function SettingsPage() {
                   onChange={(e) => modifier(racine.id, { color: e.target.value })}
                   aria-label={`Couleur de ${racine.name}`}
                 />
-                <button className="lien" onClick={() => ajouter(racine)}>+ sous-catégorie</button>
-                <button className="lien danger" onClick={() => retirer(racine)}>Supprimer</button>
+                <button className="bouton-fin" onClick={() => ajouter(racine)}>+ sous-catégorie</button>
+                <button className="bouton-fin danger" onClick={() => retirer(racine)}>Supprimer</button>
               </div>
 
               {racine.enfants.length > 0 && (
@@ -192,7 +192,7 @@ export default function SettingsPage() {
                           onChange={(e) => modifier(enfant.id, { color: e.target.value })}
                           aria-label={`Couleur de ${enfant.name}`}
                         />
-                        <button className="lien danger" onClick={() => retirer(enfant)}>Supprimer</button>
+                        <button className="bouton-fin danger" onClick={() => retirer(enfant)}>Supprimer</button>
                       </div>
                     </li>
                   ))}
