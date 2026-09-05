@@ -994,3 +994,151 @@ input[type="color"] {
   background: var(--fond); color: var(--texte);
 }
 .ligne-reglage button { flex: none; }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   LES CHAMPS DE CHOIX — date et catégorie, partout pareil
+
+   Ils étaient dessinés trois fois : un bouton plat dans la ligne de
+   tâche, un rectangle bordé dans la barre de saisie, un champ nu dans
+   les menus. Trois apparences pour deux gestes qu'on refait dix fois
+   par jour. Un seul dessin ici : une pastille, un fond léger, une
+   bordure qui s'anime au survol et au focus.
+   ══════════════════════════════════════════════════════════════════ */
+.capture-date, .capture-categorie,
+.menu-champ input:not([type="color"]), .menu-champ select,
+.selecteur-tri select, .ligne-reglage select, .champ-echeance {
+  font: inherit; font-size: 13px; color-scheme: inherit;
+  padding: 7px 10px; min-height: 36px;
+  border: 1px solid var(--trait); border-radius: 999px;
+  background: var(--surface-2); color: var(--texte);
+  transition: border-color .15s ease, background-color .15s ease, color .15s ease;
+}
+.capture-date:hover, .capture-categorie:hover,
+.menu-champ input:not([type="color"]):hover, .menu-champ select:hover,
+.selecteur-tri select:hover, .ligne-reglage select:hover {
+  border-color: var(--accent); background: var(--accent-doux); color: var(--accent);
+}
+.capture-date:focus, .capture-categorie:focus,
+.menu-champ input:focus, .menu-champ select:focus,
+.selecteur-tri select:focus, .ligne-reglage select:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+/* Le champ date, une fois vide, ne doit pas crier plus fort qu'un champ
+   rempli : on l'atténue plutôt que de le border en pointillés. */
+.menu-champ input[type="date"]:invalid, .capture-date:invalid { color: var(--discret); }
+
+/* Le bouton d'échéance d'une ligne de tâche suit le même dessin, en plus
+   petit — il vit dans une ligne de 48 px, pas dans un formulaire. */
+.bouton-echeance {
+  font-size: 12px; white-space: nowrap; padding: 4px 10px; min-height: 28px;
+  border-radius: 999px; border: 1px solid var(--trait);
+  background: var(--surface-2); color: var(--texte-doux);
+  transition: border-color .15s ease, background-color .15s ease, color .15s ease;
+}
+.bouton-echeance:hover { border-color: var(--accent); background: var(--accent-doux); color: var(--accent); }
+.bouton-echeance.vide { background: none; border-style: dashed; color: var(--discret); }
+.bouton-echeance.vide:hover { border-style: solid; }
+.tache.en-retard .bouton-echeance {
+  border-color: var(--alerte); color: var(--alerte); background: var(--alerte-douce); font-weight: 600;
+}
+
+/* ══ Le choix de l'ordre des tâches ══ */
+.selecteur-tri { display: flex; align-items: center; }
+.selecteur-tri select { font-size: 12px; min-height: 30px; padding: 4px 8px; max-width: 12em; }
+.sr-seulement {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ══ La fenêtre « Nouvelle tâche » ══
+   Elle était trop étroite : la liste des catégories débordait sous le bord
+   droit. La largeur suit maintenant celle de son contenu, avec un plancher
+   assez large pour « Sans catégorie » et une date côte à côte. */
+.fenetre-ajout { padding: 10px; min-width: 340px; max-width: min(420px, calc(100vw - 24px)); }
+.barre-capture.en-fenetre { border-radius: var(--rayon-panneau); padding: 8px 8px 8px 14px; }
+.barre-capture.en-fenetre .capture-options {
+  padding-top: 6px; display: flex; flex-wrap: wrap; gap: 6px;
+}
+.barre-capture.en-fenetre .capture-date,
+.barre-capture.en-fenetre .capture-categorie {
+  flex: 1 1 9em; min-width: 0; max-width: none;
+}
+
+/* ══ L'interrupteur du mode révision ══ */
+.interrupteur {
+  display: flex; align-items: flex-start; gap: var(--gap-s); width: 100%;
+  padding: 10px; margin: 2px 0 6px; text-align: left;
+  background: var(--surface-2); border: 1px solid var(--trait);
+  border-radius: var(--rayon-panneau); color: var(--texte-doux);
+}
+.interrupteur:hover:not(:disabled) { border-color: var(--accent); }
+.interrupteur:disabled { opacity: .55; cursor: not-allowed; }
+.interrupteur-piste {
+  flex: none; width: 40px; height: 24px; margin-top: 1px; border-radius: 999px;
+  background: var(--trait); position: relative;
+  transition: background-color .2s ease;
+}
+.interrupteur-bouton {
+  position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+  transition: transform .2s cubic-bezier(.3, .85, .35, 1);
+}
+.interrupteur.allume .interrupteur-piste { background: var(--accent); }
+.interrupteur.allume .interrupteur-bouton { transform: translateX(16px); }
+.interrupteur-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.interrupteur-texte strong { font-size: 13.5px; color: var(--texte); }
+.interrupteur-texte span { font-size: 12px; color: var(--discret); line-height: 1.4; }
+@media (prefers-reduced-motion: reduce) {
+  .interrupteur-bouton, .interrupteur-piste { transition: none; }
+}
+
+/* ══ La clochette des jours à rappel, dans le calendrier ══ */
+.cloche-jour { display: inline-grid; place-items: center; color: var(--accent); flex: none; }
+.cloche-jour svg { width: 11px; height: 11px; }
+.case.selectionne .cloche-jour { color: var(--fond); }
+.tete-case { display: flex; align-items: center; gap: 4px; }
+
+/* ══ La pastille de compte du rail ══ */
+.rail-lien { position: relative; }
+.rail-pastille {
+  position: absolute; top: 2px; right: 2px;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+  display: grid; place-items: center;
+  background: var(--alerte); color: var(--fond);
+  font-size: 10px; font-weight: 700; line-height: 1;
+  border: 1.5px solid var(--surface-rail);
+}
+
+/* ══ La page Rappels ══ */
+.page-rappels .page-tete h1 { font-size: 20px; }
+.page-corps.colonne-unique { flex-direction: column; gap: var(--gap-l); overflow-y: auto; }
+.page-corps.colonne-unique > * { flex: none; }
+.bloc-rappels { max-width: 780px; }
+.liste-rappels { list-style: none; margin: 0; padding: 0; }
+.liste-rappels li {
+  display: flex; align-items: center; gap: var(--gap-m); flex-wrap: wrap;
+  padding: 11px var(--gap-m);
+  background: var(--accent-doux); border: 1px solid var(--accent);
+  border-radius: var(--rayon-panneau);
+}
+.liste-rappels li + li { margin-top: 6px; }
+.liste-rappels li.en-retard { background: var(--alerte-douce); border-color: var(--alerte); }
+.rappel-actions { display: flex; align-items: center; gap: var(--gap-m); flex: none; }
+.groupe-jour { margin-bottom: var(--gap-m); }
+.jour-rappels {
+  font-size: 13px; font-weight: 600; color: var(--texte);
+  margin: 0 0 2px; padding-bottom: 4px; border-bottom: 1px solid var(--trait);
+}
+.jour-rappels::first-letter { text-transform: uppercase; }
+.jour-rappels em { font-style: normal; font-weight: 400; color: var(--discret); }
+.page-tete.rangee { display: flex; align-items: center; gap: var(--gap-m); flex-wrap: wrap; }
+.page-tete.rangee .segments { flex: 1; }
+.pile-categories > .selecteur-tri { flex: none; align-self: flex-end; }
+/* Un décalage déjà couvert : visiblement acquis, pas grisé sans raison. */
+.puce.posee {
+  opacity: 1; background: var(--accent-doux); border-color: var(--accent);
+  color: var(--accent); font-weight: 600; cursor: default;
+}

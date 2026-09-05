@@ -4,6 +4,7 @@ import ShoppingPanel from '../components/dashboard/ShoppingPanel'
 import InboxPanel from '../components/dashboard/InboxPanel'
 import CategoryColumn from '../components/categories/CategoryColumn'
 import BandeauRappels from '../components/rappels/BandeauRappels'
+import SelecteurTri from '../components/tasks/SelecteurTri'
 
 const VUES = [
   { id: 'courses', nom: 'Courses' },
@@ -47,7 +48,7 @@ export default function PageListes({ vueInitiale = 'courses' }) {
     <div className="page-pleine">
       <BandeauRappels />
 
-      <div className="page-tete">
+      <div className="page-tete rangee">
         <div className="segments" role="tablist">
           {VUES.map((v) => (
             <button
@@ -57,6 +58,7 @@ export default function PageListes({ vueInitiale = 'courses' }) {
             >{v.nom}</button>
           ))}
         </div>
+        {vue === 'categories' && <SelecteurTri />}
       </div>
 
       <div className="page-corps">

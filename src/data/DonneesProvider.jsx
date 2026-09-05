@@ -5,6 +5,7 @@ import { useReminders } from './useReminders'
 import { useReglage, joursDArchivage } from '../lib/useReglage'
 import { datesDeRevision } from '../lib/revision'
 import { addDays, daysBetween, today } from '../lib/dates'
+import { TRI_DEFAUT } from '../lib/tri'
 
 const DonneesContext = createContext(null)
 
@@ -24,6 +25,7 @@ export const titreDeRevision = (titre) => `Réviser : ${titre}`
  */
 export function DonneesProvider({ children }) {
   const [delaiArchivage, setDelaiArchivage] = useReglage('todo-archivage', 'mois')
+  const [triTaches, setTriTaches] = useReglage('todo-tri', TRI_DEFAUT)
   const taches = useTasks({
     includeDone: true,
     archiveApresJours: joursDArchivage(delaiArchivage),
@@ -32,6 +34,22 @@ export function DonneesProvider({ children }) {
   const rappels = useReminders()
 
   const { tasks, creerPlusieurs, modifier, supprimerPlusieurs, cocher } = taches
+  const { rechargerRappels } = rappels
+
+  /**
+   * Toute écriture sur une tâche est suivie d'une relecture des rappels.
+   *
+   * Depuis la migration 0006, c'est un trigger PostgreSQL qui crée et
+   * déplace le rappel automatique — donc la base change SANS que le site
+   * l'ait demandé. Sans cette relecture, le calendrier et la page Rappels
+   * continueraient d'afficher l'état d'avant jusqu'au prochain rechargement
+   * complet de la page.
+   */
+  const suivi = useCallback((fn) => async (...args) => {
+    const resultat = await fn(...args)
+    await rechargerRappels()
+    return resultat
+  }, [rechargerRappels])
 
   /** Les tâches de révision engendrées par une tâche source, par date. */
   const revisionsDe = useCallback(
@@ -48,21 +66,25 @@ export function DonneesProvider({ children }) {
    * l'historique, et les effacer donnerait l'impression que le travail
    * fait n'a pas compté. Seules les séances à venir sont remplacées.
    */
-  const activerRevision = useCallback(async (tache, dateExamen) => {
+  const activerRevision = useCallback(async (tache) => {
     /*
-     * Le plan part TOUJOURS d'aujourd'hui, jamais de l'échéance de la tâche.
+     * Deux dates, et aucune à saisir.
      *
-     * Partir de l'échéance paraissait logique — on révise ce qu'on vient
-     * d'apprendre — mais ça donnait un résultat absurde : activer la révision
-     * d'un devoir noté pour dans trois semaines ne créait rien avant ces trois
-     * semaines. Or on active la révision au moment où on décide de réviser,
-     * c'est-à-dire maintenant. Le temps disponible court donc de ce jour à
-     * l'examen.
+     * Le départ est TOUJOURS aujourd'hui : on active la révision au moment
+     * où on décide de réviser. Partir de l'échéance ne créerait rien avant
+     * trois semaines pour un devoir prévu dans trois semaines.
+     *
+     * L'arrivée est l'échéance de la tâche elle-même. Il y avait avant un
+     * champ « date de l'examen » à remplir en plus — mais une tâche
+     * « Contrôle de maths » datée du 20 porte déjà la réponse. Un champ de
+     * moins à remplir, et une date de moins à maintenir en accord.
      */
-    const depart = today()
-    const jours = datesDeRevision(depart, dateExamen)
+    if (!tache.due_date) {
+      return { error: { message: 'Donne d\'abord une date à la tâche : c\'est elle qui sert d\'échéance aux révisions.' } }
+    }
+    const jours = datesDeRevision(today(), tache.due_date)
     if (jours.length === 0) {
-      return { error: { message: "L'examen est trop proche pour étaler des révisions." } }
+      return { error: { message: "L'échéance est trop proche pour étaler des révisions." } }
     }
 
     const aRemplacer = revisionsDe(tache.id).filter((t) => !t.is_done)
@@ -79,7 +101,10 @@ export function DonneesProvider({ children }) {
       }))
     )
     if (error) return { error }
-    return modifier(tache.id, { exam_date: dateExamen })
+    // On garde trace de l'échéance visée au moment de l'activation : si la
+    // date de la tâche bouge ensuite, la replanification saura sur quoi elle
+    // s'était engagée.
+    return modifier(tache.id, { exam_date: tache.due_date })
   }, [revisionsDe, supprimerPlusieurs, creerPlusieurs, modifier])
 
   /** Coupe les révisions : les séances à venir disparaissent, pas les faites. */
@@ -102,13 +127,16 @@ export function DonneesProvider({ children }) {
     if (daysBetween(tache.due_date, today()) <= 0) return resultat   // à l'heure
 
     const source = tasks.find((t) => t.id === tache.revision_of)
-    if (!source?.exam_date) return resultat
+    // L'échéance de la tâche fait foi ; `exam_date` n'est qu'une trace de ce
+    // qui était visé à l'activation, et sert de repli.
+    const echeance = source?.due_date ?? source?.exam_date
+    if (!echeance) return resultat
 
     const restantes = revisionsDe(source.id)
       .filter((t) => !t.is_done && t.id !== tache.id)
     if (restantes.length === 0) return resultat
 
-    const jours = datesDeRevision(today(), source.exam_date, restantes.length)
+    const jours = datesDeRevision(today(), echeance, restantes.length)
 
     // Moins de jours disponibles que de séances : on supprime les séances
     // en trop plutôt que d'en empiler deux le même jour.
@@ -135,7 +163,14 @@ export function DonneesProvider({ children }) {
 
     return {
       ...taches,
-      cocher: cocherEtReplanifier,
+      // Les écritures passent par `suivi` : le trigger de la base crée et
+      // déplace les rappels automatiques, il faut donc les relire ensuite.
+      creer: suivi(taches.creer),
+      creerPlusieurs: suivi(taches.creerPlusieurs),
+      modifier: suivi(taches.modifier),
+      supprimer: suivi(taches.supprimer),
+      supprimerPlusieurs: suivi(taches.supprimerPlusieurs),
+      cocher: suivi(cocherEtReplanifier),
       categories: plates,
       arbre,
       choixCategories: choix,
@@ -150,10 +185,18 @@ export function DonneesProvider({ children }) {
         plates.find((c) => c.id === tache.category_id)?.name ?? null,
       delaiArchivage,
       setDelaiArchivage,
+      triTaches,
+      setTriTaches,
       ...rappels,
       revisionsDe,
       activerRevision,
       desactiverRevision,
+      /** Vrai si la tâche a un plan de révision en cours ou déjà entamé. */
+      revisionActive: (tache) => tasks.some((t) => t.revision_of === tache.id),
+      /** Les jours qui portent au moins un rappel non vu — pour le calendrier. */
+      joursAvecRappel: new Set(
+        rappels.rappels.filter((r) => !r.seen_at).map((r) => r.remind_on)
+      ),
       /** Le libellé « révision 2/4 » d'une séance, ou null si ce n'en est pas une. */
       rangDeRevision: (tache) => {
         if (!tache.revision_of) return null
@@ -166,6 +209,7 @@ export function DonneesProvider({ children }) {
     }
   }, [
     taches, categories, rappels, delaiArchivage, setDelaiArchivage,
+    triTaches, setTriTaches, suivi,
     cocherEtReplanifier, revisionsDe, activerRevision, desactiverRevision, tasks,
   ])
 

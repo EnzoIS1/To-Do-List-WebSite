@@ -8,6 +8,7 @@ import AppShell from './components/layout/AppShell'
 import DashboardPage from './pages/DashboardPage'
 import PageCalendrier from './pages/PageCalendrier'
 import PageListes from './pages/PageListes'
+import PageRappels from './pages/PageRappels'
 import EcranTaches from './pages/mobile/EcranTaches'
 import EcranCalendrier from './pages/mobile/EcranCalendrier'
 import EcranListes from './pages/mobile/EcranListes'
@@ -53,6 +54,7 @@ export default function App() {
             <Route path="/" element={<RequireAuth><AppShell /></RequireAuth>}>
               <Route index element={<Accueil />} />
               <Route path="calendrier" element={<Calendrier />} />
+              <Route path="rappels" element={<PageRappels />} />
               <Route path="listes" element={<Listes />} />
               <Route path="notes" element={<Listes vue="notes" />} />
               <Route path="reglages" element={<SettingsPage />} />

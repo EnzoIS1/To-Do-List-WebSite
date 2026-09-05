@@ -1,5 +1,6 @@
 import Panneau from './Panneau'
 import MonthGrid from '../calendar/MonthGrid'
+import { useDonnees } from '../../data/DonneesProvider'
 import FiltreCategories from '../calendar/FiltreCategories'
 import { formatMonth, shiftMonth, monthOf, today } from '../../lib/dates'
 
@@ -11,6 +12,8 @@ export default function CalendarPanel({
   mois, setMois, jourChoisi, onJourClique, taches, couleurDe,
   arbre, categoriesActives, setCategoriesActives,
 }) {
+  const { joursAvecRappel } = useDonnees()
+
   const revenirAujourdhui = () => { setMois(monthOf(today())); onJourClique(today()) }
 
   return (
@@ -36,6 +39,7 @@ export default function CalendarPanel({
         onChange={setCategoriesActives}
       />
       <MonthGrid
+        joursAvecRappel={joursAvecRappel}
         mois={mois}
         taches={taches}
         jourChoisi={jourChoisi}

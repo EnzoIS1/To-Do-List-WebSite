@@ -19,11 +19,19 @@ Puis, dans **SQL Editor**, exécute les migrations **dans l'ordre** :
 supabase/migrations/0001_schema.sql     -- les tables et les index
 supabase/migrations/0002_rls.sql        -- le cloisonnement des comptes
 supabase/migrations/0003_triggers.sql   -- profil auto, updated_at, completed_at
-supabase/migrations/0004_revision_rappels.sql  -- les colonnes des révisions
+supabase/migrations/0004_revision_rappels.sql   -- les colonnes des révisions
+supabase/migrations/0005_notifications.sql      -- les notifications groupées
+supabase/migrations/0006_rappels_automatiques.sql -- le rappel de la veille
 ```
 
-`0004` peut être relancée sans risque : chaque instruction est en
-`add column if not exists`.
+`0004` et `0006` peuvent être relancées sans risque : les colonnes sont en
+`add column if not exists`, et les rappels du rattrapage en
+`on conflict do nothing`.
+
+`0006` pose une règle qui vaut pour tout le site : **une tâche datée et non
+faite se rappelle toute seule la veille**, et une séance de révision le jour
+même. C'est un trigger PostgreSQL et non du code côté site, pour que la règle
+tienne quelle que soit la façon dont la tâche est arrivée en base.
 
 Après `0002`, le tableau de bord ne doit plus signaler aucune table du schéma
 `public` sans sécurité activée.
@@ -102,6 +110,7 @@ qu'une intention.
 | `npm run test:dates` | teste les utilitaires de dates |
 | `npm run test:revision` | teste le calcul des révisions espacées |
 | `npm run test:sw` | teste le service worker des notifications |
+| `npm run test:tri` | teste l'ordre d'affichage des tâches |
 | `node outils/cles-vapid.mjs` | génère la paire de clés des notifications |
 
 ## Comment le code est rangé

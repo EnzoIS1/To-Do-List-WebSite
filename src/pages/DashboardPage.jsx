@@ -10,6 +10,7 @@ import ShoppingPanel from '../components/dashboard/ShoppingPanel'
 import InboxPanel from '../components/dashboard/InboxPanel'
 import CategoryColumn from '../components/categories/CategoryColumn'
 import Panneau from '../components/dashboard/Panneau'
+import SelecteurTri from '../components/tasks/SelecteurTri'
 import BandeauRappels from '../components/rappels/BandeauRappels'
 import { filtrer } from '../components/calendar/FiltreCategories'
 import { today, monthOf } from '../lib/dates'
@@ -141,7 +142,7 @@ export default function DashboardPage() {
      * héritera silencieusement du même défaut.
      */
     categories: (
-      <Panneau titre="Catégories" className="panneau-categories">
+      <Panneau titre="Catégories" className="panneau-categories" action={<SelecteurTri />}>
         <CategoryColumn
           arbre={arbreSansCourses} taches={tasks} loading={loading}
           creer={creer} cocher={cocher} supprimer={supprimer}

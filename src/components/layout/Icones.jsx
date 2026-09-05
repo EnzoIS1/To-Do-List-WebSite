@@ -36,6 +36,12 @@ const DESSINS = {
     </>
   ),
   check: <path d="M4 12.5l5 5L20 6.5" />,
+  cloche: (
+    <>
+      <path d="M18 8.5a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16s-2-1.5-2-6.5" />
+      <path d="M13.7 19a2 2 0 0 1-3.4 0" />
+    </>
+  ),
   reglages: (
     <>
       <circle cx="12" cy="12" r="3.2" />

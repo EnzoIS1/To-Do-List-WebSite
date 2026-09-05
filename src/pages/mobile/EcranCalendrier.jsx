@@ -14,7 +14,7 @@ import { today, monthOf, shiftMonth, formatMonth, formatLong } from '../../lib/d
 export default function EcranCalendrier() {
   const {
     tasks, loading, creer, modifier, cocher, supprimer,
-    choixCategories, couleurDe, arbre,
+    choixCategories, couleurDe, arbre, joursAvecRappel,
   } = useDonnees()
 
   const [jourChoisi, setJourChoisi] = useState(today())
@@ -52,6 +52,7 @@ export default function EcranCalendrier() {
 
       <div className="ecran-corps mois-plein">
         <MonthGrid
+          joursAvecRappel={joursAvecRappel}
           mois={mois}
           taches={visibles}
           jourChoisi={jourChoisi}

@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import Icone from './Icones'
 import BoutonAjout from '../capture/BoutonAjout'
 import { useAuth } from '../../auth/AuthProvider'
+import { useDonnees } from '../../data/DonneesProvider'
 
 /**
  * Le rail de gauche, redessiné d'après la référence d'Enzo.
@@ -26,6 +27,7 @@ import { useAuth } from '../../auth/AuthProvider'
 const DESTINATIONS = [
   { to: '/', fin: true, nom: 'Tableau de bord', icone: 'tableau' },
   { to: '/calendrier', nom: 'Calendrier', icone: 'calendrier' },
+  { to: '/rappels', nom: 'Rappels', icone: 'cloche', compteur: true },
   { to: '/listes', nom: 'Listes', icone: 'liste' },
   { to: '/notes', nom: 'Prise de note', icone: 'note' },
 ]
@@ -42,6 +44,13 @@ function initiales(email) {
 
 export default function Rail({ dateParDefaut = null }) {
   const { user } = useAuth()
+  const { rappelsEchus, tasks } = useDonnees()
+
+  // Le compte n'annonce que ce qui est réellement à faire : un rappel dont
+  // la tâche est cochée gonflerait la pastille sans rien vouloir dire.
+  const aTraiter = rappelsEchus.filter(
+    (r) => tasks.some((t) => t.id === r.task_id && !t.is_done)
+  ).length
 
   return (
     <nav className="rail" aria-label="Navigation principale">
@@ -59,6 +68,11 @@ export default function Rail({ dateParDefaut = null }) {
               aria-label={d.nom}
             >
               <Icone nom={d.icone} />
+              {d.compteur && aTraiter > 0 && (
+                <span className="rail-pastille" aria-label={`${aTraiter} rappel(s)`}>
+                  {aTraiter > 9 ? '9+' : aTraiter}
+                </span>
+              )}
             </NavLink>
           ))}
         </div>

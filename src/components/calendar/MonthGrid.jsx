@@ -37,6 +37,7 @@ const JOURS = [
  */
 export default function MonthGrid({
   mois, taches, jourChoisi, onJourClique, couleurDe, apercuMax = 2, mode = 'noms',
+  joursAvecRappel,
 }) {
   const jours = monthGrid(mois.year, mois.month)
 
@@ -87,11 +88,30 @@ export default function MonthGrid({
               key={jour}
               className={classes}
               aria-current={choisi ? 'date' : undefined}
-              aria-label={`${jour}, ${duJour.length} tâche${duJour.length > 1 ? 's' : ''}`}
+              aria-label={
+                `${jour}, ${duJour.length} tâche${duJour.length > 1 ? 's' : ''}` +
+                (joursAvecRappel?.has(jour) ? ', rappel' : '')
+              }
               onClick={() => onJourClique?.(jour)}
             >
               <span className="tete-case">
                 <span className="numero">{Number(jour.slice(8, 10))}</span>
+                {/*
+                  Une clochette sur les jours qui portent un rappel. Elle est
+                  posée à côté du numéro et non dans la liste des tâches : un
+                  rappel n'est pas une tâche de plus ce jour-là, c'est une
+                  propriété du jour. La mettre dans la liste ferait croire à
+                  une sixième chose à faire.
+                */}
+                {joursAvecRappel?.has(jour) && (
+                  <span className="cloche-jour" title="Rappel ce jour-là" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8.5a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16s-2-1.5-2-6.5" />
+                      <path d="M13.7 19a2 2 0 0 1-3.4 0" />
+                    </svg>
+                  </span>
+                )}
                 {duJour.length > 0 && (
                   <span
                     className={`compteur-jour${faites === duJour.length ? ' tout-fait' : ''}`}
