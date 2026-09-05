@@ -259,6 +259,22 @@ l'ordre de probabilité :
    explicitement. Pour le vérifier sans navigateur : `npm run test:fonction`.
 3. **`VITE_SUPABASE_URL` est erronée** dans le site compilé.
 
+**« 403 invalid JWT » / « BadJwtToken »** veut dire que la fonction a bien
+envoyé, et que c'est le service de notification qui refuse la signature. Une
+seule cause en pratique : **l'appareil s'est abonné avec une autre clé
+publique que celle qui signe aujourd'hui**. Un abonnement est lié à vie à la
+clé passée au moment de s'abonner ; regénérer les clés VAPID rend donc muets
+tous les abonnements existants, sans que rien ne le signale.
+
+Le remède est sur l'appareil concerné : Paramètres → Notifications →
+**« Réabonner »**. Le site détecte aussi le cas tout seul à l'ouverture, quand
+le navigateur expose la clé d'origine — Safari ne le fait pas toujours, d'où
+le bouton.
+
+Vérifie au passage que les trois valeurs viennent bien de la **même**
+génération de clés : `VITE_VAPID_PUBLIQUE` (variable GitHub Actions),
+`VAPID_PUBLIQUE` et `VAPID_PRIVEE` (secrets Supabase).
+
 **Un message qui nomme un secret** (« VAPID_PUBLIQUE : absent des secrets de
 la fonction ») veut dire que la fonction tourne et répond — il ne reste qu'à
 renseigner ce secret dans Supabase → Edge Functions → Secrets, puis à

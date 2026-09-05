@@ -179,7 +179,18 @@ async function envoyerA(userId: string, titres: string[]) {
           headers: { Prefer: 'return=minimal' },
           body: JSON.stringify({ echecs: (a.echecs ?? 0) + 1 }),
         })
-        echecs.push(`${a.appareil ?? 'appareil'} : ${res.statut} ${res.detail ?? ''}`.trim())
+        /*
+         * Un 403 n'est presque jamais un problème de configuration de la
+         * fonction : c'est le service de notification qui constate que la
+         * clé signant l'envoi n'est pas celle avec laquelle l'appareil s'est
+         * abonné. Aucun réglage côté serveur ne le corrige — il faut
+         * refaire l'abonnement sur l'appareil concerné.
+         */
+        const explication = res.statut === 403
+          ? "clé VAPID refusée : cet appareil s'est abonné avec une autre clé publique. " +
+            'Sur cet appareil, Paramètres → Notifications → « Réabonner ».'
+          : `${res.statut} ${res.detail ?? ''}`.trim()
+        echecs.push(`${a.appareil ?? 'appareil'} : ${explication}`)
       }
     } catch (e) {
       echecs.push(`${a.appareil ?? 'appareil'} : ${(e as Error).message}`)

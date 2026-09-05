@@ -5,7 +5,7 @@ import {
   notificationsPossibles, installeSurEcranAccueil, estAppareilApple,
   etatAutorisation, activerNotifications, desactiverNotifications,
   dernierEnvoi, envoyerUnEssai, testerAffichage, abonnementActuel,
-  cleVapidValide, CLE_VAPID,
+  cleVapidValide, CLE_VAPID, cleDeLAbonnement, reabonner,
 } from '../../lib/push'
 import { formatLong } from '../../lib/dates'
 
@@ -56,6 +56,7 @@ export default function SectionNotifications() {
   const installee = installeSurEcranAccueil()
   const active = autorisation === 'granted'
   const cleOk = cleVapidValide()
+  const cleAbonnement = cleDeLAbonnement(abonnement)
 
   /** Les cinq maillons, dans l'ordre où ils doivent être réglés. */
   const controles = [
@@ -97,6 +98,25 @@ export default function SectionNotifications() {
         ? `Adresse d'envoi : ${new URL(abonnement.endpoint).host}`
         : "Aucun abonnement sur cet appareil. Les quatre points au-dessus doivent d'abord être verts.",
     },
+    /*
+     * Le maillon qui manquait, et qui explique « 403 invalid JWT ».
+     *
+     * Un abonnement est lié à VIE à la clé publique utilisée au moment de
+     * s'abonner. Regénérer les clés VAPID rend donc muets tous les
+     * abonnements déjà créés — sans que rien ne le signale : la ligne en
+     * base reste parfaitement valide, seul le service de notification
+     * refuse. Cette ligne compare les deux et propose le remède.
+     */
+    ...(abonnement ? [{
+      nom: 'Abonnement créé avec la clé actuelle',
+      etat: cleAbonnement === null ? true : cleAbonnement === CLE_VAPID,
+      aide: cleAbonnement === null
+        ? "Ce navigateur n'expose pas la clé d'origine : impossible de vérifier. " +
+          'En cas de « 403 invalid JWT », utilise « Réabonner cet appareil ».'
+        : cleAbonnement === CLE_VAPID ? null
+          : 'Cet appareil s\'est abonné avec une AUTRE clé publique. Le service de ' +
+            'notification refusera tous les envois. Clique « Réabonner cet appareil ».',
+    }] : []),
   ]
 
   const toutVert = controles.every((c) => c.etat)
@@ -201,6 +221,22 @@ export default function SectionNotifications() {
       </div>
 
       {/* ── Les deux essais, du plus local au plus complet ── */}
+      <div className="ligne-reglage">
+        <div>
+          <strong>Réabonner cet appareil</strong>
+          <p className="aide">
+            Refait l'abonnement de zéro. C'est le remède au « 403 invalid JWT » :
+            il survient quand les clés VAPID ont changé depuis l'abonnement, et
+            aucun autre réglage ne le corrige.
+          </p>
+        </div>
+        <button className="bouton-doux" disabled={occupe || !active || !cleOk}
+          onClick={() => lancer(() => reabonner(user.id),
+            'Abonnement refait avec la clé actuelle. Relance l\'essai 2.')}>
+          Réabonner
+        </button>
+      </div>
+
       <div className="ligne-reglage">
         <div>
           <strong>Essai 1 — l'affichage</strong>

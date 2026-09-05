@@ -44,6 +44,34 @@ function versB64url(buffer) {
   return btoa(binaire).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
+/**
+ * La clé publique avec laquelle CET abonnement a été créé.
+ *
+ * ─────────────────────────────────────────────────────────────────────
+ * LE PIÈGE QU'ELLE SERT À DÉTECTER
+ *
+ * Un abonnement est lié à VIE à la clé publique passée au moment où le
+ * navigateur s'est abonné. Le service de notification refuse ensuite tout
+ * envoi signé par une autre clé — c'est ce qui produit « 403 invalid JWT »
+ * chez Google et « BadJwtToken » chez Apple.
+ *
+ * Autrement dit : regénérer les clés VAPID invalide silencieusement tous
+ * les abonnements existants. Rien ne le signale, la ligne en base a l'air
+ * parfaitement valide, et les envois échouent sans qu'on comprenne
+ * pourquoi. D'où cette lecture, qui permet de comparer et de se réabonner
+ * tout seul.
+ *
+ * Renvoie null si le navigateur n'expose pas l'information — on ne peut
+ * alors ni confirmer ni infirmer, et il ne faut surtout pas se réabonner
+ * « au cas où » : ça bouclerait à chaque ouverture.
+ * ─────────────────────────────────────────────────────────────────────
+ */
+export function cleDeLAbonnement(abonnement) {
+  const brute = abonnement?.options?.applicationServerKey
+  if (!brute) return null
+  try { return versB64url(brute) } catch { return null }
+}
+
 /** Le navigateur sait-il faire des notifications web ? */
 export function notificationsPossibles() {
   return typeof window !== 'undefined' &&
@@ -189,6 +217,22 @@ export async function synchroniser(userId) {
     const enregistrement = await enregistrerServiceWorker()
     await navigator.serviceWorker.ready
     let abonnement = await enregistrement.pushManager.getSubscription()
+
+    /*
+     * L'abonnement existe, mais a-t-il été créé avec la clé COURANTE ?
+     * Si les clés VAPID ont été regénérées depuis, il est devenu inutile :
+     * le service de notification refusera tout envoi. On le remplace sans
+     * rien demander — l'autorisation, elle, reste acquise.
+     */
+    if (abonnement && CLE_PUBLIQUE) {
+      const cleUtilisee = cleDeLAbonnement(abonnement)
+      if (cleUtilisee && cleUtilisee !== CLE_PUBLIQUE) {
+        await supabase.from('push_subscriptions').delete().eq('endpoint', abonnement.endpoint)
+        await abonnement.unsubscribe()
+        abonnement = null
+      }
+    }
+
     if (!abonnement && CLE_PUBLIQUE) {
       // L'autorisation est toujours là mais l'abonnement a disparu : on le
       // recrée sans rien demander. C'est le cas qui, sans ça, ferait cesser
@@ -244,6 +288,44 @@ export async function testerAffichage() {
       lang: 'fr',
     })
     return { ok: true }
+  } catch (e) {
+    return { ok: false, raison: e.message }
+  }
+}
+
+/**
+ * Refait l'abonnement de zéro sur cet appareil.
+ *
+ * C'est le remède universel au « 403 invalid JWT » : il marche même sur les
+ * navigateurs qui n'exposent pas la clé d'origine de l'abonnement, donc là
+ * où la détection automatique ne peut rien voir.
+ */
+export async function reabonner(userId) {
+  if (!notificationsPossibles()) {
+    return { ok: false, raison: 'Ce navigateur ne sait pas afficher de notifications.' }
+  }
+  if (!cleVapidValide()) {
+    return { ok: false, raison: 'La clé publique VAPID manque ou est mal formée dans le site.' }
+  }
+  if (Notification.permission !== 'granted') {
+    return { ok: false, raison: "Accorde d'abord l'autorisation avec le bouton « Activer »." }
+  }
+  try {
+    const enregistrement = await enregistrerServiceWorker()
+    await navigator.serviceWorker.ready
+
+    const ancien = await enregistrement.pushManager.getSubscription()
+    if (ancien) {
+      await supabase.from('push_subscriptions').delete().eq('endpoint', ancien.endpoint)
+      await ancien.unsubscribe()
+    }
+
+    const neuf = await enregistrement.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: versOctets(CLE_PUBLIQUE),
+    })
+    const erreur = await enregistrerEnBase(neuf, userId)
+    return erreur ? { ok: false, raison: erreur.message } : { ok: true }
   } catch (e) {
     return { ok: false, raison: e.message }
   }
