@@ -1,14 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
+import MenuTache from './MenuTache'
 import { formatRelative, isPast } from '../../lib/dates'
 
 /**
- * Une tâche. Le bouton de droite affiche l'échéance et permet de la changer :
- * un clic ouvre un champ date, et le choix est enregistré immédiatement.
- * Une tâche sans date affiche un discret « + date » plutôt que rien du tout.
+ * Une tâche.
+ *
+ * Le titre s'affiche EN ENTIER, sur plusieurs lignes s'il le faut. Il était
+ * auparavant coupé par une ellipse : sur un téléphone de 390 px, « Réviser le
+ * chapitre 3 sur les suites numériques » devenait « Réviser le chapit… », et
+ * le seul moyen de lire la suite était de cocher la tâche pour la faire
+ * disparaître. La place a été prise sur les réglages, regroupés dans le
+ * bouton « ⋯ ».
+ *
+ * Le bouton de droite affiche l'échéance et permet de la changer d'un clic ;
+ * tout le reste — catégorie, rappels, révisions, suppression — est dans le
+ * menu, disponible même sur une tâche déjà cochée.
  */
-export default function TaskItem({ tache, teinte, etiquette, onCocher, onSupprimer, onDater, categories }) {
+export default function TaskItem({ tache, teinte, etiquette, badge, onCocher, onDater }) {
   const [editionDate, setEditionDate] = useState(false)
+  const [menuOuvert, setMenuOuvert] = useState(false)
   const champ = useRef(null)
+  const boutonMenu = useRef(null)
 
   useEffect(() => {
     if (editionDate) champ.current?.focus()
@@ -48,22 +60,9 @@ export default function TaskItem({ tache, teinte, etiquette, onCocher, onSupprim
         <span className="titre">{tache.title}</span>
       </label>
 
+      {badge && <span className="badge-revision">{badge}</span>}
       {etiquette && <span className="etiquette">{etiquette}</span>}
       {tache.quantity && <span className="quantite">{tache.quantity}</span>}
-
-      {categories && (
-        <select
-          className="choix-categorie"
-          value={tache.category_id ?? ''}
-          onChange={(e) => onDater?.(tache.id, { category_id: e.target.value || null })}
-          aria-label={`Catégorie de ${tache.title}`}
-        >
-          <option value="">Sans catégorie</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.chemin ?? c.name}</option>
-          ))}
-        </select>
-      )}
 
       {onDater && (
         editionDate ? (
@@ -95,9 +94,21 @@ export default function TaskItem({ tache, teinte, etiquette, onCocher, onSupprim
         <span className="echeance">{formatRelative(tache.due_date)}</span>
       )}
 
-      <button className="supprimer" onClick={() => onSupprimer(tache.id)} aria-label="Supprimer">
-        ✕
+      <button
+        ref={boutonMenu}
+        type="button"
+        className="bouton-reglage"
+        aria-haspopup="menu"
+        aria-expanded={menuOuvert}
+        aria-label={`Réglages de ${tache.title}`}
+        onClick={() => setMenuOuvert((v) => !v)}
+      >
+        ⋯
       </button>
+
+      {menuOuvert && (
+        <MenuTache tache={tache} ancre={boutonMenu} onFermer={() => setMenuOuvert(false)} />
+      )}
     </li>
   )
 }

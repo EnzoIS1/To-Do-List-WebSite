@@ -12,3 +12,7 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 .idea/
+
+# Banc d'essai local (faux Supabase) — jamais en production
+banc/
+vite.banc.mjs

@@ -4,14 +4,15 @@ import { useDonnees } from '../../data/DonneesProvider'
 
 /**
  * TaskList est le seul composant d'affichage qui touche au contexte : il y
- * prend la couleur de la catégorie de chaque tâche et la passe à la ligne,
- * pour que la coche s'y teinte. Ça évite de faire descendre `couleurDe` à
- * travers les six endroits qui affichent une liste.
+ * prend la couleur de la catégorie de chaque tâche et son éventuel rang de
+ * révision, et les passe à la ligne. Ça évite de faire descendre `couleurDe`
+ * à travers les six endroits qui affichent une liste.
+ *
+ * La suppression et le choix de la catégorie ne sont plus des props : ils
+ * vivent dans le menu « ⋯ » de chaque ligne, qui lit le contexte lui-même.
  */
-export default function TaskList({
-  taches, loading, onCocher, onSupprimer, vide, etiquette, onDater, categories,
-}) {
-  const { couleurDe } = useDonnees()
+export default function TaskList({ taches, loading, onCocher, vide, etiquette, onDater }) {
+  const { couleurDe, rangDeRevision } = useDonnees()
 
   if (loading) return <p className="etat">Chargement…</p>
   if (taches.length === 0) return <EmptyState>{vide ?? 'Rien à faire ici.'}</EmptyState>
@@ -24,10 +25,9 @@ export default function TaskList({
           tache={t}
           teinte={couleurDe(t)}
           etiquette={etiquette?.(t)}
+          badge={rangDeRevision(t)}
           onCocher={onCocher}
-          onSupprimer={onSupprimer}
           onDater={onDater}
-          categories={categories}
         />
       ))}
     </ul>

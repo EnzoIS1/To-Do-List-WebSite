@@ -221,13 +221,29 @@ body { background: var(--fond-page); }
 .tache {
   --teinte: var(--accent);
   --teinte-lisible: color-mix(in srgb, #fff var(--eclaircir), var(--teinte));
-  display: flex; align-items: center; gap: var(--gap-s);
+  display: flex; align-items: center; gap: var(--gap-s); flex-wrap: wrap;
   padding: 5px 6px; border-radius: 4px;
 }
 .tache:hover { background: var(--surface-2); }
 .tache + .tache { border-top: 1px solid var(--trait); border-radius: 0; }
-.tache label { display: flex; align-items: center; gap: var(--gap-s); flex: 1; min-width: 0; cursor: pointer; }
-.tache .titre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* `flex-start` et non `center` : un titre sur deux lignes doit rester aligné
+   sur sa coche, pas la faire glisser au milieu du bloc de texte. */
+/* `flex: 1 1 11em` : le titre garde une largeur utile et ce sont les
+   étiquettes qui passent à la ligne quand la colonne est trop étroite. */
+.tache label { display: flex; align-items: flex-start; gap: var(--gap-s); flex: 1 1 11em; min-width: 0; cursor: pointer; }
+/*
+ * Le titre s'affiche en entier.
+ * Il était coupé par `text-overflow: ellipsis`, ce qui rendait illisible
+ * toute tâche un peu longue sur un téléphone — et il n'y avait aucun moyen
+ * de lire la fin sans cocher la tâche.
+ *
+ * `break-word` et surtout PAS `anywhere` : les deux coupent un mot trop
+ * long pour la ligne, mais `anywhere` compte aussi ces coupures dans la
+ * largeur minimale du bloc. Dans une colonne étroite, le navigateur en
+ * conclut que le titre peut tenir en 4 caractères, laisse toute la place
+ * aux étiquettes, et découpe « raisonnement » en « raisonnem / ent ».
+ */
+.tache .titre { white-space: normal; overflow-wrap: break-word; }
 .tache.faite .titre { text-decoration: line-through; color: var(--discret); }
 .tache.en-retard .echeance { color: var(--alerte); font-weight: 600; }
 .echeance { font-size: 11.5px; color: var(--discret); white-space: nowrap; }
@@ -246,21 +262,20 @@ body { background: var(--fond-page); }
   border: 1px solid var(--accent); border-radius: 4px;
   background: var(--fond); color: var(--texte);
 }
-.choix-categorie {
-  font: inherit; font-size: 11px; max-width: 8.5em; padding: 1px 4px;
-  border: 1px solid transparent; border-radius: 4px;
-  background: none; color: var(--discret);
-}
-.choix-categorie:hover, .choix-categorie:focus {
-  border-color: var(--trait); background: var(--surface-2); color: var(--texte-doux);
-}
 .etiquette, .quantite {
   font-size: 10.5px; color: var(--discret); background: var(--surface-2);
   border: 1px solid var(--trait); border-radius: 3px; padding: 0 5px; white-space: nowrap;
 }
-.supprimer { background: none; border: 0; color: var(--trait); padding: 0 2px; }
-.tache:hover .supprimer { color: var(--discret); }
-.supprimer:hover { color: var(--alerte); }
+/* Rang d'une séance de révision : « révision 2/4 ». */
+.badge-revision {
+  font-size: 10.5px; white-space: nowrap; padding: 0 6px; border-radius: 9px;
+  background: color-mix(in srgb, var(--teinte-lisible) 20%, transparent);
+  color: var(--teinte-lisible); font-weight: 600;
+}
+/* Le « ⋯ » d'une ligne : discret au repos, jamais absent — sur un écran
+   tactile il n'y a pas de survol pour le faire apparaître. */
+.tache .bouton-reglage { flex: none; width: 24px; height: 24px; border-color: transparent; background: none; }
+.tache:hover .bouton-reglage { border-color: var(--trait); }
 
 /* ══ Ajout rapide ══ */
 .ajout-rapide { display: flex; gap: 6px; }
@@ -613,7 +628,8 @@ input[type="color"] {
 .coque-telephone .capture-valider { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
 .coque-telephone .capture-date, .coque-telephone .capture-categorie { padding: 9px 8px; min-height: 40px; }
 .coque-telephone .tache { min-height: 48px; padding: 6px 4px; }
-.coque-telephone .bouton-echeance, .coque-telephone .choix-categorie { min-height: 34px; }
+.coque-telephone .bouton-echeance { min-height: 34px; }
+.coque-telephone .tache .bouton-reglage { width: 34px; height: 34px; border-color: var(--trait); }
 .coque-telephone .page-reglages { padding: var(--gap-l) var(--gap-m); }
 .coque-telephone .page-reglages > * { max-width: none; }
 
@@ -777,3 +793,112 @@ input[type="color"] {
   background: color-mix(in srgb, #fff var(--eclaircir), var(--teinte));
 }
 .barre-tache.faite { opacity: .3; }
+
+
+/* ══════════════════════════════════════════════════════════════════
+   MENUS « ⋯ » — menu ancré sur grand écran, feuille sur téléphone
+
+   Le menu est rendu sous <body> par un portail. Le voile qui le porte
+   couvre tout l'écran : c'est lui qui reçoit le clic « à côté », ce qui
+   est bien plus fiable qu'un écouteur global comparant des cibles —
+   surtout au doigt, où la cible n'est jamais exactement l'élément visé.
+   ══════════════════════════════════════════════════════════════════ */
+.voile-menu { position: fixed; inset: 0; z-index: 1000; }
+.voile-menu.en-feuille {
+  display: flex; align-items: flex-end;
+  background: rgba(0, 0, 0, .38);
+  animation: voile-arrive .18s ease both;
+}
+@keyframes voile-arrive { from { opacity: 0 } to { opacity: 1 } }
+
+.menu-flottant {
+  position: fixed; min-width: 250px; max-width: min(340px, calc(100vw - 16px));
+  max-height: calc(100vh - 24px); overflow-y: auto;
+  display: flex; flex-direction: column; padding: 4px;
+  background: var(--surface); border: 1px solid var(--trait);
+  border-radius: var(--rayon); box-shadow: var(--ombre);
+}
+
+.feuille {
+  width: 100%; max-height: 82dvh; overflow-y: auto;
+  background: var(--surface); border-top: 1px solid var(--trait);
+  border-radius: 20px 20px 0 0; box-shadow: var(--ombre);
+  padding-bottom: calc(var(--gap-m) + env(safe-area-inset-bottom, 0px));
+  animation: feuille-monte .22s cubic-bezier(.25, .9, .35, 1) both;
+}
+@keyframes feuille-monte { from { transform: translateY(14%); opacity: .6 } to { transform: none; opacity: 1 } }
+@media (prefers-reduced-motion: reduce) {
+  .feuille, .voile-menu.en-feuille { animation: none; }
+}
+
+.feuille-tete {
+  display: flex; align-items: flex-start; gap: var(--gap-s);
+  padding: 12px var(--gap-m) 8px;
+  position: sticky; top: 0; z-index: 1;
+  background: var(--surface); border-bottom: 1px solid var(--trait);
+}
+.feuille-tete h3 { flex: 1; min-width: 0; font-size: 14px; overflow-wrap: anywhere; }
+.feuille-fermer {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid var(--trait); background: var(--surface-2); color: var(--texte-doux);
+}
+
+/* ── Contenu commun aux deux formes ── */
+.menu-corps { display: flex; flex-direction: column; gap: 2px; padding: 6px; }
+.menu-champ {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--gap-m);
+  padding: 7px 10px; font-size: 13px; color: var(--texte-doux);
+}
+.menu-champ > span { flex: none; }
+.menu-champ input:not([type="color"]), .menu-champ select {
+  font: inherit; font-size: 13px; min-width: 0; flex: 1; max-width: 62%;
+  padding: 6px 8px; color-scheme: inherit;
+  border: 1px solid var(--trait); border-radius: var(--rayon);
+  background: var(--fond); color: var(--texte);
+}
+.menu-bloc { border-top: 1px solid var(--trait); margin-top: 4px; padding-top: 6px; }
+.menu-bloc h4 {
+  margin: 0 0 4px; padding: 0 10px;
+  font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--discret);
+}
+.menu-puces { display: flex; flex-wrap: wrap; gap: 5px; padding: 2px 10px 6px; }
+.puce {
+  padding: 7px 11px; font-size: 12.5px; border-radius: 999px;
+  border: 1px solid var(--trait); background: var(--surface-2); color: var(--texte-doux);
+}
+.puce:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.puce:disabled { opacity: .4; cursor: not-allowed; }
+.puce.pleine { background: var(--accent); border-color: var(--accent); color: var(--fond); font-weight: 600; }
+.menu-note { margin: 2px 10px 6px; font-size: 12px; color: var(--discret); line-height: 1.45; }
+.menu-note.erreur { color: var(--alerte); }
+.menu-note code { font-size: 11px; }
+.menu-liste { list-style: none; margin: 0 0 6px; padding: 0 4px; }
+.menu-liste li {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--gap-s);
+  padding: 5px 6px; font-size: 12.5px; color: var(--texte-doux);
+}
+.menu-liste li + li { border-top: 1px solid var(--trait); }
+.menu-liste em { font-style: normal; color: var(--discret); }
+.menu-liste .fait { text-decoration: line-through; color: var(--discret); }
+
+/* Sur téléphone, tout ce qui se touche fait au moins 44 px. */
+.feuille .menu-ligne, .feuille .menu-champ { min-height: 46px; font-size: 14px; }
+.feuille .puce { min-height: 42px; font-size: 13.5px; }
+.feuille .menu-champ input:not([type="color"]), .feuille .menu-champ select { min-height: 40px; font-size: 14px; }
+
+/* ══ Bandeau des rappels arrivés à échéance ══ */
+.bandeau-rappels { margin: 0 var(--gap-m) var(--gap-s); }
+.tableau > .bandeau-rappels { margin: 0 var(--gap-m) var(--gap-s); }
+.bandeau-rappels ul { list-style: none; margin: 0; padding: 0; }
+.bandeau-rappels li {
+  display: flex; align-items: center; gap: var(--gap-m);
+  padding: 9px var(--gap-m);
+  background: var(--accent-doux); border: 1px solid var(--accent);
+  border-radius: var(--rayon-panneau, var(--rayon));
+}
+.bandeau-rappels li + li { margin-top: 5px; }
+.rappel-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.rappel-texte strong { font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+.rappel-echeance { font-size: 11.5px; color: var(--texte-doux); }
+.ecran-corps > .bandeau-rappels { margin: 0 0 var(--gap-s); }

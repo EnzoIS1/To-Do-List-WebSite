@@ -64,7 +64,7 @@ export default function EcranCalendrier() {
           <h2 className="titre-bloc">{formatLong(jourChoisi)} · {duJour.length}</h2>
           <TaskList
             taches={duJour} loading={loading} onCocher={cocher}
-            onSupprimer={supprimer} onDater={modifier}
+            onDater={modifier}
             vide="Aucune tâche ce jour-là."
           />
         </div>

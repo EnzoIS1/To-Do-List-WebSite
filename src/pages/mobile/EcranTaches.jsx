@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useDonnees } from '../../data/DonneesProvider'
 import TaskList from '../../components/tasks/TaskList'
 import BarreCapture from '../../components/capture/BarreCapture'
+import BandeauRappels from '../../components/rappels/BandeauRappels'
 import { today, addDays, formatLong, formatRelative, isToday, isPast } from '../../lib/dates'
 
 /**
@@ -63,12 +64,14 @@ export default function EcranTaches() {
       </header>
 
       <div className="ecran-corps">
+        <BandeauRappels />
+
         {enRetard.length > 0 && (
           <>
             <h2 className="titre-bloc alerte">En retard · {enRetard.length}</h2>
             <TaskList
               taches={enRetard} loading={false} onCocher={cocher}
-              onSupprimer={supprimer} onDater={modifier} vide=""
+              onDater={modifier} vide=""
             />
           </>
         )}
@@ -76,7 +79,7 @@ export default function EcranTaches() {
         <h2 className="titre-bloc">À cocher · {duJour.length - faites}</h2>
         <TaskList
           taches={duJour} loading={loading} onCocher={cocher}
-          onSupprimer={supprimer} onDater={modifier}
+          onDater={modifier}
           vide={isToday(jour) ? "Rien de prévu aujourd'hui. Profites-en." : 'Rien de prévu ce jour-là.'}
         />
 
@@ -87,7 +90,7 @@ export default function EcranTaches() {
             </h2>
             <TaskList
               taches={suivantes} loading={false} onCocher={cocher}
-              onSupprimer={supprimer} onDater={modifier} vide=""
+              onDater={modifier} vide=""
             />
           </>
         )}

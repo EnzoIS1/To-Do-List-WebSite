@@ -38,7 +38,6 @@ export default function ShoppingPanel({
         taches={articles}
         loading={loading}
         onCocher={cocher}
-        onSupprimer={supprimer}
         vide="Le panier est vide."
       />
     </Panneau>

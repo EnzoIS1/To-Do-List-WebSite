@@ -70,6 +70,22 @@ export function useTasks(filtres = {}) {
     return { data, error }
   }, [user])
 
+  /**
+   * Crée plusieurs tâches d'un coup — utilisé par les révisions, qui
+   * arrivent par séries de trois à sept. Un seul aller-retour réseau au
+   * lieu de sept, et surtout : soit la série entière est créée, soit rien,
+   * ce qui évite les plannings de révision à moitié écrits.
+   */
+  const creerPlusieurs = useCallback(async (liste) => {
+    if (liste.length === 0) return { data: [], error: null }
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert(liste.map((champs) => ({ ...champs, user_id: user.id })))
+      .select()
+    if (!error) setTasks((t) => [...t, ...(data ?? [])])
+    return { data, error }
+  }, [user])
+
   const modifier = useCallback(async (id, champs) => {
     const { data, error } = await supabase
       .from('tasks').update(champs).eq('id', id).select().single()
@@ -86,5 +102,15 @@ export function useTasks(filtres = {}) {
     return { error }
   }, [])
 
-  return { tasks, loading, error, recharger, creer, modifier, cocher, supprimer }
+  const supprimerPlusieurs = useCallback(async (ids) => {
+    if (ids.length === 0) return { error: null }
+    const { error } = await supabase.from('tasks').delete().in('id', ids)
+    if (!error) setTasks((t) => t.filter((x) => !ids.includes(x.id)))
+    return { error }
+  }, [])
+
+  return {
+    tasks, loading, error, recharger,
+    creer, creerPlusieurs, modifier, cocher, supprimer, supprimerPlusieurs,
+  }
 }

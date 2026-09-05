@@ -53,7 +53,7 @@ export default function EcranListes() {
           categorieCourses ? (
             <TaskList
               taches={courses} loading={loading} onCocher={cocher}
-              onSupprimer={supprimer} vide="Le panier est vide."
+              vide="Le panier est vide."
             />
           ) : (
             <div className="bloc-vide">
@@ -68,7 +68,7 @@ export default function EcranListes() {
         {vue === 'notes' && (
           <TaskList
             taches={notes} loading={loading} onCocher={cocher}
-            onSupprimer={supprimer} onDater={modifier} categories={choixCategories}
+            onDater={modifier}
             vide="Tout est rangé."
           />
         )}

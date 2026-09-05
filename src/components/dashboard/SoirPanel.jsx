@@ -31,7 +31,6 @@ export default function SoirPanel({
         taches={duJour}
         loading={loading}
         onCocher={cocher}
-        onSupprimer={supprimer}
         onDater={dater}
         vide="Rien de prévu ce jour-là."
       />
@@ -45,7 +44,6 @@ export default function SoirPanel({
             taches={demain}
             loading={false}
             onCocher={cocher}
-            onSupprimer={supprimer}
             onDater={dater}
             vide=""
           />

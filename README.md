@@ -19,7 +19,11 @@ Puis, dans **SQL Editor**, exécute les migrations **dans l'ordre** :
 supabase/migrations/0001_schema.sql     -- les tables et les index
 supabase/migrations/0002_rls.sql        -- le cloisonnement des comptes
 supabase/migrations/0003_triggers.sql   -- profil auto, updated_at, completed_at
+supabase/migrations/0004_revision_rappels.sql  -- les colonnes des révisions
 ```
+
+`0004` peut être relancée sans risque : chaque instruction est en
+`add column if not exists`.
 
 Après `0002`, le tableau de bord ne doit plus signaler aucune table du schéma
 `public` sans sécurité activée.

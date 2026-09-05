@@ -27,9 +27,7 @@ export default function InboxPanel({ taches, loading, cocher, supprimer, ranger,
         taches={aTrier}
         loading={loading}
         onCocher={cocher}
-        onSupprimer={supprimer}
         onDater={ranger}
-        categories={categories}
         vide="Tout est rangé."
       />
     </Panneau>

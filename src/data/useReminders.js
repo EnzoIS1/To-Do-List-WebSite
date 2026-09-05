@@ -1,54 +1,83 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
 import { today } from '../lib/dates'
 
 /**
- * Rappels « dans le site » (v1).
+ * Rappels « dans le site ».
  *
- * Il n'y a pas de tâche planifiée côté serveur en v1 : au chargement, on
- * demande les rappels dont la date est arrivée et qui n'ont pas encore été
- * vus. C'est ce qui alimente le badge de l'en-tête.
+ * Il n'y a pas de tâche planifiée côté serveur : au chargement, on demande
+ * TOUS les rappels du compte — passés et à venir. C'est volontaire et ça
+ * reste léger : un rappel pèse une cinquantaine d'octets et il y en a au
+ * plus quelques dizaines à la fois. En échange, le menu d'une tâche peut
+ * afficher ses rappels sans une requête de plus à chaque ouverture.
  *
- * Le passage aux e-mails (v2) ne changera rien ici : il ajoutera une tâche
- * Supabase Cron qui lira les mêmes lignes avec channel = 'email'.
+ * Les rappels dont le jour est arrivé alimentent le bandeau ; les autres
+ * attendent. Le jour de comparaison est calculé en heure locale (today()),
+ * jamais avec toISOString() — voir l'avertissement de lib/dates.js.
+ *
+ * Le passage aux e-mails plus tard ne changera rien ici : il ajoutera une
+ * tâche planifiée Supabase qui lira les mêmes lignes avec channel = 'email'.
  */
 export function useReminders() {
   const { user } = useAuth()
-  const [reminders, setReminders] = useState([])
+  const [rappels, setRappels] = useState([])
   const [loading, setLoading] = useState(true)
 
   const recharger = useCallback(async () => {
-    if (!user) { setReminders([]); setLoading(false); return }
+    if (!user) { setRappels([]); setLoading(false); return }
     setLoading(true)
     const { data } = await supabase
       .from('reminders')
-      .select('*, tasks(id, title, due_date, is_done)')
+      .select('*')
       .eq('channel', 'in_app')
-      .is('seen_at', null)
-      .lte('remind_on', today())
       .order('remind_on', { ascending: true })
-    // On ignore les rappels dont la tâche a été cochée entre-temps.
-    setReminders((data ?? []).filter((r) => r.tasks && !r.tasks.is_done))
+    setRappels(data ?? [])
     setLoading(false)
   }, [user])
 
   useEffect(() => { recharger() }, [recharger])
 
   const creer = useCallback(async ({ taskId, remindOn }) => {
+    // Deux rappels le même jour pour la même tâche n'apportent rien.
+    const existe = rappels.some((r) => r.task_id === taskId && r.remind_on === remindOn)
+    if (existe) return { data: null, error: null }
+
     const { data, error } = await supabase
       .from('reminders')
       .insert({ user_id: user.id, task_id: taskId, remind_on: remindOn })
       .select().single()
+    if (!error && data) setRappels((r) => [...r, data])
     return { data, error }
-  }, [user])
+  }, [user, rappels])
 
-  const marquerVu = useCallback(async (id) => {
-    const { error } = await supabase
-      .from('reminders').update({ seen_at: new Date().toISOString() }).eq('id', id)
-    if (!error) setReminders((r) => r.filter((x) => x.id !== id))
+  const supprimer = useCallback(async (id) => {
+    const { error } = await supabase.from('reminders').delete().eq('id', id)
+    if (!error) setRappels((r) => r.filter((x) => x.id !== id))
     return { error }
   }, [])
 
-  return { reminders, loading, recharger, creer, marquerVu }
+  const marquerVu = useCallback(async (id) => {
+    const vu = new Date().toISOString()
+    const { error } = await supabase.from('reminders').update({ seen_at: vu }).eq('id', id)
+    if (!error) setRappels((r) => r.map((x) => (x.id === id ? { ...x, seen_at: vu } : x)))
+    return { error }
+  }, [])
+
+  /** Les rappels arrivés à échéance et pas encore écartés. */
+  const echus = useMemo(() => {
+    const jour = today()
+    return rappels.filter((r) => !r.seen_at && r.remind_on <= jour)
+  }, [rappels])
+
+  const rappelsDe = useCallback(
+    (taskId) => rappels.filter((r) => r.task_id === taskId),
+    [rappels]
+  )
+
+  return {
+    rappels, rappelsEchus: echus, rappelsDe,
+    rappelsLoading: loading, rechargerRappels: recharger,
+    creerRappel: creer, supprimerRappel: supprimer, marquerRappelVu: marquerVu,
+  }
 }

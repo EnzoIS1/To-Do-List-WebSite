@@ -10,6 +10,7 @@ import ShoppingPanel from '../components/dashboard/ShoppingPanel'
 import InboxPanel from '../components/dashboard/InboxPanel'
 import CategoryColumn from '../components/categories/CategoryColumn'
 import BarreCapture from '../components/capture/BarreCapture'
+import BandeauRappels from '../components/rappels/BandeauRappels'
 import { filtrer } from '../components/calendar/FiltreCategories'
 import { today, monthOf } from '../lib/dates'
 
@@ -184,6 +185,8 @@ export default function DashboardPage() {
           </button>
         </div>
       )}
+
+      <BandeauRappels />
 
       <div className="tableau-grille" ref={containerRef}>
         {mounted && (
