@@ -36,43 +36,102 @@ button { font: inherit; cursor: pointer; }
 }
 .bouton-doux:hover { background: var(--accent-doux); color: var(--accent); border-color: var(--accent); }
 
-/* ══ Coque : le rail étroit + la page ══
-   Le cadre est détaché des bords de la fenêtre et ses angles sont adoucis,
-   comme sur les tableaux de bord de référence. Le fond de page est un ton
-   plus sombre que les panneaux, ce qui fait ressortir le cadre. */
+/* ══ Coque : le rail flottant + la carte ══
+
+   ⚠️ LE BUG DE DÉFILEMENT — à ne pas réintroduire.
+
+   La coque était une grille `64px minmax(0,1fr)` en `overflow: hidden`, et
+   `.zone-page` en était une case. Or une case de grille a `min-height: auto`
+   par défaut : elle grandit jusqu'à contenir tout son contenu au lieu de
+   s'arrêter à la hauteur de la rangée. La page mesurait donc 1064 px dans
+   une coque de 578, `.tableau-grille` n'avait rien qui dépasse — donc rien
+   à faire défiler — et l'`overflow: hidden` de la coque coupait purement et
+   simplement les 486 px du bas. On pouvait rouler la molette sans que rien
+   ne bouge : la moitié du tableau de bord était inatteignable.
+
+   La règle : chaque conteneur de la chaîne (`.coque` → `.carte-app` →
+   `.zone-page` → `.tableau`) doit porter `min-height: 0`. C'est ce qui rend
+   sa hauteur à `.tableau-grille` et lui redonne quelque chose à défiler. */
 body { background: var(--fond-page); }
 .coque {
-  display: grid; grid-template-columns: 64px minmax(0, 1fr);
-  height: calc(100% - 20px); margin: 10px;
+  display: flex; align-items: stretch; gap: 10px;
+  height: calc(100% - 20px); margin: 10px; min-height: 0;
+}
+.carte-app {
+  flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column;
   background: var(--fond); border: 1px solid var(--trait);
   border-radius: 18px; overflow: hidden;
 }
+.carte-app > .zone-page { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 
+/* ══ Le rail ══
+   Une pastille détachée, posée à côté de la carte plutôt que découpée
+   dedans. Icônes seules : sous 64 px de large, le libellé tenait en 9 px de
+   haut, illisible, et volait la place de la cible tactile. L'infobulle et
+   l'`aria-label` disent la même chose sans rien encombrer. */
 .rail {
+  flex: none; width: 56px;
   display: flex; flex-direction: column; justify-content: space-between; align-items: center;
-  padding: var(--gap-m) 0; background: var(--surface-rail); border-right: 1px solid var(--trait);
+  padding: 10px 0; min-height: 0;
+  background: var(--surface-rail); border: 1px solid var(--trait);
+  border-radius: 22px; box-shadow: var(--ombre-panneau);
 }
-.rail-marque { color: var(--accent); display: grid; place-items: center; }
-.rail-bas { display: flex; flex-direction: column; gap: var(--gap-xs); }
+.rail-haut, .rail-bas, .rail-groupe { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.rail-haut { gap: 14px; }
 .rail-lien {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  width: 48px; padding: 8px 2px; border: 0; background: none;
-  color: var(--discret); text-decoration: none; border-radius: var(--rayon);
-  font-size: 16px; line-height: 1;
+  display: grid; place-items: center;
+  width: 40px; height: 40px; border: 0; background: none;
+  color: var(--discret); text-decoration: none; border-radius: 13px;
+  transition: background-color .18s ease, color .18s ease;
 }
-.rail-lien:hover, .rail-lien.active { background: var(--accent-doux); color: var(--accent); }
-.rail-texte { font-size: 9px; letter-spacing: .02em; }
+.rail-lien:hover { background: var(--accent-doux); color: var(--accent); }
+/* L'entrée courante est un carré plein, comme sur la référence. */
+.rail-lien.active { background: var(--accent); color: var(--fond); }
+
+/* Le bouton d'ajout : première chose du rail, et la seule qui soit pleine
+   au repos — c'est l'action, pas une destination. */
+.rail-ajout {
+  display: grid; place-items: center;
+  width: 40px; height: 40px; border: 0; border-radius: 13px;
+  background: var(--accent); color: var(--fond);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--accent) 35%, transparent);
+  transition: transform .15s ease, filter .15s ease;
+}
+.rail-ajout:hover { filter: brightness(1.08); }
+.rail-ajout.actif { transform: rotate(45deg); }
+
+.rail-avatar {
+  display: grid; place-items: center;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--surface-2); border: 1px solid var(--trait);
+  color: var(--texte-doux); font-size: 12.5px; font-weight: 700; letter-spacing: .02em;
+  text-decoration: none;
+}
+.rail-avatar:hover, .rail-avatar.active { border-color: var(--accent); color: var(--accent); }
+
+/* ══ Pages plein écran (calendrier, listes) ══ */
+.page-pleine { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: var(--gap-m); gap: var(--gap-s); }
+.page-tete { flex: none; }
+.page-tete .segments { max-width: 460px; }
+.page-corps { flex: 1; min-height: 0; display: flex; }
+.page-corps > * { flex: 1; min-width: 0; min-height: 0; }
+.page-corps.deux-colonnes { gap: var(--gap-m); }
+.page-corps .colonne-large { flex: 2.2; min-width: 0; }
+.page-corps .colonne-etroite { flex: 1; min-width: 260px; }
+.page-calendrier .grille { min-height: 420px; }
 
 /* ══ Tableau de bord ══
    Depuis que les panneaux se déplacent et se redimensionnent librement, la
    grille n'est plus figée : la page défile et chaque panneau occupe la case
    que l'utilisateur lui a donnée. */
-.tableau { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.tableau { display: flex; flex-direction: column; flex: 1; height: 100%; min-height: 0; }
 .tableau-barre {
   display: flex; align-items: center; gap: var(--gap-s);
   padding: var(--gap-m) var(--gap-m) var(--gap-s);
 }
-.tableau-barre .barre-capture { flex: 1; min-width: 0; }
+.tableau-titres { flex: 1; min-width: 0; }
+.tableau-titres h1 { font-size: 18px; }
+.tableau-titres .sous-titre { font-size: 12.5px; }
 .bouton-personnaliser { flex: none; padding: 9px 14px; }
 .bouton-personnaliser.actif {
   background: var(--accent); color: var(--fond); border-color: var(--accent); font-weight: 600;
@@ -902,3 +961,21 @@ input[type="color"] {
 .rappel-texte strong { font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
 .rappel-echeance { font-size: 11.5px; color: var(--texte-doux); }
 .ecran-corps > .bandeau-rappels { margin: 0 0 var(--gap-s); }
+
+
+/* ══ La fenêtre du bouton « + » ══
+   Elle réutilise le menu flottant : même portail, même voile, donc elle
+   passe au-dessus de la grille déplaçable sans qu'aucun panneau ne puisse
+   la découper. La barre de saisie y est empilée, pas alignée. */
+.fenetre-ajout { padding: 10px; min-width: 270px; }
+.barre-capture.en-fenetre { border-radius: var(--rayon); padding: 6px 6px 6px 12px; }
+.barre-capture.en-fenetre .capture-options { padding-top: 2px; }
+.barre-capture.en-fenetre .capture-date,
+.barre-capture.en-fenetre .capture-categorie { flex: 1; max-width: none; min-height: 36px; }
+.barre-capture.en-fenetre .capture-valider { width: 34px; height: 34px; border-radius: 50%; }
+
+/* La colonne des catégories est un panneau comme les autres : elle en avait
+   besoin pour recevoir la poignée de déplacement `.panneau-tete`. Son corps
+   ne prend pas la marge habituelle, les cartes ont déjà la leur. */
+.panneau-categories .panneau-corps { padding: var(--gap-s); overflow: hidden; }
+.panneau-categories .colonne-categories { height: 100%; }

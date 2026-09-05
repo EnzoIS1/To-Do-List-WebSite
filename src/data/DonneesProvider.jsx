@@ -49,7 +49,17 @@ export function DonneesProvider({ children }) {
    * fait n'a pas compté. Seules les séances à venir sont remplacées.
    */
   const activerRevision = useCallback(async (tache, dateExamen) => {
-    const depart = tache.due_date && tache.due_date > today() ? tache.due_date : today()
+    /*
+     * Le plan part TOUJOURS d'aujourd'hui, jamais de l'échéance de la tâche.
+     *
+     * Partir de l'échéance paraissait logique — on révise ce qu'on vient
+     * d'apprendre — mais ça donnait un résultat absurde : activer la révision
+     * d'un devoir noté pour dans trois semaines ne créait rien avant ces trois
+     * semaines. Or on active la révision au moment où on décide de réviser,
+     * c'est-à-dire maintenant. Le temps disponible court donc de ce jour à
+     * l'examen.
+     */
+    const depart = today()
     const jours = datesDeRevision(depart, dateExamen)
     if (jours.length === 0) {
       return { error: { message: "L'examen est trop proche pour étaler des révisions." } }

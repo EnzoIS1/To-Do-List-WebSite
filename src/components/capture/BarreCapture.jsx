@@ -12,7 +12,7 @@ import { useEstTelephone } from '../../lib/useEcran'
  */
 export default function BarreCapture({
   onCreer, categories = [], dateParDefaut = null, categorieParDefaut = null,
-  placeholder = 'Ajouter une tâche…', compacte = false,
+  placeholder = 'Ajouter une tâche…', compacte = false, pile = false, autoFocus = false,
 }) {
   const [titre, setTitre] = useState('')
   const [date, setDate] = useState(dateParDefaut ?? '')
@@ -27,7 +27,22 @@ export default function BarreCapture({
    * réglages passent donc sur une seconde ligne, qui n'apparaît qu'une fois
    * qu'on écrit. Sur grand écran il y a la place : tout reste visible.
    */
-  const optionsVisibles = !telephone || deplie || titre.length > 0
+  const optionsVisibles = pile || !telephone || deplie || titre.length > 0
+
+  /*
+   * Dans la fenêtre du bouton « + », le champ est la seule raison d'avoir
+   * ouvert la fenêtre : on y met le curseur tout de suite.
+   *
+   * Le `requestAnimationFrame` n'est pas une superstition : <MenuFlottant>
+   * mesure la fenêtre dans un effet de mise en page pour la positionner, et
+   * ce calcul s'exécute APRÈS celui-ci. Sans l'attente d'une image, le focus
+   * est posé puis perdu au repositionnement.
+   */
+  useEffect(() => {
+    if (!autoFocus) return
+    const t = requestAnimationFrame(() => champ.current?.focus())
+    return () => cancelAnimationFrame(t)
+  }, [autoFocus])
 
   // Le contexte de l'écran change (autre jour choisi, autre onglet) : on suit.
   useEffect(() => { setDate(dateParDefaut ?? '') }, [dateParDefaut])
@@ -49,7 +64,7 @@ export default function BarreCapture({
 
   return (
     <form
-      className={`barre-capture${telephone ? ' empilee' : ''}${compacte ? ' compacte' : ''}`}
+      className={`barre-capture${telephone || pile ? ' empilee' : ''}${compacte ? ' compacte' : ''}${pile ? ' en-fenetre' : ''}`}
       onSubmit={envoyer}
     >
       <div className="capture-ligne">
@@ -62,7 +77,7 @@ export default function BarreCapture({
           placeholder={placeholder}
           aria-label="Nouvelle tâche"
         />
-        {telephone && (
+        {(telephone || pile) && (
           <button type="submit" className="capture-valider" aria-label="Ajouter la tâche">+</button>
         )}
       </div>
@@ -88,7 +103,7 @@ export default function BarreCapture({
             ))}
           </select>
         )}
-        {!telephone && (
+        {!telephone && !pile && (
           <button type="submit" className="capture-valider" aria-label="Ajouter la tâche">+</button>
         )}
       </div>

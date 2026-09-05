@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDonnees } from '../../data/DonneesProvider'
 import TaskList from '../../components/tasks/TaskList'
 import BarreCapture from '../../components/capture/BarreCapture'
@@ -10,14 +10,16 @@ const VUES = [
   { id: 'categories', nom: 'Catégories' },
 ]
 
-export default function EcranListes() {
+export default function EcranListes({ vueInitiale = 'courses' }) {
   const {
     tasks, loading, creer, modifier, cocher, supprimer,
     categorieCourses, arbreSansCourses, choixCategories,
     creerCategorie, modifierCategorie, supprimerCategorie,
   } = useDonnees()
 
-  const [vue, setVue] = useState('courses')
+  const [vue, setVue] = useState(vueInitiale)
+  // La barre d'onglets peut mener ici sur un segment précis.
+  useEffect(() => { setVue(vueInitiale) }, [vueInitiale])
 
   const courses = categorieCourses
     ? tasks.filter((t) => t.category_id === categorieCourses.id)

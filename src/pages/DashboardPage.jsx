@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ResponsiveGridLayout, useContainerWidth, verticalCompactor } from 'react-grid-layout'
+import { ResponsiveGridLayout, useContainerWidth, noCompactor } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 
 import { useDonnees } from '../data/DonneesProvider'
@@ -9,7 +9,7 @@ import SoirPanel from '../components/dashboard/SoirPanel'
 import ShoppingPanel from '../components/dashboard/ShoppingPanel'
 import InboxPanel from '../components/dashboard/InboxPanel'
 import CategoryColumn from '../components/categories/CategoryColumn'
-import BarreCapture from '../components/capture/BarreCapture'
+import Panneau from '../components/dashboard/Panneau'
 import BandeauRappels from '../components/rappels/BandeauRappels'
 import { filtrer } from '../components/calendar/FiltreCategories'
 import { today, monthOf } from '../lib/dates'
@@ -128,26 +128,39 @@ export default function DashboardPage() {
         supprimer={supprimer} ranger={modifier} categories={choixCategories}
       />
     ),
+    /*
+     * ⚠️ La colonne des catégories DOIT être enveloppée dans un <Panneau>.
+     *
+     * C'était le vrai bug : la poignée de déplacement de la grille est
+     * `.panneau-tete`, et CategoryColumn n'en avait pas — elle rendait sa
+     * propre pile de cartes, sans en-tête. La colonne n'était donc pas
+     * saisissable du tout. Pour la « déplacer », il fallait bouger les
+     * panneaux voisins jusqu'à ce que le tassement la pousse ailleurs.
+     *
+     * Tout contenu ajouté à la grille doit passer par <Panneau>, sinon il
+     * héritera silencieusement du même défaut.
+     */
     categories: (
-      <CategoryColumn
-        arbre={arbreSansCourses} taches={tasks} loading={loading}
-        creer={creer} cocher={cocher} supprimer={supprimer}
-        modifier={modifierCategorie} dater={modifier}
-        creerCategorie={() => demanderCategorie(null)}
-        creerSousCategorie={(parent) => demanderCategorie(parent)}
-        supprimerCategorie={(categorie) => supprimerCategorie(categorie.id)}
-      />
+      <Panneau titre="Catégories" className="panneau-categories">
+        <CategoryColumn
+          arbre={arbreSansCourses} taches={tasks} loading={loading}
+          creer={creer} cocher={cocher} supprimer={supprimer}
+          modifier={modifierCategorie} dater={modifier}
+          creerCategorie={() => demanderCategorie(null)}
+          creerSousCategorie={(parent) => demanderCategorie(parent)}
+          supprimerCategorie={(categorie) => supprimerCategorie(categorie.id)}
+        />
+      </Panneau>
     ),
   }
 
   return (
     <div className={`tableau${personnalise ? ' en-edition' : ''}`}>
       <div className="tableau-barre">
-        <BarreCapture
-          onCreer={creer}
-          categories={choixCategories}
-          dateParDefaut={jourChoisi}
-        />
+        <div className="tableau-titres">
+          <h1>Tableau de bord</h1>
+          <p className="sous-titre">Tout ce qui compte, sur un seul écran.</p>
+        </div>
         <button
           type="button"
           className={`bouton-doux bouton-personnaliser${personnalise ? ' actif' : ''}`}
@@ -198,7 +211,17 @@ export default function DashboardPage() {
             rowHeight={26}
             margin={[12, 12]}
             containerPadding={[0, 0]}
-            compactor={verticalCompactor}
+            /*
+             * `noCompactor` et non `verticalCompactor`.
+             *
+             * Le tassement vertical remontait tous les panneaux dès qu'une
+             * place se libérait. Conséquence : la colonne des catégories,
+             * haute de 26 lignes, servait de mur — impossible de la bouger
+             * sans déplacer d'abord tout ce qui la retenait. Sans tassement,
+             * chaque panneau reste exactement là où on le lâche, et les
+             * collisions se contentent d'écarter le voisin.
+             */
+            compactor={noCompactor}
             /* On n'attrape que l'en-tête : sans ça, cocher une tâche
                déclencherait un déplacement du panneau. */
             dragConfig={{ enabled: personnalise, handle: '.panneau-tete' }}

@@ -153,14 +153,14 @@ export default function MenuTache({ tache, ancre, onFermer }) {
               <input
                 type="date"
                 value={examen}
-                min={tache.due_date ?? today()}
+                min={today()}
                 onChange={(e) => { setExamen(e.target.value); setErreur(null) }}
               />
             </label>
 
             {examen && (
               <p className="menu-note">
-                {resumeDeRevision(tache.due_date ?? today(), examen)}
+                {resumeDeRevision(today(), examen)}
               </p>
             )}
             {erreur && <p className="menu-note erreur">{erreur}</p>}

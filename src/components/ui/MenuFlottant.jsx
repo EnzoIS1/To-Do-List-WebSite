@@ -27,7 +27,7 @@ import { useEstTelephone } from '../../lib/useEcran'
  * et le pouce n'a pas à monter chercher un menu de 210 px.
  * ─────────────────────────────────────────────────────────────────────
  */
-export default function MenuFlottant({ ancre, titre, onFermer, children }) {
+export default function MenuFlottant({ ancre, titre, onFermer, children, cote = 'dessous' }) {
   const surTelephone = useEstTelephone()
   const boite = useRef(null)
   const [pos, setPos] = useState(null)
@@ -41,16 +41,25 @@ export default function MenuFlottant({ ancre, titre, onFermer, children }) {
     const menu = boite.current?.getBoundingClientRect()
     if (!bouton || !menu) return
     const marge = 8
-    const gauche = Math.max(
-      marge,
-      Math.min(bouton.right - menu.width, window.innerWidth - marge - menu.width)
-    )
+    const borne = (v, max) => Math.max(marge, Math.min(v, max - marge - menu.width))
+    const borneH = (v) => Math.max(marge, Math.min(v, window.innerHeight - marge - menu.height))
+
+    // `cote="droite"` : la fenêtre sort SUR LE CÔTÉ du bouton, pas en
+    // dessous. C'est ce qu'il faut pour un rail vertical — une fenêtre
+    // ouverte sous un bouton de rail part vers le bas de l'écran et paraît
+    // détachée de la barre qui l'a ouverte.
+    if (cote === 'droite') {
+      setPos({ left: borne(bouton.right + 10, window.innerWidth), top: borneH(bouton.top) })
+      return
+    }
+
+    const gauche = borne(bouton.right - menu.width, window.innerWidth)
     const dessous = bouton.bottom + 6
     const haut = dessous + menu.height > window.innerHeight - marge
       ? Math.max(marge, bouton.top - 6 - menu.height)
       : dessous
     setPos({ left: gauche, top: haut })
-  }, [surTelephone, ancre])
+  }, [surTelephone, ancre, cote])
 
   useEffect(() => {
     const touche = (e) => { if (e.key === 'Escape') onFermer() }

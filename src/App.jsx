@@ -6,6 +6,8 @@ import RedirectIfAuth from './auth/RedirectIfAuth'
 import LoginPage from './auth/LoginPage'
 import AppShell from './components/layout/AppShell'
 import DashboardPage from './pages/DashboardPage'
+import PageCalendrier from './pages/PageCalendrier'
+import PageListes from './pages/PageListes'
 import EcranTaches from './pages/mobile/EcranTaches'
 import EcranCalendrier from './pages/mobile/EcranCalendrier'
 import EcranListes from './pages/mobile/EcranListes'
@@ -17,19 +19,25 @@ import { useEstTelephone } from './lib/useEcran'
  * HashRouter et non BrowserRouter — GitHub Pages n'a pas de serveur pour
  * réécrire les URLs.
  *
- * Une seule application, deux mises en page. Sur grand écran l'accueil est le
- * tableau de bord, et les routes propres au téléphone y ramènent. Sur
- * téléphone l'accueil est « Ce soir », et le calendrier et les listes ont
- * chacun leur onglet — les cinq panneaux du bureau ne tiennent pas sur
- * 390 px sans devenir une page à faire défiler sans fin.
+ * Une seule application, deux mises en page. Chaque route a sa version
+ * téléphone et sa version bureau, choisies ici et nulle part ailleurs.
+ *
+ * Avant, `/calendrier` et `/listes` renvoyaient au tableau de bord sur grand
+ * écran, au prétexte que tout y était déjà. C'était vrai en information,
+ * faux en usage : le calendrier d'un panneau de 8 colonnes ne montre pas les
+ * mêmes choses qu'un calendrier plein écran, et le rail avait des entrées
+ * qui ne menaient nulle part.
  */
 function Accueil() {
   return useEstTelephone() ? <EcranTaches /> : <DashboardPage />
 }
 
-/** Sur grand écran, ces routes n'ont pas lieu d'être : tout est déjà à l'écran. */
-function SiTelephone({ children }) {
-  return useEstTelephone() ? children : <Navigate to="/" replace />
+function Calendrier() {
+  return useEstTelephone() ? <EcranCalendrier /> : <PageCalendrier />
+}
+
+function Listes({ vue = 'courses' }) {
+  return useEstTelephone() ? <EcranListes vueInitiale={vue} /> : <PageListes vueInitiale={vue} />
 }
 
 export default function App() {
@@ -44,8 +52,9 @@ export default function App() {
             />
             <Route path="/" element={<RequireAuth><AppShell /></RequireAuth>}>
               <Route index element={<Accueil />} />
-              <Route path="calendrier" element={<SiTelephone><EcranCalendrier /></SiTelephone>} />
-              <Route path="listes" element={<SiTelephone><EcranListes /></SiTelephone>} />
+              <Route path="calendrier" element={<Calendrier />} />
+              <Route path="listes" element={<Listes />} />
+              <Route path="notes" element={<Listes vue="notes" />} />
               <Route path="reglages" element={<SettingsPage />} />
               <Route path="compte" element={<AccountPage />} />
             </Route>
