@@ -1142,3 +1142,25 @@ input[type="color"] {
   opacity: 1; background: var(--accent-doux); border-color: var(--accent);
   color: var(--accent); font-weight: 600; cursor: default;
 }
+
+/* ══ Le diagnostic des notifications ══
+   Une ligne par maillon de la chaîne, verte ou rouge. C'est ce qui permet
+   de savoir OÙ ça bloque au lieu de constater que ça ne marche pas. */
+.diagnostic { list-style: none; margin: var(--gap-m) 0; padding: 0; }
+.diagnostic li {
+  display: flex; align-items: flex-start; gap: var(--gap-s);
+  padding: 9px 12px; border-radius: var(--rayon);
+  border: 1px solid var(--trait); background: var(--surface-2);
+}
+.diagnostic li + li { margin-top: 5px; }
+.diagnostic li.vert { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.diagnostic li.rouge { border-color: var(--alerte); background: var(--alerte-douce); }
+.diagnostic li > span:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.diagnostic strong { font-size: 13.5px; font-weight: 600; color: var(--texte); }
+.diagnostic .aide { font-size: 12px; margin: 0; overflow-wrap: anywhere; }
+.pastille-etat {
+  flex: none; width: 20px; height: 20px; border-radius: 50%; margin-top: 1px;
+  display: grid; place-items: center; font-size: 12px; font-weight: 700;
+}
+.diagnostic li.vert .pastille-etat { background: var(--accent); color: var(--fond); }
+.diagnostic li.rouge .pastille-etat { background: var(--alerte); color: var(--fond); }

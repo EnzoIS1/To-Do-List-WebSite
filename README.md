@@ -226,6 +226,25 @@ les notifications web n'existent pas.
 
 **8. Vérifier.** Paramètres → Notifications → « Envoyer un essai ».
 
+### Savoir où ça bloque
+
+Paramètres → Notifications affiche l'état de **chaque maillon** de la chaîne :
+navigateur compatible, clé publique compilée dans le site, site installé sur
+l'écran d'accueil (iPhone seulement), autorisation accordée, appareil
+enregistré côté serveur. Le premier rouge en partant du haut est celui à
+régler ; les suivants en découlent.
+
+Deux essais séparés, et l'ordre compte :
+
+- **Essai 1 — l'affichage** ne sort pas de l'appareil. Il vérifie
+  l'autorisation et le service worker, sans toucher au serveur.
+- **Essai 2 — la chaîne complète** passe par la fonction serveur, le
+  chiffrement et le service de notification.
+
+Si le 1 marche et pas le 2, le problème est côté serveur : fonction non
+déployée, secret manquant, ou refus du service de notification. Si le 1 ne
+marche pas, inutile de chercher plus loin.
+
 ### Quand ça ne marchera pas
 
 Trois causes, dans l'ordre de probabilité :

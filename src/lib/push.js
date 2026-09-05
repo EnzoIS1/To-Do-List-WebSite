@@ -16,6 +16,19 @@ import { supabase } from './supabase'
 
 const CLE_PUBLIQUE = import.meta.env.VITE_VAPID_PUBLIQUE ?? ''
 
+/**
+ * Une clé publique VAPID est un point non compressé sur la courbe P-256 :
+ * 65 octets, soit 87 caractères en base64url, et le premier octet vaut 0x04
+ * — ce qui donne toujours un « B » en tête. Vérifier la forme ici évite un
+ * échec incompréhensible plus tard : `applicationServerKey` refuse une clé
+ * mal formée avec un message que personne ne peut relier à un .env oublié.
+ */
+export function cleVapidValide(cle = CLE_PUBLIQUE) {
+  return typeof cle === 'string' && /^[A-Za-z0-9_-]{86,88}$/.test(cle) && cle.startsWith('B')
+}
+
+export const CLE_VAPID = CLE_PUBLIQUE
+
 /** base64url → Uint8Array, ce qu'attend `applicationServerKey`. */
 function versOctets(base64url) {
   const complet = base64url.replace(/-/g, '+').replace(/_/g, '/')
@@ -101,7 +114,22 @@ export async function activerNotifications(userId) {
     return { ok: false, raison: 'Ce navigateur ne sait pas afficher de notifications.' }
   }
   if (!CLE_PUBLIQUE) {
-    return { ok: false, raison: 'La clé publique VAPID manque à la compilation du site.' }
+    return {
+      ok: false,
+      raison: "La clé publique VAPID manque : elle n'était pas là quand le site " +
+        'a été compilé. En local, mets VITE_VAPID_PUBLIQUE dans .env.local et ' +
+        'relance npm run dev — Vite ne relit pas ce fichier à chaud. En ligne, ' +
+        'il faut la variable GitHub Actions ET la ligne correspondante dans le ' +
+        'workflow, puis un nouveau push.',
+    }
+  }
+  if (!cleVapidValide()) {
+    return {
+      ok: false,
+      raison: `La clé publique VAPID est mal formée (${CLE_PUBLIQUE.length} caractères, ` +
+        'il en faut 87 commençant par « B »). Relance node outils/cles-vapid.mjs ' +
+        'et recopie la clé PUBLIQUE, sans espace ni retour à la ligne.',
+    }
   }
   if (estAppareilApple() && !installeSurEcranAccueil()) {
     return {
@@ -174,6 +202,50 @@ export async function synchroniser(userId) {
   } catch (e) {
     // Un échec ici ne doit jamais empêcher le site de s'afficher.
     console.warn('Synchronisation des notifications impossible :', e)
+  }
+}
+
+/** L'abonnement enregistré par ce navigateur, s'il en a un. */
+export async function abonnementActuel() {
+  if (!notificationsPossibles()) return null
+  try {
+    const enregistrement = await navigator.serviceWorker.getRegistration(import.meta.env.BASE_URL)
+    return (await enregistrement?.pushManager.getSubscription()) ?? null
+  } catch { return null }
+}
+
+/**
+ * Affiche une notification SANS passer par le serveur.
+ *
+ * C'est le test qui manquait. « Envoyer un essai » traverse toute la chaîne —
+ * fonction serveur, clés, chiffrement, service d'Apple — et quand il échoue,
+ * il ne dit pas lequel des cinq maillons a lâché. Celui-ci ne teste que le
+ * bout local : autorisation accordée, service worker en place, notification
+ * affichée par le système. S'il marche et que l'autre échoue, le problème est
+ * forcément côté serveur ; s'il échoue lui aussi, inutile d'aller chercher
+ * plus loin.
+ */
+export async function testerAffichage() {
+  if (!notificationsPossibles()) {
+    return { ok: false, raison: 'Ce navigateur ne sait pas afficher de notifications.' }
+  }
+  if (Notification.permission !== 'granted') {
+    return { ok: false, raison: "L'autorisation n'a pas été accordée sur cet appareil." }
+  }
+  try {
+    const enregistrement = await enregistrerServiceWorker()
+    await navigator.serviceWorker.ready
+    await enregistrement.showNotification('Essai d\'affichage', {
+      body: 'Si tu lis ceci, le service worker et l\'autorisation fonctionnent.',
+      tag: 'resume-du-jour',
+      renotify: true,
+      icon: `${import.meta.env.BASE_URL}icone-192.png`,
+      badge: `${import.meta.env.BASE_URL}icone-192.png`,
+      lang: 'fr',
+    })
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, raison: e.message }
   }
 }
 
