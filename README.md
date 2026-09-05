@@ -111,7 +111,7 @@ qu'une intention.
 | `npm run test:revision` | teste le calcul des révisions espacées |
 | `npm run test:sw` | teste le service worker des notifications |
 | `npm run test:tri` | teste l'ordre d'affichage des tâches |
-| `npm run test:cors` | vérifie que le navigateur peut appeler la fonction serveur |
+| `npm run test:fonction` | lance la fonction serveur dans Deno et vérifie CORS + secrets |
 | `node outils/cles-vapid.mjs` | génère la paire de clés des notifications |
 
 ## Comment le code est rangé
@@ -256,9 +256,15 @@ l'ordre de probabilité :
    d'essai part du site vers une autre origine et porte un en-tête
    `Authorization` : le navigateur envoie d'abord une requête `OPTIONS` de
    contrôle préalable et bloque tout si la réponse ne l'autorise pas
-   explicitement. Pour le vérifier sans navigateur, lance la fonction en
-   local puis `npm run test:cors`.
+   explicitement. Pour le vérifier sans navigateur : `npm run test:fonction`.
 3. **`VITE_SUPABASE_URL` est erronée** dans le site compilé.
+
+**Un message qui nomme un secret** (« VAPID_PUBLIQUE : absent des secrets de
+la fonction ») veut dire que la fonction tourne et répond — il ne reste qu'à
+renseigner ce secret dans Supabase → Edge Functions → Secrets, puis à
+redéployer. La fonction contrôle aussi la FORME des deux clés VAPID : elles
+font 87 et 43 caractères, donc les avoir interverties est détecté et signalé
+comme tel.
 
 ### Quand ça ne marchera pas
 

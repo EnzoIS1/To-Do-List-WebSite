@@ -36,7 +36,16 @@ export function versB64url(octets) {
   return btoa(binaire).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-export function depuisB64url(texte) {
+export function depuisB64url(texte, quoi = 'valeur') {
+  /*
+   * Sans ce garde-fou, une clé absente donne « Cannot read properties of
+   * undefined (reading 'replace') » — un message qui ne dit ni quelle clé
+   * manque, ni où la mettre. C'est exactement ce qui est remonté à Enzo
+   * quand le secret VAPID_PUBLIQUE n'était pas renseigné côté Supabase.
+   */
+  if (typeof texte !== 'string' || texte.length === 0) {
+    throw new TypeError(`${quoi} : valeur absente ou vide`)
+  }
   const complet = texte.replace(/-/g, '+').replace(/_/g, '/')
     // atob() refuse une chaîne dont la longueur n'est pas un multiple de 4 :
     // le base64url supprime le remplissage, on le remet.
@@ -99,8 +108,8 @@ const importerPubliqueClient = (octets) =>
  * @returns {Promise<Uint8Array>} le corps de la requête HTTP
  */
 export async function chiffrer(message, abonnement, selFixe = null, paireFixe = null) {
-  const publiqueClientOctets = depuisB64url(abonnement.p256dh)
-  const auth = depuisB64url(abonnement.auth)
+  const publiqueClientOctets = depuisB64url(abonnement.p256dh, 'clé p256dh de l\'abonnement')
+  const auth = depuisB64url(abonnement.auth, 'secret auth de l\'abonnement')
 
   // Une paire de clés NEUVE par message : c'est ce qui rend chaque envoi
   // indéchiffrable à partir du précédent.
@@ -222,7 +231,10 @@ export async function enteteVapid(pointDeTerminaison, sujet, clesVapid, maintena
 
 /** La clé privée VAPID est stockée en base64url brut : on la remonte en JWK. */
 function importerPriveeVapid({ publique, privee }) {
-  const pub = depuisB64url(publique)
+  const pub = depuisB64url(publique, 'secret VAPID_PUBLIQUE de la fonction')
+  if (typeof privee !== 'string' || privee.length === 0) {
+    throw new TypeError('secret VAPID_PRIVEE de la fonction : valeur absente ou vide')
+  }
   const jwk = {
     kty: 'EC', crv: 'P-256', ext: true,
     x: versB64url(pub.slice(1, 33)),

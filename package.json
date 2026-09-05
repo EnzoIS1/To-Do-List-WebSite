@@ -12,7 +12,7 @@
     "test:sw": "node tests/sw.test.mjs",
     "test:resume": "node supabase/functions/envoyer-rappels/resume.test.mjs",
     "test:tri": "node src/lib/tri.test.js",
-    "test:cors": "node tests/cors.test.mjs"
+    "test:fonction": "node tests/fonction.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

@@ -76,6 +76,35 @@ const repondre = (corps: unknown, status = 200) =>
     headers: { ...CORS, 'Content-Type': 'application/json' },
   })
 
+/**
+ * Les réglages obligatoires, contrôlés avant tout envoi.
+ *
+ * Un secret oublié se manifestait par une erreur de cryptographie remontée
+ * telle quelle au site — « Cannot read properties of undefined » — qui ne
+ * disait ni quel secret, ni où le mettre. Le contrôle ci-dessous transforme
+ * ça en une phrase actionnable, et vérifie aussi la FORME : les deux clés
+ * VAPID ont des longueurs différentes (87 et 43), donc les intervertir est
+ * détectable, et c'est l'erreur de recopie la plus facile à commettre.
+ *
+ * On ne renvoie jamais la valeur d'un secret, seulement son état.
+ */
+function configurationManquante(): string[] {
+  const soucis: string[] = []
+  const exiger = (nom: string, valeur: string | undefined, forme?: RegExp, attendu?: string) => {
+    if (!valeur) soucis.push(`${nom} : absent des secrets de la fonction`)
+    else if (forme && !forme.test(valeur)) soucis.push(`${nom} : ${attendu} (reçu ${valeur.length} caractères)`)
+  }
+  exiger('SUPABASE_URL', URL_SUPABASE)
+  exiger('SUPABASE_SERVICE_ROLE_KEY', CLE_SERVICE)
+  exiger('VAPID_PUBLIQUE', VAPID_PUBLIQUE, /^B[A-Za-z0-9_-]{85,87}$/,
+    'doit faire 87 caractères et commencer par « B » — as-tu collé la clé privée ici ?')
+  exiger('VAPID_PRIVEE', VAPID_PRIVEE, /^[A-Za-z0-9_-]{42,44}$/,
+    'doit faire 43 caractères — as-tu collé la clé publique ici ?')
+  exiger('SUJET_VAPID', SUJET_VAPID, /^mailto:.+@.+/,
+    'doit être « mailto: » suivi d\'une adresse e-mail')
+  return soucis
+}
+
 const enteteService = {
   apikey: CLE_SERVICE,
   Authorization: `Bearer ${CLE_SERVICE}`,
@@ -174,6 +203,18 @@ Deno.serve(async (requete) => {
   // reste : il n'est ni authentifié ni censé faire quoi que ce soit.
   if (requete.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS })
+  }
+
+  // Rien ne peut fonctionner si un secret manque : autant le dire tout de
+  // suite, et le dire précisément, plutôt que d'échouer plus loin dans le
+  // chiffrement avec un message que personne ne peut relier à un réglage.
+  const soucis = configurationManquante()
+  if (soucis.length > 0) {
+    return repondre({
+      erreur: 'configuration incomplète',
+      detail: `Dans Supabase → Edge Functions → Secrets : ${soucis.join(' ; ')}.`,
+      manquants: soucis,
+    }, 500)
   }
 
   const jetonPorte = requete.headers.get('Authorization')?.replace(/^Bearer /, '') ?? ''
