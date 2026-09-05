@@ -979,3 +979,18 @@ input[type="color"] {
    ne prend pas la marge habituelle, les cartes ont déjà la leur. */
 .panneau-categories .panneau-corps { padding: var(--gap-s); overflow: hidden; }
 .panneau-categories .colonne-categories { height: 100%; }
+
+/* ══ Une ligne de réglage : libellé à gauche, contrôle à droite ══ */
+.ligne-reglage {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--gap-m);
+  padding: 12px 0; border-top: 1px solid var(--trait); flex-wrap: wrap;
+}
+.ligne-reglage > div { flex: 1; min-width: 14em; }
+.ligne-reglage strong { font-size: 14px; font-weight: 600; }
+.ligne-reglage .aide { margin: 2px 0 0; }
+.ligne-reglage select {
+  font: inherit; font-size: 13px; padding: 7px 9px; min-height: 38px; color-scheme: inherit;
+  border: 1px solid var(--trait); border-radius: var(--rayon);
+  background: var(--fond); color: var(--texte);
+}
+.ligne-reglage button { flex: none; }

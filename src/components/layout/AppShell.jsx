@@ -1,8 +1,11 @@
+import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import Rail from './Rail'
 import BarreOnglets from './BarreOnglets'
 import { DonneesProvider } from '../../data/DonneesProvider'
 import { useEstTelephone } from '../../lib/useEcran'
+import { useAuth } from '../../auth/AuthProvider'
+import { synchroniser } from '../../lib/push'
 
 /**
  * La coque commune. Sur grand écran, le rail flottant à gauche et la carte
@@ -15,6 +18,15 @@ import { useEstTelephone } from '../../lib/useEcran'
  */
 export default function AppShell() {
   const telephone = useEstTelephone()
+  const { user } = useAuth()
+
+  /*
+   * À chaque ouverture, on relit l'abonnement réel auprès du navigateur et on
+   * réécrit la base à partir de lui. Un abonnement peut disparaître sans
+   * prévenir ; sans ce rappel à l'ordre, les notifications s'arrêteraient en
+   * silence et personne ne saurait pourquoi. Ne demande jamais d'autorisation.
+   */
+  useEffect(() => { if (user) synchroniser(user.id) }, [user])
 
   if (telephone) {
     return (

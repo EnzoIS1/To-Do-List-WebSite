@@ -3,6 +3,7 @@ import { useCategories } from '../data/useCategories'
 import { useTheme } from '../theme/ThemeProvider'
 import { useDonnees } from '../data/DonneesProvider'
 import { DELAIS_ARCHIVAGE } from '../lib/useReglage'
+import SectionNotifications from '../components/reglages/SectionNotifications'
 
 const OPTIONS_THEME = [
   { valeur: 'clair',   nom: 'Clair',   aide: 'Toujours le fond blanc.' },
@@ -40,7 +41,7 @@ export default function SettingsPage() {
       <header className="entete-page">
         <div>
           <h1>Paramètres</h1>
-          <p className="sous-titre">Apparence et catégories</p>
+          <p className="sous-titre">Apparence, notifications et catégories</p>
         </div>
         <Link to="/" className="bouton-doux">← Tableau de bord</Link>
       </header>
@@ -70,6 +71,8 @@ export default function SettingsPage() {
           ))}
         </div>
       </section>
+
+      <SectionNotifications />
 
       <section>
         <h2>Tâches terminées</h2>

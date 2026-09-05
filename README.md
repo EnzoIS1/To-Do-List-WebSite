@@ -100,6 +100,9 @@ qu'une intention.
 | `npm run build` | compilation dans `dist/` |
 | `npm run preview` | prévisualise la compilation |
 | `npm run test:dates` | teste les utilitaires de dates |
+| `npm run test:revision` | teste le calcul des révisions espacées |
+| `npm run test:sw` | teste le service worker des notifications |
+| `node outils/cles-vapid.mjs` | génère la paire de clés des notifications |
 
 ## Comment le code est rangé
 
@@ -117,9 +120,122 @@ Deux règles à ne pas contourner : ne jamais recréer un client Supabase ailleu
 que dans `lib/supabase.js`, et ne jamais fabriquer une date avec
 `toISOString()` — tout passe par `lib/dates.js`.
 
+## Les notifications du matin
+
+Un seul message par jour, à l'heure choisie, qui **regroupe tous les rappels
+dus**. Jamais une notification par tâche.
+
+### Comment ça marche
+
+`pg_cron` réveille une fonction Supabase toutes les heures. Elle demande à
+PostgreSQL qui doit recevoir son résumé *maintenant* — c'est la fonction SQL
+`resumes_a_envoyer()` qui porte toute la logique de fuseau horaire et de
+dédoublonnage — puis elle chiffre et envoie un message par appareil abonné.
+Le service worker `public/sw.js` l'affiche, toujours avec la même étiquette :
+une nouvelle notification **remplace** la précédente au lieu de s'empiler.
+
+Rien de payant nulle part : les notifications web passent par le service
+d'Apple ou de Google avec des clés qu'on génère soi-même, sans compte ni
+abonnement.
+
+### Installation, dans l'ordre
+
+**1. La migration.** Dans Supabase → SQL Editor, lancer
+`supabase/migrations/0005_notifications.sql`.
+
+**2. Les clés.** Sur ta machine :
+
+```
+node outils/cles-vapid.mjs
+```
+
+Suivre exactement ce qu'il affiche. La clé privée ne va QUE dans les secrets
+Supabase — jamais dans `.env.local`, jamais sur GitHub.
+
+**3. La clé publique côté site.** Dans `.env.local` pour le développement, et
+dans GitHub → Settings → Secrets and variables → Actions → **Variables** pour
+la production. Puis ajouter la ligne au workflow, sous les deux autres :
+
+```yaml
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_VAPID_PUBLIQUE: ${{ vars.VITE_VAPID_PUBLIQUE }}
+```
+
+**4. Les secrets de la fonction.** Supabase → Edge Functions → Secrets :
+
+| Nom | Valeur |
+| --- | --- |
+| `VAPID_PUBLIQUE` | la clé publique |
+| `VAPID_PRIVEE` | la clé privée |
+| `SUJET_VAPID` | `mailto:` suivi de ton adresse e-mail |
+| `LIEN_SITE` | `https://enzois1.github.io/To-Do-List-WebSite/` |
+| `CLE_PLANIFICATEUR` | une longue chaîne au hasard, inventée par toi |
+
+`SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` sont fournis automatiquement.
+
+**5. Déployer la fonction.**
+
+```
+npx supabase functions deploy envoyer-rappels --no-verify-jwt
+```
+
+`--no-verify-jwt` est volontaire : la fonction fait ses propres contrôles —
+la clé du planificateur, ou un jeton de connexion valide — plutôt que de
+s'en remettre à un réglage invisible.
+
+**6. La tâche planifiée.** Dans SQL Editor, en remplaçant les deux valeurs :
+
+```sql
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
+select cron.schedule(
+  'resume-des-rappels',
+  '0 * * * *',                      -- au début de chaque heure
+  $$
+  select net.http_post(
+    url := 'https://TON-PROJET.supabase.co/functions/v1/envoyer-rappels',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-cle-planificateur', 'LA-CLE-QUE-TU-AS-INVENTEE'
+    ),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 20000
+  );
+  $$
+);
+```
+
+Pour vérifier : `select * from cron.job;`
+
+**7. Sur l'iPhone.** Ouvrir le site dans Safari, **Partager → « Sur l'écran
+d'accueil »**, puis rouvrir le site **depuis cette icône**. Paramètres →
+Notifications → Activer. C'est une règle d'Apple : dans un onglet Safari,
+les notifications web n'existent pas.
+
+**8. Vérifier.** Paramètres → Notifications → « Envoyer un essai ».
+
+### Quand ça ne marchera pas
+
+Trois causes, dans l'ordre de probabilité :
+
+- **L'icône de l'écran d'accueil a été supprimée.** L'abonnement meurt avec
+  elle. Il faut réinstaller et réactiver.
+- **Le projet Supabase s'est mis en pause.** Le plan gratuit endort un
+  projet qui ne reçoit pas d'activité pendant une semaine. Un projet endormi
+  n'exécute aucune tâche planifiée.
+- **L'abonnement a expiré.** Le site s'en occupe seul à chaque ouverture,
+  mais il faut donc ouvrir le site de temps en temps.
+
+Dans tous les cas, Paramètres → Notifications affiche la date du **dernier
+envoi**. Si elle date de trois semaines, le système s'est tu — c'est
+exactement pour ça que cette ligne existe.
+
 ## Ce qui n'est pas dans la v1
 
-Listes partagées, rappels par e-mail, notifications navigateur fermé, tâches
-récurrentes, pièces jointes. Le schéma prévoit déjà chacun de ces cas
-(`user_id` partout, `reminders.channel`, `tasks.recurrence_rule`) pour que
-l'ajout ne demande pas de migration lourde.
+Listes partagées, rappels par e-mail, tâches récurrentes, pièces jointes.
+Le schéma prévoit déjà chacun de ces cas (`user_id` partout,
+`reminders.channel`, `tasks.recurrence_rule`) pour que l'ajout ne demande pas
+de migration lourde.
