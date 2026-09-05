@@ -17,15 +17,29 @@ import MenuFlottant from '../ui/MenuFlottant'
  */
 export default function CategoryCard({
   categorie, taches, loading, cocher, modifier, dater,
-  creerSousCategorie, supprimerCategorie, onReplier,
+  creerSousCategorie, supprimerCategorie, onReplier, virtuelle = false,
 }) {
   const [menuOuvert, setMenuOuvert] = useState(false)
   const [nom, setNom] = useState(categorie.name)
   const bouton = useRef(null)
 
   const idsDeLaFamille = [categorie.id, ...categorie.enfants.map((e) => e.id)]
-  const siennes = taches.filter((t) => idsDeLaFamille.includes(t.category_id))
-  const restantes = siennes.filter((t) => !t.is_done).length
+  const siennes = virtuelle
+    ? taches.filter((t) => !t.category_id)
+    : taches.filter((t) => idsDeLaFamille.includes(t.category_id))
+
+  /*
+   * Les tâches finies sont SÉPARÉES, pas mélangées.
+   *
+   * Le tri les envoyait déjà en bas de la liste, mais rien ne marquait la
+   * frontière : une catégorie de vingt lignes dont quinze étaient cochées
+   * ressemblait à une catégorie de vingt lignes à faire, et il fallait
+   * lire les titres barrés un par un pour trouver où commençait le reste.
+   * Le trait et le compte le disent d'un coup d'œil.
+   */
+  const enCours = siennes.filter((t) => !t.is_done)
+  const terminees = siennes.filter((t) => t.is_done)
+  const restantes = enCours.length
   const nomSousCategorie = (id) =>
     id === categorie.id ? null : categorie.enfants.find((e) => e.id === id)?.name
 
@@ -61,6 +75,7 @@ export default function CategoryCard({
           <button type="button" className="bouton-reglage" onClick={onReplier} aria-label="Replier">–</button>
         )}
 
+        {!virtuelle && (
         <button
           ref={bouton}
           type="button"
@@ -72,9 +87,10 @@ export default function CategoryCard({
         >
           ⋯
         </button>
+        )}
       </header>
 
-      {menuOuvert && (
+      {!virtuelle && menuOuvert && (
         <MenuFlottant ancre={bouton} titre={categorie.name} onFermer={() => setMenuOuvert(false)}>
           <div className="menu-corps">
             <label className="menu-champ">
@@ -118,13 +134,31 @@ export default function CategoryCard({
 
       <div className="carte-corps">
         <TaskList
-          taches={siennes}
+          taches={enCours}
           loading={loading}
           onCocher={cocher}
           onDater={dater}
           etiquette={(t) => nomSousCategorie(t.category_id)}
-          vide="Aucune tâche dans cette catégorie."
+          vide={virtuelle
+            ? 'Toutes les tâches sont rangées dans une catégorie.'
+            : 'Aucune tâche à faire dans cette catégorie.'}
         />
+
+        {terminees.length > 0 && (
+          <>
+            <div className="separateur-terminees">
+              <span>Terminées · {terminees.length}</span>
+            </div>
+            <TaskList
+              taches={terminees}
+              loading={false}
+              onCocher={cocher}
+              onDater={dater}
+              etiquette={(t) => nomSousCategorie(t.category_id)}
+              vide=""
+            />
+          </>
+        )}
       </div>
 
     </section>

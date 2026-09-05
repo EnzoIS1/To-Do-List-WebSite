@@ -3,6 +3,7 @@ import { useDonnees } from '../../data/DonneesProvider'
 import TaskList from '../../components/tasks/TaskList'
 import BarreCapture from '../../components/capture/BarreCapture'
 import CategoryCard from '../../components/categories/CategoryCard'
+import { SANS_CATEGORIE } from '../../components/categories/sansCategorie'
 import SelecteurTri from '../../components/tasks/SelecteurTri'
 
 const VUES = [
@@ -88,6 +89,16 @@ export default function EcranListes({ vueInitiale = 'courses' }) {
                 supprimerCategorie={(cat) => supprimerCategorie(cat.id)}
               />
             ))}
+            {/* À la fin, comme sur ordinateur : ce qui n'est rangé nulle part. */}
+            <CategoryCard
+              virtuelle
+              categorie={SANS_CATEGORIE}
+              taches={tasks}
+              loading={loading}
+              cocher={cocher}
+              dater={modifier}
+            />
+
             <button className="creer-categorie" onClick={() => demanderCategorie(null)}>
               + Créer une nouvelle catégorie
             </button>

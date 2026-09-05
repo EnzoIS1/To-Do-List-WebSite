@@ -352,8 +352,11 @@ body { background: var(--fond-page); }
   background: var(--fond); color: var(--texte-doux);
 }
 .ajout-rapide button {
-  padding: 0 12px; border: 0; border-radius: var(--rayon);
-  background: var(--accent); color: var(--fond); font-weight: 700; font-size: 15px;
+  /* Même raison qu'au-dessus : le « + » est une icône, donc une grille
+     centrée plutôt qu'une ligne de texte. */
+  display: grid; place-items: center; line-height: 0;
+  width: 34px; flex: none; border: 0; border-radius: var(--rayon);
+  background: var(--accent); color: var(--fond);
 }
 
 /* ══ Colonne des catégories ══ */
@@ -566,10 +569,23 @@ input[type="color"] {
   border: 1px solid var(--trait); border-radius: var(--rayon);
   background: var(--fond); color: var(--texte-doux);
 }
+/*
+ * Le « + » est un DESSIN, plus un caractère.
+ *
+ * Écrit en texte, il était centré comme une ligne de texte : la boîte de
+ * la ligne au milieu du bouton, mais l'encre du glyphe où la police la
+ * pose. Selon la police du système, ça tombait juste ou non — mesuré sur
+ * une capture d'Enzo : 3 px trop bas dans un bouton de 34, alors que sur
+ * ma machine le même code tombait au centre. Une différence de police,
+ * donc invisible depuis ici.
+ *
+ * Le SVG, lui, est centré géométriquement : le résultat ne dépend plus de
+ * ce qui est installé sur la machine.
+ */
 .capture-valider {
   width: 34px; height: 34px; flex-shrink: 0; border: 0; border-radius: var(--rayon);
-  background: var(--accent); color: var(--fond); font-size: 19px; font-weight: 700;
-  display: grid; place-items: center;
+  background: var(--accent); color: var(--fond);
+  display: grid; place-items: center; line-height: 0;
 }
 
 /* ══ Aperçu de demain, sous les tâches du jour ══ */
@@ -656,19 +672,29 @@ input[type="color"] {
 }
 .segment.actif { background: var(--surface); color: var(--texte); font-weight: 600; }
 
-/* Barre d'onglets du bas */
+/* ══ Barre d'onglets du bas ══
+   Le rail du bureau, couché. Même fond, mêmes coins, mêmes cases de
+   40 px, même entrée courante en plein — passer du PC au téléphone ne
+   demande plus de réapprendre où regarder. Détachée du bord, comme le
+   rail l'est de la carte, et posée au-dessus de la zone des gestes. */
 .barre-onglets {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid var(--trait); background: var(--surface);
-  padding-bottom: env(safe-area-inset-bottom, 0px); flex: none;
+  flex: none;
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+  align-items: center; justify-items: center;
+  gap: 2px; padding: 6px;
+  margin: 0 var(--gap-m) calc(var(--gap-s) + env(safe-area-inset-bottom, 0px));
+  background: var(--surface-rail); border: 1px solid var(--trait);
+  border-radius: 22px; box-shadow: var(--ombre-panneau);
 }
 .onglet {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  min-height: 52px; padding: 6px 2px; text-decoration: none; color: var(--discret);
+  position: relative;
+  display: grid; place-items: center;
+  width: 100%; max-width: 52px; height: 40px;
+  border-radius: 13px; text-decoration: none; color: var(--discret);
+  transition: background-color .18s ease, color .18s ease;
 }
-.onglet.active { color: var(--accent); }
-.onglet-nom { font-size: 10px; }
-.onglet.active .onglet-nom { font-weight: 700; }
+.onglet.active { background: var(--accent); color: var(--fond); }
+.onglet .rail-pastille { border-color: var(--surface-rail); }
 
 /* Sur téléphone, la barre de saisie est collée au-dessus des onglets et les
    cibles tactiles passent à 44 px minimum. */
@@ -1112,28 +1138,78 @@ input[type="color"] {
   border: 1.5px solid var(--surface-rail);
 }
 
-/* ══ La page Rappels ══ */
+/* ══ La page Rappels ══
+   Deux colonnes sur ordinateur : ce qui presse à gauche, la suite à
+   droite. Chacune défile de son côté — une longue liste de retard ne
+   doit pas pousser la semaine hors de l'écran. */
 .page-rappels .page-tete h1 { font-size: 20px; }
-.page-corps.colonne-unique { flex-direction: column; gap: var(--gap-l); overflow-y: auto; }
-.page-corps.colonne-unique > * { flex: none; }
-.bloc-rappels { max-width: 780px; }
+.rappels-entete { display: flex; align-items: center; gap: var(--gap-m); flex-wrap: wrap; }
+.rappels-compteurs { display: flex; gap: 6px; flex-wrap: wrap; }
+.jeton {
+  padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: var(--surface-2); color: var(--texte-doux); border: 1px solid var(--trait);
+}
+.jeton.accent { background: var(--accent-doux); color: var(--accent); border-color: var(--accent); }
+.jeton.alerte { background: var(--alerte-douce); color: var(--alerte); border-color: var(--alerte); }
+
+.rappels-colonnes { gap: var(--gap-l); }
+.colonne-rappels { display: flex; flex-direction: column; min-height: 0; gap: var(--gap-s); }
+.colonne-defilante { flex: 1; min-height: 0; overflow-y: auto; padding-right: 2px; }
+.titre-groupe {
+  font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--discret); margin: var(--gap-m) 0 var(--gap-s);
+}
+.colonne-defilante > .titre-groupe:first-child { margin-top: 0; }
+.titre-groupe.alerte { color: var(--alerte); }
+
 .liste-rappels { list-style: none; margin: 0; padding: 0; }
-.liste-rappels li {
-  display: flex; align-items: center; gap: var(--gap-m); flex-wrap: wrap;
-  padding: 11px var(--gap-m);
-  background: var(--accent-doux); border: 1px solid var(--accent);
+/* Une ligne de rappel : intitulé, titre, échéance, actions. La barre de
+   couleur à gauche est celle de la catégorie de la tâche — c'est le même
+   repère que la coche des listes, il se lit sans légende. */
+.rappel {
+  display: flex; align-items: center; gap: var(--gap-m);
+  padding: 10px var(--gap-m); position: relative; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--trait);
   border-radius: var(--rayon-panneau);
 }
-.liste-rappels li + li { margin-top: 6px; }
-.liste-rappels li.en-retard { background: var(--alerte-douce); border-color: var(--alerte); }
-.rappel-actions { display: flex; align-items: center; gap: var(--gap-m); flex: none; }
+.rappel::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--teinte, var(--discret));
+}
+.rappel + .rappel { margin-top: 6px; }
+.rappel.en-retard { border-color: var(--alerte); background: var(--alerte-douce); }
+.rappel-pastille {
+  flex: none; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--teinte, var(--discret));
+}
+.rappel-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.rappel-intitule {
+  font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase;
+  color: var(--accent);
+}
+.rappel.en-retard .rappel-intitule { color: var(--alerte); }
+.rappel-intitule em { font-style: normal; font-weight: 500; color: var(--discret); text-transform: none; letter-spacing: 0; }
+.rappel-texte strong { font-size: 14px; font-weight: 600; overflow-wrap: break-word; }
+.rappel-echeance { font-size: 11.5px; color: var(--texte-doux); }
+.rappel-actions { display: flex; align-items: center; gap: var(--gap-s); flex: none; }
+/* Sur les jours à venir, les actions ne servent qu'à corriger un réglage :
+   elles n'ont pas à peser autant que sur la ligne du jour. */
+.rappel.compact { padding: 8px var(--gap-m); }
+.rappel.compact .rappel-texte strong { font-size: 13px; }
+
 .groupe-jour { margin-bottom: var(--gap-m); }
 .jour-rappels {
   font-size: 13px; font-weight: 600; color: var(--texte);
-  margin: 0 0 2px; padding-bottom: 4px; border-bottom: 1px solid var(--trait);
+  margin: 0 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--trait);
 }
 .jour-rappels::first-letter { text-transform: uppercase; }
 .jour-rappels em { font-style: normal; font-weight: 400; color: var(--discret); }
+
+/* Sur téléphone, les actions passent sous le texte : trois boutons et un
+   titre sur 390 px, ça ne tient pas sur une ligne. */
+.coque-telephone .rappel { flex-wrap: wrap; }
+.coque-telephone .rappel-actions { width: 100%; justify-content: flex-end; }
+
 .page-tete.rangee { display: flex; align-items: center; gap: var(--gap-m); flex-wrap: wrap; }
 .page-tete.rangee .segments { flex: 1; }
 .pile-categories > .selecteur-tri { flex: none; align-self: flex-end; }
@@ -1143,24 +1219,25 @@ input[type="color"] {
   color: var(--accent); font-weight: 600; cursor: default;
 }
 
-/* ══ Le diagnostic des notifications ══
-   Une ligne par maillon de la chaîne, verte ou rouge. C'est ce qui permet
-   de savoir OÙ ça bloque au lieu de constater que ça ne marche pas. */
-.diagnostic { list-style: none; margin: var(--gap-m) 0; padding: 0; }
-.diagnostic li {
-  display: flex; align-items: flex-start; gap: var(--gap-s);
-  padding: 9px 12px; border-radius: var(--rayon);
-  border: 1px solid var(--trait); background: var(--surface-2);
+
+
+/* ══ La frontière entre ce qui reste et ce qui est fait ══
+   Le tri envoyait déjà les tâches cochées en bas, mais rien ne marquait
+   la limite : vingt lignes dont quinze barrées ressemblaient à vingt
+   lignes à faire. Un trait, un compte, et la question ne se pose plus. */
+.separateur-terminees {
+  display: flex; align-items: center; gap: var(--gap-s);
+  margin: var(--gap-m) 0 var(--gap-s);
+  font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--discret);
 }
-.diagnostic li + li { margin-top: 5px; }
-.diagnostic li.vert { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
-.diagnostic li.rouge { border-color: var(--alerte); background: var(--alerte-douce); }
-.diagnostic li > span:last-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.diagnostic strong { font-size: 13.5px; font-weight: 600; color: var(--texte); }
-.diagnostic .aide { font-size: 12px; margin: 0; overflow-wrap: anywhere; }
-.pastille-etat {
-  flex: none; width: 20px; height: 20px; border-radius: 50%; margin-top: 1px;
-  display: grid; place-items: center; font-size: 12px; font-weight: 700;
+.separateur-terminees::before,
+.separateur-terminees::after {
+  content: ''; flex: 1; height: 1px; background: var(--trait);
 }
-.diagnostic li.vert .pastille-etat { background: var(--accent); color: var(--fond); }
-.diagnostic li.rouge .pastille-etat { background: var(--alerte); color: var(--fond); }
+.separateur-terminees::before { flex: 0 0 12px; }
+
+/* L'entrée « Sans catégorie » : présente comme les autres, mais en
+   pointillé — elle n'existe pas en base, et rien ne s'y règle. */
+.categorie-repliee.sans-categorie { border-style: dashed; }
+.categorie-repliee.sans-categorie .categorie-nom { color: var(--texte-doux); font-style: italic; }

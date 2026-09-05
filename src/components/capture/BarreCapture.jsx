@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { today } from '../../lib/dates'
 import { useEstTelephone } from '../../lib/useEcran'
+import Icone from '../layout/Icones'
 
 /**
  * La barre de saisie unique.
@@ -78,7 +79,9 @@ export default function BarreCapture({
           aria-label="Nouvelle tâche"
         />
         {(telephone || pile) && (
-          <button type="submit" className="capture-valider" aria-label="Ajouter la tâche">+</button>
+          <button type="submit" className="capture-valider" aria-label="Ajouter la tâche">
+            <Icone nom="plus" taille={18} />
+          </button>
         )}
       </div>
 
@@ -104,7 +107,9 @@ export default function BarreCapture({
           </select>
         )}
         {!telephone && !pile && (
-          <button type="submit" className="capture-valider" aria-label="Ajouter la tâche">+</button>
+          <button type="submit" className="capture-valider" aria-label="Ajouter la tâche">
+            <Icone nom="plus" taille={18} />
+          </button>
         )}
       </div>
     </form>

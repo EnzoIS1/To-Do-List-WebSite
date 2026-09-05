@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Icone from '../layout/Icones'
 
 /**
  * Ajout rapide d'une tâche. Le champ date est un <input type="date"> :
@@ -73,7 +74,9 @@ export default function QuickAdd({
         />
       )}
 
-      <button type="submit" aria-label="Ajouter">+</button>
+      <button type="submit" aria-label="Ajouter">
+        <Icone nom="plus" taille={16} />
+      </button>
     </form>
   )
 }

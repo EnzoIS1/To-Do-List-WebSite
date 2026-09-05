@@ -22,7 +22,7 @@ const VUES = [
  */
 export default function PageListes({ vueInitiale = 'courses' }) {
   const {
-    tasks, loading, cocher, modifier, supprimer, choixCategories,
+    tasks, loading, cocher, modifier, supprimer,
     categorieCourses, arbreSansCourses, creer,
     creerCategorie, modifierCategorie, supprimerCategorie,
   } = useDonnees()
@@ -73,7 +73,7 @@ export default function PageListes({ vueInitiale = 'courses' }) {
         {vue === 'notes' && (
           <InboxPanel
             taches={tasks} loading={loading} cocher={cocher}
-            supprimer={supprimer} ranger={modifier} categories={choixCategories}
+            ranger={modifier} creer={creer}
           />
         )}
 

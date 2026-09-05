@@ -4,7 +4,7 @@ import { useCategories } from './useCategories'
 import { useReminders } from './useReminders'
 import { useReglage, joursDArchivage } from '../lib/useReglage'
 import { datesDeRevision } from '../lib/revision'
-import { addDays, daysBetween, today } from '../lib/dates'
+import { daysBetween, today } from '../lib/dates'
 import { TRI_DEFAUT } from '../lib/tri'
 
 const DonneesContext = createContext(null)
@@ -188,6 +188,18 @@ export function DonneesProvider({ children }) {
       triTaches,
       setTriTaches,
       ...rappels,
+      /*
+       * Le rappel automatique se refuse sur la TÂCHE, pas en effaçant la
+       * ligne du rappel.
+       *
+       * Supprimer le rappel seul ne tenait pas : le trigger de la base le
+       * repose à chaque écriture sur la date ou sur `is_done` — cocher puis
+       * décocher suffisait à le voir revenir. La colonne `rappel_auto`
+       * (migration 0007) porte le refus, et le trigger la lit avant de
+       * reposer quoi que ce soit.
+       */
+      basculerRappelAuto: (tache, actif) =>
+        suivi(taches.modifier)(tache.id, { rappel_auto: actif }),
       revisionsDe,
       activerRevision,
       desactiverRevision,
@@ -222,13 +234,10 @@ export function useDonnees() {
   return ctx
 }
 
-/** Les décalages proposés dans le menu « Rappel » d'une tâche datée. */
-export const DECALAGES_RAPPEL = [
-  { id: 'veille', nom: 'La veille', jours: 1 },
-  { id: 'trois', nom: '3 jours avant', jours: 3 },
-  { id: 'semaine', nom: '1 semaine avant', jours: 7 },
-  { id: 'deux-semaines', nom: '2 semaines avant', jours: 14 },
-]
-
-/** Le jour d'un rappel posé « n jours avant » une échéance. */
-export const jourDuRappel = (echeance, jours) => addDays(echeance, -jours)
+/*
+ * Le vocabulaire des rappels vit maintenant dans lib/rappels.js, avec les
+ * libellés qui vont avec. Il est réexporté ici parce que les composants
+ * l'importaient d'ici, et parce qu'un fichier de données ne devrait pas
+ * être la source d'une constante de présentation.
+ */
+export { DECALAGES_RAPPEL, jourDuRappel, libelleRappel, detailRappel } from '../lib/rappels'

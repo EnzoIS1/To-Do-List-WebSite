@@ -126,7 +126,7 @@ export default function DashboardPage() {
     notes: (
       <InboxPanel
         taches={tasks} loading={loading} cocher={cocher}
-        supprimer={supprimer} ranger={modifier} categories={choixCategories}
+        ranger={modifier} creer={creer}
       />
     ),
     /*

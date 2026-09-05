@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import MenuFlottant from '../ui/MenuFlottant'
-import {
-  useDonnees, DECALAGES_RAPPEL, jourDuRappel,
-} from '../../data/DonneesProvider'
+import { useDonnees } from '../../data/DonneesProvider'
+import { DECALAGES_RAPPEL, jourDuRappel, libelleRappel } from '../../lib/rappels'
 import { datesDeRevision } from '../../lib/revision'
 import { formatLong, formatRelative, isPast, today } from '../../lib/dates'
 
@@ -22,7 +21,7 @@ import { formatLong, formatRelative, isPast, today } from '../../lib/dates'
 export default function MenuTache({ tache, ancre, onFermer }) {
   const {
     choixCategories, modifier, supprimer,
-    rappelsDe, creerRappel, supprimerRappel,
+    rappelsDe, creerRappel, supprimerRappel, basculerRappelAuto,
     revisionsDe, activerRevision, desactiverRevision, tasks,
   } = useDonnees()
 
@@ -88,7 +87,7 @@ export default function MenuTache({ tache, ancre, onFermer }) {
           <p className="menu-note">
             {tache.revision_of
               ? 'Une séance de révision se rappelle le jour même, automatiquement.'
-              : 'Une tâche datée se rappelle la veille, automatiquement. Ajoute ici un rappel plus tôt si tu veux t\'y prendre à l\'avance.'}
+              : 'Une tâche datée se rappelle la veille, automatiquement. Chaque puce s\'allume et s\'éteint : clique dessus pour poser le rappel, reclique pour le retirer.'}
           </p>
 
           {tache.due_date && DECALAGES_RAPPEL.every((d) => isPast(jourDuRappel(tache.due_date, d.jours))) && (
@@ -100,31 +99,52 @@ export default function MenuTache({ tache, ancre, onFermer }) {
 
           {tache.due_date ? (
             <div className="menu-puces">
+              {/*
+                Chaque puce est un interrupteur : elle pose le rappel, et
+                elle le retire. Avant, une puce cochée était simplement
+                désactivée — on pouvait mettre « 3 jours avant » mais plus
+                jamais l'enlever, sauf à aller chercher la ligne dans la
+                liste du dessous. Un bouton qui ne sait qu'aller dans un
+                sens n'est pas un réglage, c'est un piège.
+
+                Cas particulier du rappel automatique de la veille : il
+                n'appartient pas à l'utilisateur, c'est la base qui le pose.
+                Le supprimer ne tiendrait pas — le trigger le repose à la
+                modification suivante. On bascule donc `rappel_auto` sur la
+                tâche (migration 0007), qui est le seul refus qui survive.
+              */}
               {DECALAGES_RAPPEL.map((d) => {
                 const jour = jourDuRappel(tache.due_date, d.jours)
                 const depasse = isPast(jour)
-                /*
-                 * Un décalage déjà couvert est marqué comme tel plutôt que
-                 * cliquable pour rien. Le cas arrive tout le temps depuis que
-                 * le rappel de la veille est automatique : « La veille »
-                 * n'avait plus aucun effet visible, ce qui donnait
-                 * l'impression que le bouton était cassé.
-                 */
-                const dejaPose = mesRappels.some((r) => r.remind_on === jour)
+                const pose = mesRappels.find((r) => r.remind_on === jour)
+                // La veille d'une tâche ordinaire, c'est le rappel automatique.
+                const estLAuto = !tache.revision_of && d.jours === 1
+                const autoCoupe = estLAuto && tache.rappel_auto === false
+
+                const retirer = () => (pose?.auto || estLAuto)
+                  ? basculerRappelAuto(tache, false)
+                  : supprimerRappel(pose.id)
+
                 return (
                   <button
                     key={d.id}
                     type="button"
-                    className={`puce${dejaPose ? ' posee' : ''}`}
-                    disabled={depasse || dejaPose}
+                    className={`puce${pose ? ' posee' : ''}`}
+                    aria-pressed={Boolean(pose)}
+                    disabled={!pose && depasse && !autoCoupe}
                     title={
-                      dejaPose ? `Rappel déjà posé le ${formatLong(jour)}`
+                      pose ? `Posé le ${formatLong(jour)} — cliquer pour retirer`
+                        : autoCoupe ? 'Remettre le rappel automatique de la veille'
                         : depasse ? `${formatLong(jour)} est déjà passé`
                         : formatLong(jour)
                     }
-                    onClick={() => creerRappel({ taskId: tache.id, remindOn: jour })}
+                    onClick={() => {
+                      if (pose) return retirer()
+                      if (autoCoupe) return basculerRappelAuto(tache, true)
+                      return creerRappel({ taskId: tache.id, remindOn: jour })
+                    }}
                   >
-                    {dejaPose ? `✓ ${d.nom}` : d.nom}
+                    {pose ? `✓ ${d.nom}` : d.nom}
                   </button>
                 )
               })}
@@ -149,15 +169,24 @@ export default function MenuTache({ tache, ancre, onFermer }) {
 
           {mesRappels.length > 0 && (
             <ul className="menu-liste">
+              {/*
+                L'intitulé d'abord, la date ensuite. « Rappel du 17 » oblige
+                à retrouver l'échéance et à faire la soustraction ; « La
+                veille » se lit d'un coup. La date reste juste derrière,
+                parce que c'est elle qui répond à « c'est quand, au juste ».
+              */}
               {mesRappels.map((r) => (
                 <li key={r.id}>
                   <span>
-                    {formatLong(r.remind_on)}
-                    <em> · {formatRelative(r.remind_on)}{r.auto ? ' · automatique' : ''}</em>
+                    <strong>{libelleRappel(r.remind_on, tache.due_date)}</strong>
+                    <em> · {formatLong(r.remind_on)} · {formatRelative(r.remind_on)}
+                      {r.auto ? ' · automatique' : ''}</em>
                   </span>
                   <button
                     type="button" className="lien danger"
-                    onClick={() => supprimerRappel(r.id)}
+                    onClick={() => (r.auto
+                      ? basculerRappelAuto(tache, false)
+                      : supprimerRappel(r.id))}
                   >
                     retirer
                   </button>

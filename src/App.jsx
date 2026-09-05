@@ -12,6 +12,7 @@ import PageRappels from './pages/PageRappels'
 import EcranTaches from './pages/mobile/EcranTaches'
 import EcranCalendrier from './pages/mobile/EcranCalendrier'
 import EcranListes from './pages/mobile/EcranListes'
+import EcranRappels from './pages/mobile/EcranRappels'
 import SettingsPage from './pages/SettingsPage'
 import AccountPage from './pages/AccountPage'
 import { useEstTelephone } from './lib/useEcran'
@@ -37,6 +38,10 @@ function Calendrier() {
   return useEstTelephone() ? <EcranCalendrier /> : <PageCalendrier />
 }
 
+function Rappels() {
+  return useEstTelephone() ? <EcranRappels /> : <PageRappels />
+}
+
 function Listes({ vue = 'courses' }) {
   return useEstTelephone() ? <EcranListes vueInitiale={vue} /> : <PageListes vueInitiale={vue} />
 }
@@ -54,7 +59,7 @@ export default function App() {
             <Route path="/" element={<RequireAuth><AppShell /></RequireAuth>}>
               <Route index element={<Accueil />} />
               <Route path="calendrier" element={<Calendrier />} />
-              <Route path="rappels" element={<PageRappels />} />
+              <Route path="rappels" element={<Rappels />} />
               <Route path="listes" element={<Listes />} />
               <Route path="notes" element={<Listes vue="notes" />} />
               <Route path="reglages" element={<SettingsPage />} />

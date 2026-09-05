@@ -22,16 +22,23 @@ supabase/migrations/0003_triggers.sql   -- profil auto, updated_at, completed_at
 supabase/migrations/0004_revision_rappels.sql   -- les colonnes des révisions
 supabase/migrations/0005_notifications.sql      -- les notifications groupées
 supabase/migrations/0006_rappels_automatiques.sql -- le rappel de la veille
+supabase/migrations/0007_rappel_veille_refusable.sql -- pouvoir le retirer
 ```
 
-`0004` et `0006` peuvent être relancées sans risque : les colonnes sont en
-`add column if not exists`, et les rappels du rattrapage en
+`0004`, `0006` et `0007` peuvent être relancées sans risque : les colonnes
+sont en `add column if not exists`, et les rappels du rattrapage en
 `on conflict do nothing`.
 
 `0006` pose une règle qui vaut pour tout le site : **une tâche datée et non
 faite se rappelle toute seule la veille**, et une séance de révision le jour
 même. C'est un trigger PostgreSQL et non du code côté site, pour que la règle
 tienne quelle que soit la façon dont la tâche est arrivée en base.
+
+`0007` la rend refusable. Sans elle, retirer le rappel de la veille depuis le
+site ne tenait pas : le trigger le repose à chaque écriture sur `due_date`,
+`is_done` ou `revision_of` — cocher puis décocher la tâche suffisait à le voir
+revenir. Le refus est donc rangé sur la tâche (`tasks.rappel_auto`), seul
+endroit qui survive au trigger, à un rechargement et à un autre appareil.
 
 Après `0002`, le tableau de bord ne doit plus signaler aucune table du schéma
 `public` sans sécurité activée.

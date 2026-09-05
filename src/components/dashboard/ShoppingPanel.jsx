@@ -23,6 +23,8 @@ export default function ShoppingPanel({
     )
   }
 
+  // « Ajouter une tâche… » dans une liste de courses : le mot ne
+  // correspond à rien de ce qu'on y écrit. Ce sont des articles.
   const articles = taches.filter((t) => t.category_id === categorie.id)
   const aPrendre = articles.filter((t) => !t.is_done).length
 
@@ -31,7 +33,12 @@ export default function ShoppingPanel({
       titre="Liste de courses"
       accent={categorie.color}
       action={<span className="compteur" title="Articles à prendre">{aPrendre}</span>}
-      pied={<QuickAdd onCreer={creer} categoryId={categorie.id} sansDate />}
+      pied={(
+        <QuickAdd
+          onCreer={creer} categoryId={categorie.id} sansDate
+          placeholder="Ajouter un article…"
+        />
+      )}
       className="panneau-courses"
     >
       <TaskList

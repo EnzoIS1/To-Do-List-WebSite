@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import CategoryCard from './CategoryCard'
+import { SANS_CATEGORIE, tachesSansCategorie } from './sansCategorie'
 
 /**
  * La colonne de droite, en accordéon : une seule catégorie ouverte à la fois.
@@ -70,6 +71,32 @@ export default function CategoryColumn({
             </button>
           )
         })}
+
+        {/* Toujours en dernier : ce qui n'est rangé nulle part. */}
+        {ouverte === SANS_CATEGORIE.id ? (
+          <CategoryCard
+            virtuelle
+            categorie={SANS_CATEGORIE}
+            taches={taches}
+            loading={loading}
+            cocher={cocher}
+            dater={dater}
+            onReplier={() => setOuverte(null)}
+          />
+        ) : (
+          <button
+            type="button"
+            className="categorie-repliee sans-categorie"
+            style={{ '--teinte': SANS_CATEGORIE.color }}
+            onClick={() => setOuverte(SANS_CATEGORIE.id)}
+          >
+            <span className="pastille" />
+            <span className="categorie-nom">{SANS_CATEGORIE.name}</span>
+            <span className="compteur">
+              {tachesSansCategorie(taches).filter((t) => !t.is_done).length}
+            </span>
+          </button>
+        )}
       </div>
 
       <button type="button" className="creer-categorie" onClick={creerCategorie}>

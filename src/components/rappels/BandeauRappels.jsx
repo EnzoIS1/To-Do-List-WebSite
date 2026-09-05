@@ -1,5 +1,6 @@
 import { useDonnees } from '../../data/DonneesProvider'
-import { formatLong, formatRelative } from '../../lib/dates'
+import { formatRelative } from '../../lib/dates'
+import { detailRappel } from '../../lib/rappels'
 
 /**
  * Les rappels dont le jour est arrivé.
@@ -32,11 +33,13 @@ export default function BandeauRappels() {
           <li key={rappel.id}>
             <div className="rappel-texte">
               <strong>{tache.title}</strong>
-              {tache.due_date && (
-                <span className="rappel-echeance">
-                  {formatLong(tache.due_date)} · {formatRelative(tache.due_date)}
-                </span>
-              )}
+              {/* L'intitulé du rappel, puis ce qu'il annonce : « La veille ·
+                  à faire demain ». Sans l'intitulé, deux rappels de la même
+                  tâche s'affichaient à l'identique. */}
+              <span className="rappel-echeance">
+                {detailRappel(rappel, tache)}
+                {tache.due_date && ` · à faire ${formatRelative(tache.due_date)}`}
+              </span>
             </div>
             <button
               type="button"

@@ -259,41 +259,6 @@ export async function abonnementActuel() {
 }
 
 /**
- * Affiche une notification SANS passer par le serveur.
- *
- * C'est le test qui manquait. « Envoyer un essai » traverse toute la chaîne —
- * fonction serveur, clés, chiffrement, service d'Apple — et quand il échoue,
- * il ne dit pas lequel des cinq maillons a lâché. Celui-ci ne teste que le
- * bout local : autorisation accordée, service worker en place, notification
- * affichée par le système. S'il marche et que l'autre échoue, le problème est
- * forcément côté serveur ; s'il échoue lui aussi, inutile d'aller chercher
- * plus loin.
- */
-export async function testerAffichage() {
-  if (!notificationsPossibles()) {
-    return { ok: false, raison: 'Ce navigateur ne sait pas afficher de notifications.' }
-  }
-  if (Notification.permission !== 'granted') {
-    return { ok: false, raison: "L'autorisation n'a pas été accordée sur cet appareil." }
-  }
-  try {
-    const enregistrement = await enregistrerServiceWorker()
-    await navigator.serviceWorker.ready
-    await enregistrement.showNotification('Essai d\'affichage', {
-      body: 'Si tu lis ceci, le service worker et l\'autorisation fonctionnent.',
-      tag: 'resume-du-jour',
-      renotify: true,
-      icon: `${import.meta.env.BASE_URL}icone-192.png`,
-      badge: `${import.meta.env.BASE_URL}icone-192.png`,
-      lang: 'fr',
-    })
-    return { ok: true }
-  } catch (e) {
-    return { ok: false, raison: e.message }
-  }
-}
-
-/**
  * Refait l'abonnement de zéro sur cet appareil.
  *
  * C'est le remède universel au « 403 invalid JWT » : il marche même sur les
