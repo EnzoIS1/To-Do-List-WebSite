@@ -39,6 +39,43 @@ const VAPID_PRIVEE = Deno.env.get('VAPID_PRIVEE')!
 const SUJET_VAPID = Deno.env.get('SUJET_VAPID') ?? 'mailto:contact@exemple.fr'
 const LIEN_SITE = Deno.env.get('LIEN_SITE') ?? '/'
 
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ * CORS — sans ça, le bouton « Envoyer un essai » ne part JAMAIS.
+ *
+ * La requête d'essai est envoyée depuis le site, donc depuis une autre
+ * origine que celle de la fonction. Et elle porte un en-tête Authorization,
+ * qui n'est pas un en-tête « simple » : le navigateur envoie d'abord une
+ * requête OPTIONS de contrôle préalable et attend une réponse qui autorise
+ * explicitement l'origine, la méthode et l'en-tête.
+ *
+ * Sans ces en-têtes, le navigateur bloque avant même d'avoir envoyé quoi
+ * que ce soit et signale « Failed to fetch » — un message qui ne dit ni
+ * qu'il s'agit de CORS, ni quelle requête a échoué. C'est exactement ce qui
+ * s'est produit, et ça m'avait échappé parce que je ne peux pas exécuter
+ * cette fonction depuis un navigateur avant de la livrer.
+ *
+ * Rejoué depuis : essai-cors.mjs lance la fonction dans Deno et vérifie le
+ * contrôle préalable.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+const CORS = {
+  // Le site est public et la fonction ne fait rien sans jeton valide :
+  // restreindre l'origine n'ajouterait aucune sécurité, et casserait
+  // l'essai depuis localhost pendant le développement.
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-cle-planificateur, content-type, apikey',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+}
+
+/** Toute réponse de cette fonction passe par ici : aucune ne peut oublier CORS. */
+const repondre = (corps: unknown, status = 200) =>
+  new Response(JSON.stringify(corps), {
+    status,
+    headers: { ...CORS, 'Content-Type': 'application/json' },
+  })
+
 const enteteService = {
   apikey: CLE_SERVICE,
   Authorization: `Bearer ${CLE_SERVICE}`,
@@ -53,12 +90,18 @@ const rest = (chemin: string, options: RequestInit = {}) =>
 
 /** Vérifie un jeton d'utilisateur auprès de Supabase et renvoie son id. */
 async function utilisateurDuJeton(jeton: string): Promise<string | null> {
-  const r = await fetch(`${URL_SUPABASE}/auth/v1/user`, {
-    headers: { apikey: CLE_SERVICE, Authorization: `Bearer ${jeton}` },
-  })
-  if (!r.ok) return null
-  const u = await r.json()
-  return u?.id ?? null
+  // Un échec réseau ici ne doit pas devenir une erreur 500 sans corps : le
+  // site n'aurait rien de lisible à afficher.
+  try {
+    const r = await fetch(`${URL_SUPABASE}/auth/v1/user`, {
+      headers: { apikey: CLE_SERVICE, Authorization: `Bearer ${jeton}` },
+    })
+    if (!r.ok) return null
+    const u = await r.json()
+    return u?.id ?? null
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -127,6 +170,12 @@ const journaliser = (userId: string, nb: number, r: { statut: string; detail: st
   })
 
 Deno.serve(async (requete) => {
+  // Le contrôle préalable du navigateur. Il doit répondre AVANT tout le
+  // reste : il n'est ni authentifié ni censé faire quoi que ce soit.
+  if (requete.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS })
+  }
+
   const jetonPorte = requete.headers.get('Authorization')?.replace(/^Bearer /, '') ?? ''
   const clePlanificateur = requete.headers.get('x-cle-planificateur') ?? ''
 
@@ -134,25 +183,22 @@ Deno.serve(async (requete) => {
   if (clePlanificateur !== CLE_PLANIFICATEUR) {
     const userId = jetonPorte ? await utilisateurDuJeton(jetonPorte) : null
     if (!userId) {
-      return new Response(JSON.stringify({ erreur: 'non autorisé' }), {
-        status: 401, headers: { 'Content-Type': 'application/json' },
-      })
+      return repondre({
+        erreur: 'non autorisé',
+        detail: 'Session expirée, ou la fonction ne joint pas Supabase. ' +
+          'Reconnecte-toi ; si ça persiste, vérifie les secrets de la fonction.',
+      }, 401)
     }
     const resultat = await envoyerA(userId, ['Ceci est un essai — les notifications fonctionnent.'])
     // Un essai ne s'inscrit PAS au journal : sinon il compterait comme
     // l'envoi du jour et bloquerait le vrai résumé du lendemain matin.
-    return new Response(JSON.stringify({ essai: true, ...resultat }), {
-      status: resultat.statut === 'ok' ? 200 : 502,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return repondre({ essai: true, ...resultat }, resultat.statut === 'ok' ? 200 : 502)
   }
 
   // ── Mode planifié : tout le monde dont c'est l'heure ──
   const r = await rest('rpc/resumes_a_envoyer', { method: 'POST', body: '{}' })
   if (!r.ok) {
-    return new Response(JSON.stringify({ erreur: 'sélection impossible', detail: await r.text() }), {
-      status: 500, headers: { 'Content-Type': 'application/json' },
-    })
+    return repondre({ erreur: 'sélection impossible', detail: await r.text() }, 500)
   }
 
   const aEnvoyer = await r.json()
@@ -163,7 +209,5 @@ Deno.serve(async (requete) => {
     bilan.push({ user_id: ligne.user_id, nb: ligne.nb, statut: resultat.statut })
   }
 
-  return new Response(JSON.stringify({ traites: bilan.length, bilan }), {
-    headers: { 'Content-Type': 'application/json' },
-  })
+  return repondre({ traites: bilan.length, bilan })
 })

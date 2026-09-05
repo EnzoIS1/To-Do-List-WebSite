@@ -259,10 +259,15 @@ export async function dernierEnvoi() {
 
 /** Demande au serveur un envoi d'essai, tout de suite, sur cet appareil. */
 export async function envoyerUnEssai() {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return { ok: false, raison: 'Session expirée.' }
+  const base = import.meta.env.VITE_SUPABASE_URL
+  if (!base) {
+    return { ok: false, raison: 'VITE_SUPABASE_URL manque à la compilation du site.' }
+  }
 
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/envoyer-rappels`
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return { ok: false, raison: 'Session expirée. Reconnecte-toi.' }
+
+  const url = `${base}/functions/v1/envoyer-rappels`
   try {
     const r = await fetch(url, {
       method: 'POST',
@@ -273,6 +278,22 @@ export async function envoyerUnEssai() {
       ? { ok: true }
       : { ok: false, raison: corps.detail ?? corps.erreur ?? `Erreur ${r.status}` }
   } catch (e) {
-    return { ok: false, raison: e.message }
+    /*
+     * « Failed to fetch » est le message du navigateur quand la requête n'a
+     * jamais abouti. Il ne dit PAS pourquoi, et il recouvre trois causes très
+     * différentes. Les énumérer ici évite une demi-heure de recherche à
+     * l'aveugle — c'est exactement ce qui s'est produit la première fois.
+     */
+    const reseau = e instanceof TypeError
+    return {
+      ok: false,
+      raison: reseau
+        ? `La requête vers ${url} n'a pas abouti. Trois causes possibles, ` +
+          'dans l\'ordre : la fonction n\'est pas encore déployée ' +
+          '(npx supabase functions deploy envoyer-rappels --no-verify-jwt) ; ' +
+          'elle est déployée mais sans les en-têtes CORS, et le navigateur bloque ' +
+          'avant d\'envoyer quoi que ce soit ; ou VITE_SUPABASE_URL est erronée.'
+        : e.message,
+    }
   }
 }

@@ -111,6 +111,7 @@ qu'une intention.
 | `npm run test:revision` | teste le calcul des révisions espacées |
 | `npm run test:sw` | teste le service worker des notifications |
 | `npm run test:tri` | teste l'ordre d'affichage des tâches |
+| `npm run test:cors` | vérifie que le navigateur peut appeler la fonction serveur |
 | `node outils/cles-vapid.mjs` | génère la paire de clés des notifications |
 
 ## Comment le code est rangé
@@ -244,6 +245,20 @@ Deux essais séparés, et l'ordre compte :
 Si le 1 marche et pas le 2, le problème est côté serveur : fonction non
 déployée, secret manquant, ou refus du service de notification. Si le 1 ne
 marche pas, inutile de chercher plus loin.
+
+**« Failed to fetch » sur l'essai 2** veut dire que la requête n'a jamais
+abouti — le navigateur n'a même pas obtenu de réponse. Trois causes, dans
+l'ordre de probabilité :
+
+1. **La fonction n'est pas déployée.**
+   `npx supabase functions deploy envoyer-rappels --no-verify-jwt`
+2. **Elle est déployée mais ne renvoie pas les en-têtes CORS.** La requête
+   d'essai part du site vers une autre origine et porte un en-tête
+   `Authorization` : le navigateur envoie d'abord une requête `OPTIONS` de
+   contrôle préalable et bloque tout si la réponse ne l'autorise pas
+   explicitement. Pour le vérifier sans navigateur, lance la fonction en
+   local puis `npm run test:cors`.
+3. **`VITE_SUPABASE_URL` est erronée** dans le site compilé.
 
 ### Quand ça ne marchera pas
 
