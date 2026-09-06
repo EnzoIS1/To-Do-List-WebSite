@@ -1,0 +1,251 @@
+/* ══════════════════════════════════════════════════════════════════════
+   LES AMBIANCES
+
+   Trois habillages sombres, dans l'esprit des tableaux de bord que tu
+   m'as montrés : un fond qui vit derrière l'application, des panneaux en
+   verre dépoli plutôt qu'en aplat, des bords éclairés par un filet de
+   lumière plutôt que soulignés par un trait gris.
+
+   COMMENT C'EST CONSTRUIT
+
+   Une ambiance ne redessine RIEN. Elle ne fait que redéfinir les mêmes
+   variables que les deux thèmes existants — `--fond`, `--surface`,
+   `--trait`, `--accent`… — et ajouter deux choses que le thème n'avait
+   pas : un calque de fond (`--lueur`) et un flou de verre sur les grandes
+   surfaces. C'est ce qui permet d'en ajouter une quatrième en vingt
+   lignes, et surtout de revenir en arrière sans rien casser : sans
+   l'attribut `data-ambiance`, ce fichier ne s'applique pas du tout.
+
+   POURQUOI SEULEMENT EN SOMBRE
+
+   Le verre dépoli suppose une lumière derrière : sur fond blanc, un
+   panneau translucide ne se distingue plus de la page, et les filets
+   clairs disparaissent. Les trois références que tu m'as envoyées sont
+   d'ailleurs toutes sombres. Choisir une ambiance bascule donc le thème
+   en sombre, et « Clair » reste ce qu'il est.
+
+   LE COÛT, ANNONCÉ
+
+   `backdrop-filter` fait travailler la carte graphique. Sur une machine
+   modeste, un défilement peut perdre en fluidité — c'est le prix du
+   verre, et c'est pour ça que « Aucune » reste un choix, pas un défaut
+   dégradé.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Ce que les trois partagent ── */
+:root[data-ambiance] {
+  color-scheme: dark;
+  --eclaircir: 55%;
+
+  /* Des angles plus généreux : c'est ce qui fait « tableau de bord »
+     plutôt que « formulaire ». */
+  --rayon: 10px;
+  --rayon-panneau: 16px;
+
+  --ombre: 0 24px 60px rgba(0, 0, 0, .55);
+  --ombre-panneau: 0 8px 24px rgba(0, 0, 0, .28);
+}
+
+/*
+ * Le fond, en une seule couche fixe derrière tout le reste.
+ *
+ * `position: fixed` et pas un `background` sur <body> : les dégradés ne
+ * doivent pas défiler avec la page, sinon la lueur remonte et sort de
+ * l'écran au premier défilement.
+ */
+:root[data-ambiance] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--fond-page);
+  background-image: var(--lueur);
+}
+:root[data-ambiance] #root { position: relative; z-index: 1; }
+
+/*
+ * Le verre. Une seule règle pour toutes les grandes surfaces, sinon
+ * chacune finirait par avoir sa propre recette et l'ensemble se
+ * décollerait.
+ */
+:root[data-ambiance] .carte-app,
+:root[data-ambiance] .rail,
+:root[data-ambiance] .panneau,
+:root[data-ambiance] .carte-categorie,
+:root[data-ambiance] .categorie-repliee,
+:root[data-ambiance] .menu-flottant,
+:root[data-ambiance] .feuille,
+:root[data-ambiance] .barre-onglets,
+:root[data-ambiance] .barre-capture,
+:root[data-ambiance] .rappel,
+:root[data-ambiance] .bouton-aide,
+:root[data-ambiance] .aide-corps {
+  background: var(--verre);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  border-color: var(--trait);
+}
+
+/* Le filet de lumière sur l'arête haute : c'est ce détail, plus que le
+   flou, qui donne l'impression d'une plaque de verre et non d'un
+   rectangle gris. */
+:root[data-ambiance] .carte-app,
+:root[data-ambiance] .rail,
+:root[data-ambiance] .panneau,
+:root[data-ambiance] .barre-onglets {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .07),
+    var(--ombre-panneau);
+}
+:root[data-ambiance] .carte-app {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .08),
+    0 40px 80px rgba(0, 0, 0, .5);
+}
+
+/* Le fond doit se voir AUTOUR de l'application, pas seulement dans un
+   liseré de 10 px. */
+:root[data-ambiance] .coque { margin: 18px; height: calc(100% - 36px); gap: 14px; }
+/* Sur un grand écran, on laisse respirer : c'est la marge qui fait
+   « application posée sur un fond » plutôt que « page peinte en bleu ». */
+@media (min-width: 1200px) {
+  :root[data-ambiance] .coque { margin: 28px 32px; height: calc(100% - 56px); gap: 18px; }
+}
+:root[data-ambiance] .rail { border-radius: 24px; }
+:root[data-ambiance] .carte-app { border-radius: 22px; }
+
+/* Le corps de l'application laisse passer le fond : sans ça, la carte
+   opaque annulerait tout le travail du calque. */
+:root[data-ambiance] .tableau,
+:root[data-ambiance] .zone-page,
+:root[data-ambiance] .coque-telephone { background: transparent; }
+
+/* Les champs : creusés dans le verre plutôt que posés dessus. */
+:root[data-ambiance] input,
+:root[data-ambiance] select,
+:root[data-ambiance] textarea,
+:root[data-ambiance] .segments,
+:root[data-ambiance] .bouton-fin,
+:root[data-ambiance] .bouton-doux {
+  background: rgba(255, 255, 255, .05);
+  border-color: rgba(255, 255, 255, .10);
+}
+:root[data-ambiance] .segment.actif { background: rgba(255, 255, 255, .12); }
+
+/* Une tâche cochée, un séparateur, une ligne de liste : tout ce qui était
+   un gris plein devient une transparence, sinon les aplats trahissent le
+   verre. */
+:root[data-ambiance] .tache:hover { background: rgba(255, 255, 255, .04); }
+
+/* ══ 1. Nébuleuse ══
+   Le bleu roi de ta première image : une grande lueur en haut à gauche,
+   une seconde plus violette à droite, et le fond qui s'assombrit vers le
+   bas comme un dégradé de nuit. */
+:root[data-ambiance="nebuleuse"] {
+  --fond-page: #070c1a;
+  --lueur:
+    radial-gradient(1100px 700px at 12% -12%, rgba(56, 110, 255, .40), transparent 62%),
+    radial-gradient(900px 620px at 88% 4%, rgba(124, 77, 255, .26), transparent 60%),
+    radial-gradient(1000px 800px at 50% 118%, rgba(30, 70, 220, .22), transparent 62%),
+    linear-gradient(180deg, #0a1128 0%, #060a17 100%);
+
+  --fond: #0b1224;
+  --surface: rgba(21, 30, 56, .62);
+  --verre: rgba(21, 30, 56, .62);
+  --surface-2: rgba(255, 255, 255, .055);
+  --surface-rail: rgba(16, 23, 46, .66);
+  --texte: #E9EDF9;
+  --texte-doux: #B6C0DA;
+  --discret: #8791AE;
+  --trait: rgba(255, 255, 255, .10);
+  --accent: #6C9CFF;
+  --accent-doux: color-mix(in srgb, var(--accent) 20%, transparent);
+  --alerte: #FF9276;
+  --alerte-douce: rgba(255, 146, 118, .16);
+}
+
+/* ══ 2. Minuit ══
+   L'ambiance des deux tableaux de bord presque noirs : un fond profond,
+   une seule lueur violette au-dessus de l'en-tête, et des panneaux qui
+   se détachent par leur arête plus que par leur couleur. */
+:root[data-ambiance="minuit"] {
+  --fond-page: #05060e;
+  --lueur:
+    radial-gradient(900px 520px at 50% -18%, rgba(109, 91, 255, .30), transparent 62%),
+    radial-gradient(760px 520px at 92% 12%, rgba(43, 108, 255, .16), transparent 60%),
+    radial-gradient(700px 600px at 4% 88%, rgba(90, 60, 200, .14), transparent 62%),
+    linear-gradient(180deg, #0a0b18 0%, #04050c 100%);
+
+  --fond: #0a0b16;
+  --surface: rgba(19, 21, 38, .70);
+  --verre: rgba(19, 21, 38, .70);
+  --surface-2: rgba(255, 255, 255, .05);
+  --surface-rail: rgba(14, 16, 30, .74);
+  --texte: #ECEAF7;
+  --texte-doux: #B9B5D0;
+  --discret: #8A86A3;
+  --trait: rgba(255, 255, 255, .09);
+  --accent: #8F7BFF;
+  --accent-doux: color-mix(in srgb, var(--accent) 20%, transparent);
+  --alerte: #FF8095;
+  --alerte-douce: rgba(255, 128, 149, .16);
+}
+
+/* ══ 3. Aurore ══
+   Le vert-noir de ta capture CoinLytix : une lueur turquoise, un fond
+   presque noir, et une trame très légère qui donne la profondeur sans
+   qu'on la remarque vraiment. */
+:root[data-ambiance="aurore"] {
+  --fond-page: #04100c;
+  --lueur:
+    radial-gradient(900px 560px at 18% -10%, rgba(16, 185, 129, .26), transparent 62%),
+    radial-gradient(800px 520px at 86% 6%, rgba(14, 165, 233, .18), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 44px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 44px),
+    linear-gradient(180deg, #07150f 0%, #030b08 100%);
+
+  --fond: #06120e;
+  --surface: rgba(14, 30, 25, .66);
+  --verre: rgba(14, 30, 25, .66);
+  --surface-2: rgba(255, 255, 255, .05);
+  --surface-rail: rgba(10, 24, 20, .70);
+  --texte: #E6F4EE;
+  --texte-doux: #AFC7BE;
+  --discret: #7E968D;
+  --trait: rgba(255, 255, 255, .09);
+  --accent: #35E0BE;
+  --accent-doux: color-mix(in srgb, var(--accent) 18%, transparent);
+  --alerte: #FFA05C;
+  --alerte-douce: rgba(255, 160, 92, .16);
+}
+
+/* Sur téléphone, la marge du bureau mangerait l'écran. */
+@media (max-width: 720px) {
+  :root[data-ambiance] .coque { margin: 10px; height: calc(100% - 20px); }
+}
+
+/*
+ * Certaines machines n'ont pas de `backdrop-filter` (anciens Firefox avec
+ * l'option désactivée). Sans repli, les panneaux deviendraient des
+ * rectangles semi-transparents illisibles : on rend alors le verre opaque.
+ */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root[data-ambiance="nebuleuse"] { --verre: #141c34; --surface: #141c34; }
+  :root[data-ambiance="minuit"] { --verre: #13152a; --surface: #13152a; }
+  :root[data-ambiance="aurore"] { --verre: #0d1e19; --surface: #0d1e19; }
+}
+
+/* Le fond est décoratif : quand l'utilisateur demande moins d'animation et
+   moins de charge visuelle, on garde la couleur et on retire le flou. */
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-ambiance] .carte-app,
+  :root[data-ambiance] .rail,
+  :root[data-ambiance] .panneau,
+  :root[data-ambiance] .menu-flottant,
+  :root[data-ambiance] .feuille,
+  :root[data-ambiance] .barre-onglets {
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    background: var(--fond);
+  }
+}

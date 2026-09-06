@@ -2,7 +2,33 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 const CLE_THEME = 'todo-theme'
 const CLE_ACCENT = 'todo-accent'
+const CLE_AMBIANCE = 'todo-ambiance'
 const THEMES = ['systeme', 'clair', 'sombre']
+
+/**
+ * Les ambiances : trois habillages sombres, définis dans styles/ambiances.css.
+ *
+ * Elles ne remplacent pas le thème, elles l'habillent : mêmes variables,
+ * plus un fond et du verre dépoli. `null` = aucune, on retrouve exactement
+ * l'apparence d'avant.
+ */
+export const AMBIANCES = [
+  {
+    id: 'nebuleuse', nom: 'Nébuleuse',
+    aide: 'Bleu roi, lueur en haut à gauche.',
+    apercu: 'linear-gradient(135deg,#1b3bff 0%,#0a1128 55%,#060a17 100%)',
+  },
+  {
+    id: 'minuit', nom: 'Minuit',
+    aide: 'Presque noir, halo violet.',
+    apercu: 'linear-gradient(135deg,#6d5bff 0%,#0a0b18 55%,#04050c 100%)',
+  },
+  {
+    id: 'aurore', nom: 'Aurore',
+    aide: 'Vert-noir, turquoise et trame fine.',
+    apercu: 'linear-gradient(135deg,#10b981 0%,#07150f 55%,#030b08 100%)',
+  },
+]
 
 /** Six teintes qui restent lisibles dans les deux thèmes une fois dérivées. */
 export const ACCENTS = [
@@ -56,6 +82,10 @@ export function ThemeProvider({ children }) {
     return THEMES.includes(v) ? v : 'systeme'
   })
   const [accent, setAccentInterne] = useState(() => lire(CLE_ACCENT, null))
+  const [ambiance, setAmbianceInterne] = useState(() => {
+    const v = lire(CLE_AMBIANCE, null)
+    return AMBIANCES.some((a) => a.id === v) ? v : null
+  })
   const [resolu, setResolu] = useState(() => themeResolu(theme))
 
   // Le thème « Système » peut changer pendant que la page est ouverte.
@@ -76,6 +106,20 @@ export function ThemeProvider({ children }) {
     else racine.setAttribute('data-theme', theme === 'sombre' ? 'dark' : 'light')
   }, [theme])
 
+  /*
+   * L'ambiance ne s'écrit que si le thème rendu est sombre.
+   *
+   * Le verre dépoli suppose une lumière derrière : sur fond blanc, un
+   * panneau translucide ne se distingue plus de la page. Plutôt que de
+   * livrer un rendu raté, on retire l'attribut — le CSS des ambiances ne
+   * s'applique alors pas du tout, et « Clair » reste ce qu'il est.
+   */
+  useEffect(() => {
+    const racine = document.documentElement
+    if (ambiance && resolu === 'sombre') racine.setAttribute('data-ambiance', ambiance)
+    else racine.removeAttribute('data-ambiance')
+  }, [ambiance, resolu])
+
   // Pas d'accent choisi = aucune surcharge, la valeur du thème s'applique.
   useEffect(() => {
     const racine = document.documentElement
@@ -92,9 +136,25 @@ export function ThemeProvider({ children }) {
     setAccentInterne(v); ecrire(CLE_ACCENT, v)
   }, [])
 
+  /*
+   * Choisir une ambiance bascule en thème sombre — sans quoi on cliquerait
+   * sur « Nébuleuse » depuis le thème clair et il ne se passerait
+   * visiblement rien, ce qui passerait pour un bouton cassé.
+   */
+  const setAmbiance = useCallback((v) => {
+    const valide = AMBIANCES.some((a) => a.id === v) ? v : null
+    setAmbianceInterne(valide); ecrire(CLE_AMBIANCE, valide)
+    if (valide) { setThemeInterne('sombre'); ecrire(CLE_THEME, 'sombre') }
+  }, [])
+
   const value = useMemo(
-    () => ({ theme, setTheme, themes: THEMES, accent, setAccent, accents: ACCENTS, resolu }),
-    [theme, setTheme, accent, setAccent, resolu]
+    () => ({
+      theme, setTheme, themes: THEMES,
+      accent, setAccent, accents: ACCENTS,
+      ambiance, setAmbiance, ambiances: AMBIANCES,
+      resolu,
+    }),
+    [theme, setTheme, accent, setAccent, ambiance, setAmbiance, resolu]
   )
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }

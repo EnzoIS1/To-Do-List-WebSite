@@ -17,7 +17,7 @@ const OPTIONS_THEME = [
  */
 export default function SettingsPage() {
   const { arbre, modifier, supprimer, creer } = useCategories()
-  const { theme, setTheme, accent, setAccent, accents } = useTheme()
+  const { theme, setTheme, accent, setAccent, accents, ambiance, setAmbiance, ambiances } = useTheme()
   const { delaiArchivage, setDelaiArchivage } = useDonnees()
 
   function ajouter(parent = null) {
@@ -67,6 +67,43 @@ export default function SettingsPage() {
               </span>
               <span className="carte-theme-nom">{o.nom}</span>
               <span className="carte-theme-aide">{o.aide}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h2>Ambiance</h2>
+        <p className="aide">
+          Un habillage sombre complet : un fond dégradé derrière
+          l'application, des panneaux en verre dépoli et une couleur
+          d'accent assortie. Choisir une ambiance passe le site en thème
+          sombre — le verre a besoin d'une lumière derrière pour se voir.
+        </p>
+
+        <div className="choix-ambiance" role="radiogroup" aria-label="Ambiance">
+          <button
+            type="button" role="radio" aria-checked={!ambiance}
+            className={`carte-ambiance${!ambiance ? ' actif' : ''}`}
+            onClick={() => setAmbiance(null)}
+          >
+            <span className="apercu-ambiance sans" aria-hidden="true" />
+            <span className="carte-theme-nom">Aucune</span>
+            <span className="carte-theme-aide">Le thème simple, sans fond ni verre.</span>
+          </button>
+
+          {ambiances.map((a) => (
+            <button
+              key={a.id}
+              type="button" role="radio" aria-checked={ambiance === a.id}
+              className={`carte-ambiance${ambiance === a.id ? ' actif' : ''}`}
+              onClick={() => setAmbiance(a.id)}
+            >
+              <span className="apercu-ambiance" style={{ background: a.apercu }} aria-hidden="true">
+                <span className="apercu-verre" />
+              </span>
+              <span className="carte-theme-nom">{a.nom}</span>
+              <span className="carte-theme-aide">{a.aide}</span>
             </button>
           ))}
         </div>

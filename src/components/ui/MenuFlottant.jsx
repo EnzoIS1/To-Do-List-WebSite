@@ -67,17 +67,32 @@ export default function MenuFlottant({ ancre, titre, onFermer, children, cote = 
     return () => document.removeEventListener('keydown', touche)
   }, [onFermer])
 
-  // Un menu ancré ne suit pas le défilement : on le referme. La feuille du
-  // téléphone, elle, est collée au bas de l'écran et n'a aucune raison de
-  // se fermer parce qu'on fait défiler la liste derrière.
+  /*
+   * Un menu ancré ne suit pas le défilement de la page : on le referme.
+   *
+   * MAIS PAS quand c'est le menu LUI-MÊME qui défile. L'écoute était en
+   * phase de capture sur tout le document, donc n'importe quel défilement
+   * intérieur fermait le menu — y compris celui que le navigateur déclenche
+   * tout seul pour amener un champ qui vient de recevoir le focus dans la
+   * vue. Concrètement : cocher une case en bas d'un menu long le faisait
+   * disparaître, et ça passait pour un bug fantôme. Le panneau de révision,
+   * plus haut que les autres, a rendu le défaut systématique.
+   *
+   * La feuille du téléphone, elle, est collée au bas de l'écran et n'a
+   * aucune raison de se fermer parce qu'on fait défiler la liste derrière.
+   */
   useEffect(() => {
     if (surTelephone) return
+    const fermerSiDehors = (e) => {
+      if (e?.target instanceof Node && boite.current?.contains(e.target)) return
+      onFermer()
+    }
     const fermer = () => onFermer()
     window.addEventListener('resize', fermer)
-    document.addEventListener('scroll', fermer, true)
+    document.addEventListener('scroll', fermerSiDehors, true)
     return () => {
       window.removeEventListener('resize', fermer)
-      document.removeEventListener('scroll', fermer, true)
+      document.removeEventListener('scroll', fermerSiDehors, true)
     }
   }, [surTelephone, onFermer])
 

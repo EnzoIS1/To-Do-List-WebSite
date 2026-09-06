@@ -14,7 +14,8 @@
     "test:tri": "node src/lib/tri.test.js",
     "test:fonction": "node tests/fonction.test.mjs",
     "test:rappels": "node src/lib/rappels.test.js",
-    "test:liste-rappels": "node src/lib/listeRappels.test.js"
+    "test:liste-rappels": "node src/lib/listeRappels.test.js",
+    "test:plan-revision": "node src/lib/plan-revision.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",

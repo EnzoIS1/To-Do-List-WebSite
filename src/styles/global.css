@@ -1346,3 +1346,62 @@ input[type="color"] {
 }
 .aide-souci { background: var(--alerte-douce); color: var(--texte); }
 .aide-rappel-final { background: var(--surface-2); color: var(--texte-doux); }
+
+/* ══ Le panneau de révision ══
+   Replié par défaut : le cas simple — un interrupteur, un rythme calculé —
+   reste un seul geste. Ce n'est qu'en dépliant qu'on voit les réglages,
+   et l'aperçu du bas dit ce qui va se passer AVANT que ça se passe. */
+.plein-large { width: 100%; }
+.reglages-revision {
+  display: flex; flex-direction: column; gap: var(--gap-s);
+  margin-top: var(--gap-s); padding: var(--gap-s);
+  border: 1px solid var(--trait); border-radius: var(--rayon-panneau);
+  background: var(--surface-2);
+}
+.reglages-revision .menu-champ { background: var(--surface); border-radius: var(--rayon); padding: 4px 8px; }
+.reglages-revision .menu-note { margin: 0; }
+.reglages-revision .menu-puces { gap: 5px; }
+
+/* La case « pas le week-end » : la case, puis un titre et son explication. */
+.menu-bascule { display: flex; align-items: flex-start; gap: var(--gap-s); font-size: 13px; }
+.menu-bascule input { margin-top: 2px; accent-color: var(--accent); width: 16px; height: 16px; flex: none; }
+.menu-bascule > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.menu-bascule strong { font-weight: 600; }
+
+/* L'aperçu : le nombre de séances en gros, les premières dates en dessous. */
+.apercu-plan {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 9px var(--gap-s); border-radius: var(--rayon);
+  background: var(--accent-doux); border: 1px solid var(--accent);
+}
+.apercu-plan strong { font-size: 13.5px; color: var(--accent); }
+.apercu-dates { font-size: 11.5px; color: var(--texte-doux); line-height: 1.45; }
+.apercu-plan.plein { background: var(--alerte-douce); border-color: var(--alerte); }
+.apercu-plan.plein strong { color: var(--alerte); }
+
+/* ══ Le choix d'ambiance ══
+   Chaque carte montre le dégradé réel de son ambiance, avec une plaque de
+   verre par-dessus : c'est exactement ce que le site fera, en miniature. */
+.choix-ambiance {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--gap-s); margin-top: var(--gap-m);
+}
+.carte-ambiance {
+  display: flex; flex-direction: column; gap: 4px; text-align: left;
+  padding: var(--gap-s); border: 1px solid var(--trait);
+  border-radius: var(--rayon-panneau); background: var(--surface);
+}
+.carte-ambiance:hover { border-color: var(--accent); }
+.carte-ambiance.actif { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.apercu-ambiance {
+  position: relative; overflow: hidden;
+  height: 64px; border-radius: var(--rayon); margin-bottom: 2px;
+  border: 1px solid var(--trait);
+}
+.apercu-ambiance.sans { background: var(--surface-2); }
+.apercu-verre {
+  position: absolute; left: 12%; right: 12%; top: 30%; bottom: 16%;
+  border-radius: 8px; border: 1px solid rgba(255, 255, 255, .22);
+  background: rgba(255, 255, 255, .10);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}

@@ -3,7 +3,9 @@ import { useTasks } from './useTasks'
 import { useCategories } from './useCategories'
 import { useReminders } from './useReminders'
 import { useReglage, joursDArchivage } from '../lib/useReglage'
-import { datesDeRevision } from '../lib/revision'
+import {
+  planifierRevisions, replanifierRevisions, planComplet, bornesDuPlan,
+} from '../lib/revision'
 import { daysBetween, today } from '../lib/dates'
 import { TRI_DEFAUT } from '../lib/tri'
 
@@ -66,7 +68,7 @@ export function DonneesProvider({ children }) {
    * l'historique, et les effacer donnerait l'impression que le travail
    * fait n'a pas compté. Seules les séances à venir sont remplacées.
    */
-  const activerRevision = useCallback(async (tache) => {
+  const activerRevision = useCallback(async (tache, plan = null) => {
     /*
      * Deux dates, et aucune à saisir.
      *
@@ -82,7 +84,17 @@ export function DonneesProvider({ children }) {
     if (!tache.due_date) {
       return { error: { message: 'Donne d\'abord une date à la tâche : c\'est elle qui sert d\'échéance aux révisions.' } }
     }
-    const jours = datesDeRevision(today(), tache.due_date)
+    /*
+     * Le rythme vient du panneau, ou du plan déjà enregistré sur la tâche
+     * si on rallume sans rien changer. `planComplet` bouche les trous :
+     * une tâche d'avant la migration 0008 n'a pas de plan du tout, et doit
+     * continuer à se comporter comme avant.
+     */
+    const planChoisi = planComplet(plan ?? tache.revision_plan)
+    // « Du … au … » : aujourd'hui et l'échéance de la tâche tant que
+    // l'utilisateur n'a rien figé dans le panneau.
+    const { depart, fin } = bornesDuPlan(planChoisi, tache.due_date, today())
+    const jours = planifierRevisions(depart, fin, planChoisi)
     if (jours.length === 0) {
       return { error: { message: "L'échéance est trop proche pour étaler des révisions." } }
     }
@@ -101,10 +113,10 @@ export function DonneesProvider({ children }) {
       }))
     )
     if (error) return { error }
-    // On garde trace de l'échéance visée au moment de l'activation : si la
-    // date de la tâche bouge ensuite, la replanification saura sur quoi elle
-    // s'était engagée.
-    return modifier(tache.id, { exam_date: tache.due_date })
+    // On garde trace de l'échéance visée au moment de l'activation, et du
+    // rythme choisi : sans lui, la replanification d'une séance faite en
+    // retard retomberait sur le mode espacé et défferait le réglage.
+    return modifier(tache.id, { exam_date: tache.due_date, revision_plan: planChoisi })
   }, [revisionsDe, supprimerPlusieurs, creerPlusieurs, modifier])
 
   /** Coupe les révisions : les séances à venir disparaissent, pas les faites. */
@@ -136,7 +148,10 @@ export function DonneesProvider({ children }) {
       .filter((t) => !t.is_done && t.id !== tache.id)
     if (restantes.length === 0) return resultat
 
-    const jours = datesDeRevision(today(), echeance, restantes.length)
+    // On repart d'aujourd'hui — c'est le retard qu'on rattrape — mais on
+    // s'arrête à la fin choisie dans le panneau si elle a été figée.
+    const { fin } = bornesDuPlan(source.revision_plan, echeance, today())
+    const jours = replanifierRevisions(today(), fin, source.revision_plan, restantes.length)
 
     // Moins de jours disponibles que de séances : on supprime les séances
     // en trop plutôt que d'en empiler deux le même jour.
@@ -202,6 +217,8 @@ export function DonneesProvider({ children }) {
         suivi(taches.modifier)(tache.id, { rappel_auto: actif }),
       revisionsDe,
       activerRevision,
+      /** Le rythme enregistré sur une tâche, complété par les défauts. */
+      planDeRevision: (tache) => planComplet(tache?.revision_plan),
       desactiverRevision,
       /** Vrai si la tâche a un plan de révision en cours ou déjà entamé. */
       revisionActive: (tache) => tasks.some((t) => t.revision_of === tache.id),

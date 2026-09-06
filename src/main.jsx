@@ -2,6 +2,9 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './styles/tokens.css'
 import './styles/global.css'
+// Après global.css : les ambiances ne font que redéfinir des variables et
+// surcharger quelques surfaces, elles doivent donc avoir le dernier mot.
+import './styles/ambiances.css'
 
 const racine = document.getElementById('root')
 

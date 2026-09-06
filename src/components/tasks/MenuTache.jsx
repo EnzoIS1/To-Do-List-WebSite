@@ -1,8 +1,7 @@
-import { useState } from 'react'
 import MenuFlottant from '../ui/MenuFlottant'
+import PanneauRevision from './PanneauRevision'
 import { useDonnees } from '../../data/DonneesProvider'
 import { DECALAGES_RAPPEL, jourDuRappel, libelleRappel } from '../../lib/rappels'
-import { datesDeRevision } from '../../lib/revision'
 import { formatLong, formatRelative, isPast, today } from '../../lib/dates'
 
 /**
@@ -22,29 +21,12 @@ export default function MenuTache({ tache, ancre, onFermer }) {
   const {
     choixCategories, modifier, supprimer,
     rappelsDe, creerRappel, supprimerRappel, basculerRappelAuto,
-    revisionsDe, activerRevision, desactiverRevision, tasks,
+    revisionsDe, tasks,
   } = useDonnees()
-
-  const [erreur, setErreur] = useState(null)
-  const [occupe, setOccupe] = useState(false)
 
   const mesRappels = rappelsDe(tache.id)
   const mesRevisions = revisionsDe(tache.id)
   const source = tache.revision_of ? tasks.find((t) => t.id === tache.revision_of) : null
-
-  /** Un seul geste : on allume, ou on éteint. */
-  async function basculerRevision() {
-    setErreur(null); setOccupe(true)
-    const { error } = mesRevisions.length
-      ? await desactiverRevision(tache)
-      : await activerRevision(tache)
-    setOccupe(false)
-    if (error) setErreur(error.message)
-  }
-
-  // Combien de séances l'interrupteur créerait, si on l'allumait maintenant.
-  const seancesPrevues = tache.due_date ? datesDeRevision(today(), tache.due_date).length : 0
-  const revisionPossible = seancesPrevues > 0
 
   return (
     <MenuFlottant ancre={ancre} titre={tache.title} onFermer={onFermer}>
@@ -196,68 +178,8 @@ export default function MenuTache({ tache, ancre, onFermer }) {
           )}
         </div>
 
-        {/* ── Révisions : un interrupteur, sur une tâche source ── */}
-        {!tache.revision_of && (
-          <div className="menu-bloc">
-            <h4>Mode révision</h4>
-
-            {/*
-              Un interrupteur et rien d'autre. Il y avait avant un champ
-              « date de l'examen » à remplir : une date de plus à saisir, et
-              surtout une deuxième date à garder en accord avec celle de la
-              tâche. Or une tâche « Contrôle de maths » datée du 20 porte
-              déjà la réponse. Les séances s'étalent donc d'aujourd'hui à
-              l'échéance de la tâche.
-            */}
-            <button
-              type="button"
-              role="switch"
-              aria-checked={mesRevisions.length > 0}
-              className={`interrupteur${mesRevisions.length ? ' allume' : ''}`}
-              disabled={occupe || (!revisionPossible && mesRevisions.length === 0)}
-              onClick={basculerRevision}
-            >
-              <span className="interrupteur-piste"><span className="interrupteur-bouton" /></span>
-              <span className="interrupteur-texte">
-                <strong>
-                  {mesRevisions.length
-                    ? `${mesRevisions.length} séance${mesRevisions.length > 1 ? 's' : ''} programmée${mesRevisions.length > 1 ? 's' : ''}`
-                    : 'Étaler des révisions'}
-                </strong>
-                <span>
-                  {mesRevisions.length
-                    ? "Rappel automatique le jour de chaque séance."
-                    : revisionPossible
-                      ? `${seancesPrevues} séance${seancesPrevues > 1 ? 's' : ''} d'ici au ${formatLong(tache.due_date)}.`
-                      : tache.due_date
-                        ? "L'échéance est trop proche pour étaler des révisions."
-                        : "Donne d'abord une date à la tâche : c'est elle qui sert d'échéance."}
-                </span>
-              </span>
-            </button>
-
-            {erreur && <p className="menu-note erreur">{erreur}</p>}
-
-            {mesRevisions.length > 0 && (
-              <ul className="menu-liste">
-                {mesRevisions.map((r) => (
-                  <li key={r.id}>
-                    <span className={r.is_done ? 'fait' : undefined}>
-                      {formatLong(r.due_date)}
-                      <em> · {r.is_done ? 'faite' : formatRelative(r.due_date)}</em>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <p className="menu-note">
-              Les séances s'espacent de plus en plus : rapprochées au début,
-              largement séparées ensuite. C'est le point sur lequel la recherche
-              est nette. Les chiffres exacts, eux, sont un choix de réglage.
-            </p>
-          </div>
-        )}
+        {/* ── Révisions : le rythme est réglable, voir PanneauRevision ── */}
+        {!tache.revision_of && <PanneauRevision tache={tache} />}
 
         <hr className="menu-trait" />
 

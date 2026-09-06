@@ -23,6 +23,7 @@ supabase/migrations/0004_revision_rappels.sql   -- les colonnes des révisions
 supabase/migrations/0005_notifications.sql      -- les notifications groupées
 supabase/migrations/0006_rappels_automatiques.sql -- le rappel de la veille
 supabase/migrations/0007_rappel_veille_refusable.sql -- pouvoir le retirer
+supabase/migrations/0008_plan_de_revision.sql        -- le rythme de révision choisi
 ```
 
 `0004`, `0006` et `0007` peuvent être relancées sans risque : les colonnes
@@ -33,6 +34,15 @@ sont en `add column if not exists`, et les rappels du rattrapage en
 faite se rappelle toute seule la veille**, et une séance de révision le jour
 même. C'est un trigger PostgreSQL et non du code côté site, pour que la règle
 tienne quelle que soit la façon dont la tâche est arrivée en base.
+
+`0008` ajoute `tasks.revision_plan` (jsonb) : le rythme de révision choisi
+dans le menu d'une tâche — écarts croissants ou « un jour sur deux », période,
+week-end compris ou non. Il est stocké pour une raison précise : quand une
+séance est validée en retard, le site redistribue les séances restantes, et
+sans le plan il retomberait sur le mode espacé — un « un jour sur deux » se
+transformerait tout seul en écarts croissants. Le contenu du jsonb est
+vérifié par une contrainte : un mode inconnu ferait produire un plan vide en
+silence.
 
 `0007` la rend refusable. Sans elle, retirer le rappel de la veille depuis le
 site ne tenait pas : le trigger le repose à chaque écriture sur `due_date`,
