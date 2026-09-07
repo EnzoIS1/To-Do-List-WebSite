@@ -1,0 +1,27 @@
+# ════════════════════════════════════════════════════════════════════
+# Configuration du projet Supabase, côté dépôt
+#
+# Ce fichier n'existait pas : la fonction était déployée avec le drapeau
+# `--no-verify-jwt` sur la ligne de commande. Ça marche, mais le réglage
+# ne vit alors nulle part — il faut penser à retaper le drapeau à chaque
+# déploiement, et rien dans le dépôt ne dit que cette fonction s'appelle
+# aussi sans jeton d'utilisateur.
+#
+# Écrit ici, le réglage est versionné avec le reste du code.
+# ════════════════════════════════════════════════════════════════════
+
+project_id = "todo-list-website"
+
+[functions.envoyer-rappels]
+# POURQUOI LA VÉRIFICATION DU JETON EST DÉSACTIVÉE
+#
+# La fonction a DEUX appelants, et l'un des deux n'a pas de jeton
+# d'utilisateur : le planificateur (pg_cron), qui s'annonce avec l'en-tête
+# `x-cle-planificateur`. Si Supabase exigeait un JWT valide en amont,
+# l'appel du matin serait refusé avant même d'entrer dans la fonction.
+#
+# Ce n'est pas une porte ouverte : la fonction fait elle-même son
+# contrôle d'accès — soit la clé du planificateur, soit un jeton
+# d'utilisateur qu'elle vérifie auprès de Supabase. Sans l'un des deux,
+# elle répond 401 (c'est vérifié par tests/fonction.test.mjs).
+verify_jwt = false
