@@ -165,6 +165,19 @@ export function DonneesProvider({ children }) {
     return resultat
   }, [cocher, tasks, revisionsDe, supprimerPlusieurs, modifier])
 
+  /** Les rappels à annoncer, rangés par jour : pas vus, tâche vivante et à faire. */
+  const rappelsVivants = useMemo(() => {
+    const parJour = new Map()
+    for (const r of rappels.rappels) {
+      if (r.seen_at) continue
+      const tache = tasks.find((t) => t.id === r.task_id)
+      if (!tache || tache.is_done) continue
+      if (!parJour.has(r.remind_on)) parJour.set(r.remind_on, [])
+      parJour.get(r.remind_on).push({ rappel: r, tache })
+    }
+    return parJour
+  }, [rappels.rappels, tasks])
+
   const value = useMemo(() => {
     const { categories: plates, arbre } = categories
 
@@ -222,10 +235,26 @@ export function DonneesProvider({ children }) {
       desactiverRevision,
       /** Vrai si la tâche a un plan de révision en cours ou déjà entamé. */
       revisionActive: (tache) => tasks.some((t) => t.revision_of === tache.id),
-      /** Les jours qui portent au moins un rappel non vu — pour le calendrier. */
-      joursAvecRappel: new Set(
-        rappels.rappels.filter((r) => !r.seen_at).map((r) => r.remind_on)
-      ),
+      /*
+       * Les rappels VIVANTS, rangés par jour — pour le calendrier.
+       *
+       * Deux corrections d'un coup ici :
+       *
+       * 1. Le filtre. On ne gardait que « pas encore écarté », sans regarder
+       *    la tâche. Résultat : cocher une tâche vidait bien le rappel de la
+       *    page Rappels — qui, elle, filtrait sur `is_done` — mais la
+       *    clochette restait dans le calendrier, pour un rappel qui n'avait
+       *    plus rien à annoncer. Deux endroits, deux règles : c'est toujours
+       *    comme ça que naissent ces écarts. La règle est maintenant ici,
+       *    une seule fois.
+       *
+       * 2. Le contenu. C'était un Set de dates : le calendrier savait qu'il
+       *    y avait un rappel, jamais lequel. Une Map jour → rappels permet
+       *    d'afficher DE QUELLE TÂCHE il s'agit, ce qui est la seule chose
+       *    qu'on veut vraiment savoir en regardant une clochette.
+       */
+      rappelsParJour: rappelsVivants,
+      joursAvecRappel: new Set(rappelsVivants.keys()),
       /** Le libellé « révision 2/4 » d'une séance, ou null si ce n'en est pas une. */
       rangDeRevision: (tache) => {
         if (!tache.revision_of) return null
@@ -240,6 +269,7 @@ export function DonneesProvider({ children }) {
     taches, categories, rappels, delaiArchivage, setDelaiArchivage,
     triTaches, setTriTaches, suivi,
     cocherEtReplanifier, revisionsDe, activerRevision, desactiverRevision, tasks,
+    rappelsVivants,
   ])
 
   return <DonneesContext.Provider value={value}>{children}</DonneesContext.Provider>

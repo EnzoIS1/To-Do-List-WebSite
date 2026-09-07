@@ -1,4 +1,5 @@
 import { useDonnees } from '../../data/DonneesProvider'
+import SelecteurListe from '../ui/SelecteurListe'
 import { TRIS } from '../../lib/tri'
 
 /**
@@ -16,13 +17,13 @@ export default function SelecteurTri() {
   const { triTaches, setTriTaches } = useDonnees()
 
   return (
-    <label className="selecteur-tri" title="Ordre des tâches">
-      <span className="sr-seulement">Ordre des tâches</span>
-      <select value={triTaches} onChange={(e) => setTriTaches(e.target.value)}>
-        {TRIS.map((t) => (
-          <option key={t.id} value={t.id}>{t.nom}</option>
-        ))}
-      </select>
-    </label>
+    <div className="selecteur-tri">
+      <SelecteurListe
+        etiquette="Ordre des tâches"
+        valeur={triTaches}
+        options={TRIS.map((t) => ({ id: t.id, nom: t.nom }))}
+        onChoisir={setTriTaches}
+      />
+    </div>
   )
 }

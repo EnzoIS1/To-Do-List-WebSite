@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { today } from '../../lib/dates'
 import { useEstTelephone } from '../../lib/useEcran'
 import Icone from '../layout/Icones'
+import SelecteurListe from '../ui/SelecteurListe'
 
 /**
  * La barre de saisie unique.
@@ -94,17 +95,16 @@ export default function BarreCapture({
           aria-label="Échéance"
         />
         {categories.length > 0 && (
-          <select
+          <SelecteurListe
+            etiquette="Catégorie"
             className="capture-categorie"
-            value={categorie}
-            onChange={(e) => setCategorie(e.target.value)}
-            aria-label="Catégorie"
-          >
-            <option value="">Sans catégorie</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.chemin ?? c.name}</option>
-            ))}
-          </select>
+            valeur={categorie}
+            options={[
+              { id: '', nom: 'Sans catégorie' },
+              ...categories.map((c) => ({ id: c.id, nom: c.chemin ?? c.name })),
+            ]}
+            onChoisir={setCategorie}
+          />
         )}
         {!telephone && !pile && (
           <button type="submit" className="capture-valider" aria-label="Ajouter la tâche">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Icone from '../layout/Icones'
+import SelecteurListe from '../ui/SelecteurListe'
 
 /**
  * Ajout rapide d'une tâche. Le champ date est un <input type="date"> :
@@ -53,16 +54,16 @@ export default function QuickAdd({
       />
 
       {categories && (
-        <select
-          value={categorie}
-          onChange={(e) => setCategorie(e.target.value)}
-          aria-label="Catégorie"
-        >
-          <option value="">Sans catégorie</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>{c.chemin ?? c.name}</option>
-          ))}
-        </select>
+        <SelecteurListe
+          etiquette="Catégorie"
+          className="selecteur-compact"
+          valeur={categorie}
+          options={[
+            { id: '', nom: 'Sans catégorie' },
+            ...categories.map((c) => ({ id: c.id, nom: c.chemin ?? c.name })),
+          ]}
+          onChoisir={setCategorie}
+        />
       )}
 
       {!sansDate && (

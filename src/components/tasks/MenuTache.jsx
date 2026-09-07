@@ -1,4 +1,5 @@
 import MenuFlottant from '../ui/MenuFlottant'
+import SelecteurListe from '../ui/SelecteurListe'
 import PanneauRevision from './PanneauRevision'
 import { useDonnees } from '../../data/DonneesProvider'
 import { DECALAGES_RAPPEL, jourDuRappel, libelleRappel } from '../../lib/rappels'
@@ -40,18 +41,18 @@ export default function MenuTache({ tache, ancre, onFermer }) {
         )}
 
         {/* ── Catégorie : disponible partout, même sur une tâche cochée ── */}
-        <label className="menu-champ">
+        <div className="menu-champ">
           <span>Catégorie</span>
-          <select
-            value={tache.category_id ?? ''}
-            onChange={(e) => modifier(tache.id, { category_id: e.target.value || null })}
-          >
-            <option value="">Sans catégorie</option>
-            {choixCategories.map((c) => (
-              <option key={c.id} value={c.id}>{c.chemin ?? c.name}</option>
-            ))}
-          </select>
-        </label>
+          <SelecteurListe
+            etiquette="Catégorie"
+            valeur={tache.category_id ?? ''}
+            options={[
+              { id: '', nom: 'Sans catégorie' },
+              ...choixCategories.map((c) => ({ id: c.id, nom: c.chemin ?? c.name })),
+            ]}
+            onChoisir={(id) => modifier(tache.id, { category_id: id || null })}
+          />
+        </div>
 
         <label className="menu-champ">
           <span>Échéance</span>

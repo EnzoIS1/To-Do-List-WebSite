@@ -36,7 +36,23 @@
   /* Les angles adoucis des panneaux et du cadre : plus généreux que les
      petits éléments, c'est ce qui donne l'allure « tableau de bord ». */
   --rayon-panneau: 12px;
-  --police: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /*
+   * Deux polices, et un rôle chacune.
+   *
+   * Inter pour lire : dessinée pour les écrans, très lisible en petit, avec
+   * des chiffres tabulaires — ce qui compte pour un calendrier et des
+   * compteurs qui ne doivent pas danser d'un pixel quand ils changent.
+   *
+   * Space Grotesk pour les titres : ses lettres ont un caractère net,
+   * presque technique, qui donne son allure à l'ensemble sans jamais servir
+   * à un paragraphe. C'est le contraste entre les deux qui fait le style —
+   * une seule police partout, si belle soit-elle, reste plate.
+   *
+   * La pile de repli est là pour de bon : si les fichiers ne se chargent
+   * pas, le site reste lisible dans la police du système.
+   */
+  --police: 'Inter Variable', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --police-titre: 'Space Grotesk Variable', 'Inter Variable', system-ui, sans-serif;
 
   color-scheme: light;
 }

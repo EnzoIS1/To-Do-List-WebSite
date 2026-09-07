@@ -9,6 +9,7 @@ import {
 } from '../../lib/push'
 import { formatLong } from '../../lib/dates'
 import AideNotifications from './AideNotifications'
+import SelecteurListe from '../ui/SelecteurListe'
 
 const HEURES = Array.from({ length: 24 }, (_, h) => h)
 
@@ -75,8 +76,8 @@ export default function SectionNotifications() {
     <section>
       <h2>Notifications</h2>
       <p className="aide">
-        Un seul message par jour, qui regroupe tous les rappels dus. Jamais
-        une notification par tâche.
+        Un message le matin, à l'heure que tu choisis. Regroupé par défaut,
+        ou une notification par tâche — le réglage est plus bas.
       </p>
 
       {!possible && (
@@ -125,15 +126,44 @@ export default function SectionNotifications() {
             {profil?.fuseau ? `Heure locale — fuseau détecté : ${profil.fuseau}.` : 'Heure locale.'}
           </p>
         </div>
-        <select
-          value={profil?.heure_resume ?? 7}
-          onChange={(e) => modifier({ heure_resume: Number(e.target.value) })}
-          aria-label="Heure du résumé"
-        >
-          {HEURES.map((h) => (
-            <option key={h} value={h}>{String(h).padStart(2, '0')} h 00</option>
+        <SelecteurListe
+          etiquette="Heure du résumé"
+          valeur={String(profil?.heure_resume ?? 7)}
+          options={HEURES.map((h) => ({ id: String(h), nom: `${String(h).padStart(2, '0')} h 00` }))}
+          onChoisir={(h) => modifier({ heure_resume: Number(h) })}
+        />
+      </div>
+
+      {/*
+        Deux modes, et le prix de chacun annoncé.
+
+        Le groupé ne peut jamais noyer l'écran mais part en entier dès
+        qu'on le touche ; l'autre se balaie tâche par tâche mais fait
+        huit notifications les jours à huit rappels. Aucun des deux n'est
+        « le bon » — d'où le choix.
+      */}
+      <div className="ligne-reglage colonne">
+        <div>
+          <strong>Forme des notifications</strong>
+          <p className="aide">
+            {(profil?.mode_notif ?? 'resume') === 'par_tache'
+              ? 'Une notification par rappel : tu peux les traiter une par une, mais huit rappels font huit notifications.'
+              : 'Un seul message qui regroupe tous les rappels du jour. Il part en entier dès que tu le touches.'}
+          </p>
+        </div>
+        <div className="segments" role="tablist" aria-label="Forme des notifications">
+          {[
+            { id: 'resume', nom: 'Regroupées' },
+            { id: 'par_tache', nom: 'Une par tâche' },
+          ].map((m) => (
+            <button
+              key={m.id} role="tab"
+              aria-selected={(profil?.mode_notif ?? 'resume') === m.id}
+              className={`segment${(profil?.mode_notif ?? 'resume') === m.id ? ' actif' : ''}`}
+              onClick={() => modifier({ mode_notif: m.id })}
+            >{m.nom}</button>
           ))}
-        </select>
+        </div>
       </div>
 
       <div className="ligne-reglage">

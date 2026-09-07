@@ -17,9 +17,29 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
-h2 { font-size: 14px; margin: 0; letter-spacing: -.005em; }
-h3 { font-size: 14px; margin: 0; }
+/*
+ * Les titres prennent la seconde police. Le resserrement des lettres
+ * (`letter-spacing`) augmente avec la taille : à 22 px, l'espacement par
+ * défaut d'une police fait paraître un titre mou ; à 13 px, le resserrer
+ * le rendrait illisible. D'où trois valeurs et pas une.
+ */
+h1, h2, h3, h4 { font-family: var(--police-titre); font-weight: 600; }
+h1 { font-size: 22px; margin: 0; letter-spacing: -.025em; }
+h2 { font-size: 15px; margin: 0; letter-spacing: -.015em; }
+h3 { font-size: 14px; margin: 0; letter-spacing: -.01em; }
+
+/*
+ * Les chiffres ne dansent pas.
+ *
+ * Un compteur « 1/2 » qui passe à « 2/2 », une date qui change, une heure
+ * qui défile : avec des chiffres à chasse variable, tout se décale d'un
+ * pixel ou deux à chaque changement. `tabular-nums` leur donne la même
+ * largeur, et l'interface cesse de frémir.
+ */
+.compteur, .compteur-jour, .numero, .progression-chiffre, .mois-courant,
+.rappel-echeance, .echeance, .bouton-echeance, .cloche-compte {
+  font-variant-numeric: tabular-nums;
+}
 .sous-titre { color: var(--discret); margin: 2px 0 0; font-size: 13px; }
 .aide { color: var(--discret); font-size: 13px; max-width: 60ch; }
 .etat, .etat-vide { color: var(--discret); font-size: 13px; margin: var(--gap-s) 0; }
@@ -637,6 +657,7 @@ input[type="color"] {
 /* ══ Aperçu de demain, sous les tâches du jour ══ */
 .apercu-demain { margin-top: var(--gap-m); padding-top: var(--gap-s); border-top: 1px solid var(--trait); }
 .titre-bloc {
+  font-family: var(--police-titre);
   font-size: 10px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase;
   color: var(--texte-doux); margin: var(--gap-m) 0 var(--gap-xs);
 }
@@ -1405,3 +1426,66 @@ input[type="color"] {
   background: rgba(255, 255, 255, .10);
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
+
+/* Une ligne de réglage dont le contrôle est trop large pour tenir à droite. */
+.ligne-reglage.colonne { flex-direction: column; align-items: stretch; gap: var(--gap-s); }
+.ligne-reglage.colonne .segments { max-width: 320px; }
+
+/* ══ La liste déroulante maison ══
+   Le champ fermé, d'abord : une pastille comme les autres commandes, avec
+   un chevron qui tourne à l'ouverture. Le menu, lui, est rendu par
+   <MenuFlottant> — d'où l'absence de position ici. */
+.selecteur {
+  display: inline-flex; align-items: center; justify-content: space-between; gap: var(--gap-s);
+  min-height: 34px; min-width: 0; max-width: 100%; padding: 5px 10px 5px 12px;
+  border: 1px solid var(--trait); border-radius: 999px;
+  background: var(--surface); color: var(--texte);
+  font-size: 13px; text-align: left;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.selecteur:hover { border-color: var(--accent); }
+.selecteur[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-doux); }
+.selecteur-valeur { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.selecteur-fleche { flex: none; display: grid; place-items: center; color: var(--discret); }
+.selecteur-fleche svg { width: 15px; height: 15px; }
+.selecteur[aria-expanded="true"] .selecteur-fleche { transform: rotate(180deg); color: var(--accent); }
+.selecteur-compact { max-width: 11em; }
+
+.liste-options { display: flex; flex-direction: column; padding: 5px; min-width: 200px; max-height: 320px; overflow-y: auto; }
+.option {
+  display: flex; align-items: center; gap: var(--gap-s);
+  padding: 9px 10px; border: 0; border-radius: var(--rayon);
+  background: none; color: var(--texte); font-size: 13.5px; text-align: left;
+}
+.option:hover, .option:focus-visible { background: var(--surface-2); outline: none; }
+.option:focus-visible { box-shadow: 0 0 0 2px var(--accent) inset; }
+.option.active { color: var(--accent); font-weight: 600; }
+.option-marque { flex: none; width: 14px; color: var(--accent); font-size: 12px; }
+.option-texte { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.option-texte em { font-style: normal; font-size: 11.5px; color: var(--discret); font-weight: 400; }
+/* Au doigt, les options font 44 px comme le reste des feuilles. */
+.feuille .option { min-height: 44px; font-size: 14.5px; }
+
+/* ══ Les rappels d'un jour, sous l'agenda ══
+   La clochette du calendrier dit qu'il y a un rappel ; ce bloc dit lequel,
+   et pour quelle tâche. */
+.rappels-du-jour { margin-bottom: var(--gap-s); }
+.rappels-du-jour .titre-bloc { display: flex; align-items: center; gap: 5px; margin-top: 0; }
+.cloche-titre { display: inline-grid; place-items: center; color: var(--accent); }
+.cloche-titre svg { width: 12px; height: 12px; }
+.liste-rappels-jour { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.liste-rappels-jour li {
+  display: flex; align-items: flex-start; gap: var(--gap-s);
+  padding: 7px 10px; border-radius: var(--rayon);
+  background: var(--accent-doux);
+  border-left: 3px solid var(--teinte, var(--accent));
+}
+.liste-rappels-jour .pastille { margin-top: 5px; }
+.rappel-jour-texte { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.rappel-jour-texte strong { font-size: 13px; font-weight: 600; overflow-wrap: break-word; }
+.rappel-jour-texte span { font-size: 11.5px; color: var(--texte-doux); }
+
+/* Plusieurs rappels le même jour : la clochette porte le compte. */
+.cloche-jour { position: relative; display: inline-flex; align-items: center; gap: 1px; }
+.cloche-compte { font-size: 9.5px; font-weight: 700; color: var(--accent); }
+.case.selectionne .cloche-compte { color: var(--fond); }

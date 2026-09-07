@@ -1,4 +1,5 @@
 import { monthGrid, monthOf, isToday } from '../../lib/dates'
+import { libelleRappel } from '../../lib/rappels'
 
 const JOURS = [
   { court: 'L', long: 'Lundi' },
@@ -37,7 +38,7 @@ const JOURS = [
  */
 export default function MonthGrid({
   mois, taches, jourChoisi, onJourClique, couleurDe, apercuMax = 2, mode = 'noms',
-  joursAvecRappel,
+  rappelsParJour,
 }) {
   const jours = monthGrid(mois.year, mois.month)
 
@@ -76,6 +77,10 @@ export default function MonthGrid({
             : duJour.slice(0, deborde ? Math.max(1, apercuMax - 1) : apercuMax)
           const cachees = duJour.length - visibles.length
 
+          // Les rappels du jour, avec leur tâche : la clochette peut enfin
+          // dire ce qu'elle annonce au lieu de signaler « quelque chose ».
+          const rappelsDuJour = rappelsParJour?.get(jour) ?? []
+
           const classes = [
             'case',
             horsMois ? 'hors-mois' : '',
@@ -90,7 +95,9 @@ export default function MonthGrid({
               aria-current={choisi ? 'date' : undefined}
               aria-label={
                 `${jour}, ${duJour.length} tâche${duJour.length > 1 ? 's' : ''}` +
-                (joursAvecRappel?.has(jour) ? ', rappel' : '')
+                (rappelsDuJour.length
+                  ? `, rappel : ${rappelsDuJour.map((r) => r.tache.title).join(', ')}`
+                  : '')
               }
               onClick={() => onJourClique?.(jour)}
             >
@@ -103,13 +110,22 @@ export default function MonthGrid({
                   propriété du jour. La mettre dans la liste ferait croire à
                   une sixième chose à faire.
                 */}
-                {joursAvecRappel?.has(jour) && (
-                  <span className="cloche-jour" title="Rappel ce jour-là" aria-hidden="true">
+                {rappelsDuJour.length > 0 && (
+                  <span
+                    className="cloche-jour"
+                    title={rappelsDuJour
+                      .map(({ rappel, tache }) => `${tache.title} — ${libelleRappel(rappel.remind_on, tache.due_date)}`)
+                      .join('\n')}
+                    aria-hidden="true"
+                  >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M18 8.5a6 6 0 1 0-12 0c0 5-2 6.5-2 6.5h16s-2-1.5-2-6.5" />
                       <path d="M13.7 19a2 2 0 0 1-3.4 0" />
                     </svg>
+                    {rappelsDuJour.length > 1 && (
+                      <span className="cloche-compte">{rappelsDuJour.length}</span>
+                    )}
                   </span>
                 )}
                 {duJour.length > 0 && (

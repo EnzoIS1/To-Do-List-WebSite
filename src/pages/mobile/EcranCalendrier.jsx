@@ -3,6 +3,7 @@ import { useDonnees } from '../../data/DonneesProvider'
 import MonthGrid from '../../components/calendar/MonthGrid'
 import FiltreCategories, { filtrer } from '../../components/calendar/FiltreCategories'
 import TaskList from '../../components/tasks/TaskList'
+import RappelsDuJour from '../../components/rappels/RappelsDuJour'
 import BarreCapture from '../../components/capture/BarreCapture'
 import { today, monthOf, shiftMonth, formatMonth, formatLong } from '../../lib/dates'
 
@@ -14,7 +15,7 @@ import { today, monthOf, shiftMonth, formatMonth, formatLong } from '../../lib/d
 export default function EcranCalendrier() {
   const {
     tasks, loading, creer, modifier, cocher, supprimer,
-    choixCategories, couleurDe, arbre, joursAvecRappel,
+    choixCategories, couleurDe, arbre, rappelsParJour,
   } = useDonnees()
 
   const [jourChoisi, setJourChoisi] = useState(today())
@@ -52,7 +53,7 @@ export default function EcranCalendrier() {
 
       <div className="ecran-corps mois-plein">
         <MonthGrid
-          joursAvecRappel={joursAvecRappel}
+          rappelsParJour={rappelsParJour}
           mois={mois}
           taches={visibles}
           jourChoisi={jourChoisi}
@@ -63,6 +64,7 @@ export default function EcranCalendrier() {
 
         <div className="agenda-jour">
           <h2 className="titre-bloc">{formatLong(jourChoisi)} · {duJour.length}</h2>
+          <RappelsDuJour jour={jourChoisi} />
           <TaskList
             taches={duJour} loading={loading} onCocher={cocher}
             onDater={modifier}

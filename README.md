@@ -24,6 +24,7 @@ supabase/migrations/0005_notifications.sql      -- les notifications groupées
 supabase/migrations/0006_rappels_automatiques.sql -- le rappel de la veille
 supabase/migrations/0007_rappel_veille_refusable.sql -- pouvoir le retirer
 supabase/migrations/0008_plan_de_revision.sql        -- le rythme de révision choisi
+supabase/migrations/0009_mode_notification.sql       -- groupées ou une par tâche
 ```
 
 `0004`, `0006` et `0007` peuvent être relancées sans risque : les colonnes
@@ -34,6 +35,14 @@ sont en `add column if not exists`, et les rappels du rattrapage en
 faite se rappelle toute seule la veille**, et une séance de révision le jour
 même. C'est un trigger PostgreSQL et non du code côté site, pour que la règle
 tienne quelle que soit la façon dont la tâche est arrivée en base.
+
+`0009` ajoute `profiles.mode_notif` : les notifications sont groupées en un
+message par jour (défaut) ou envoyées une par rappel. Elle **supprime puis
+recrée** `resumes_a_envoyer()` : `create or replace` refuse de changer le type
+de retour, et la fonction gagne une colonne. Après cette migration, il faut
+redéployer la fonction (`npx supabase functions deploy envoyer-rappels
+--no-verify-jwt`), sinon elle continue d'envoyer un résumé quel que soit le
+réglage.
 
 `0008` ajoute `tasks.revision_plan` (jsonb) : le rythme de révision choisi
 dans le menu d'une tâche — écarts croissants ou « un jour sur deux », période,

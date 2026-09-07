@@ -12,7 +12,7 @@ export default function CalendarPanel({
   mois, setMois, jourChoisi, onJourClique, taches, couleurDe,
   arbre, categoriesActives, setCategoriesActives,
 }) {
-  const { joursAvecRappel } = useDonnees()
+  const { rappelsParJour } = useDonnees()
 
   const revenirAujourdhui = () => { setMois(monthOf(today())); onJourClique(today()) }
 
@@ -39,7 +39,7 @@ export default function CalendarPanel({
         onChange={setCategoriesActives}
       />
       <MonthGrid
-        joursAvecRappel={joursAvecRappel}
+        rappelsParJour={rappelsParJour}
         mois={mois}
         taches={taches}
         jourChoisi={jourChoisi}

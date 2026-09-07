@@ -76,5 +76,34 @@ console.log('\n7. Le lien du clic')
       === 'https://enzois1.github.io/To-Do-List-WebSite/')
 }
 
+console.log('\n8. Le mode « une notification par tâche »')
+{
+  const { composerParTache, composerMessages } = await import('./resume.js')
+  const verifie = ok
+
+  const titres = ['Contrôle de maths', 'Rendre le TP', 'Appeler le dentiste']
+  const messages = composerParTache(titres, 'https://exemple.fr/')
+
+  verifie('une notification par tâche', messages.length === 3)
+  verifie('chaque notification porte le titre de sa tâche',
+    messages.map((m) => m.titre).join('|') === titres.join('|'))
+  verifie('les étiquettes sont toutes différentes',
+    new Set(messages.map((m) => m.tag)).size === 3,
+    'sinon elles se remplaceraient les unes les autres et il n\'en resterait qu\'une')
+  verifie('elles restent stables d\'un jour à l\'autre',
+    messages.every((m, i) => m.tag === `${ETIQUETTE}-${i + 1}`))
+  verifie('un titre trop long est coupé proprement',
+    composerParTache(['x'.repeat(200)])[0].titre.endsWith('…'))
+  verifie('aucun message quand il n\'y a rien à annoncer',
+    composerParTache([]).length === 0 && composerParTache(['', '  ']).length === 0)
+
+  verifie('le mode par défaut reste le résumé groupé',
+    composerMessages(titres, '/').length === 1)
+  verifie('et le mode choisi est respecté',
+    composerMessages(titres, '/', 'par_tache').length === 3)
+  verifie('un mode inconnu retombe sur le résumé, sans planter',
+    composerMessages(titres, '/', 'nimporte').length === 1)
+}
+
 console.log(echecs === 0 ? '\n✓ Tout est vert.\n' : `\n✗ ${echecs} échec(s).\n`)
 process.exit(echecs === 0 ? 0 : 1)

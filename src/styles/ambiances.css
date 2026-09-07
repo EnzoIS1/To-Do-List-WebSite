@@ -65,6 +65,29 @@
 :root[data-ambiance] #root { position: relative; z-index: 1; }
 
 /*
+ * La deuxième couche : le grain et la vignette.
+ *
+ * Un dégradé pur, sur un grand écran, montre des anneaux — les fameuses
+ * « bandes » dues aux 256 niveaux par canal. Un grain très fin (du bruit
+ * SVG, donc aucun fichier à charger) casse ces anneaux, et la vignette
+ * assombrit les bords, ce qui concentre le regard vers le centre de
+ * l'écran là où se trouve l'application.
+ */
+:root[data-ambiance] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .5;
+  background-image:
+    radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0, 0, 0, .55) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23b)' opacity='.35'/%3E%3C/svg%3E");
+  background-size: cover, 160px 160px;
+  mix-blend-mode: soft-light;
+}
+
+/*
  * Le verre. Une seule règle pour toutes les grandes surfaces, sinon
  * chacune finirait par avoir sa propre recette et l'ensemble se
  * décollerait.
@@ -80,7 +103,16 @@
 :root[data-ambiance] .barre-capture,
 :root[data-ambiance] .rappel,
 :root[data-ambiance] .bouton-aide,
-:root[data-ambiance] .aide-corps {
+:root[data-ambiance] .aide-corps,
+:root[data-ambiance] .carte-theme,
+:root[data-ambiance] .carte-delai,
+:root[data-ambiance] .carte-ambiance,
+:root[data-ambiance] .bandeau-rappels li,
+:root[data-ambiance] .fenetre-ajout,
+:root[data-ambiance] .reglages-revision,
+:root[data-ambiance] .liste-rappels-jour li,
+:root[data-ambiance] .separateur-terminees,
+:root[data-ambiance] .case {
   background: var(--verre);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
   backdrop-filter: blur(20px) saturate(150%);
@@ -136,7 +168,61 @@
 /* Une tâche cochée, un séparateur, une ligne de liste : tout ce qui était
    un gris plein devient une transparence, sinon les aplats trahissent le
    verre. */
-:root[data-ambiance] .tache:hover { background: rgba(255, 255, 255, .04); }
+:root[data-ambiance] .tache:hover { background: rgba(255, 255, 255, .045); }
+
+/*
+ * LA SEMI-TRANSPARENCE, JUSQU'AUX PETITES PIÈCES
+ *
+ * Le verre ne tient que s'il est cohérent. Une case de calendrier ou une
+ * puce en aplat gris au milieu de panneaux translucides se voit tout de
+ * suite : c'est le seul endroit où l'œil retrouve un rectangle « posé
+ * dessus » au lieu d'une couche de la même matière. Ces surfaces reprennent
+ * donc la même recette, en plus léger — elles sont DANS le verre, elles
+ * n'ont pas à le refloutter.
+ */
+:root[data-ambiance] .case,
+:root[data-ambiance] .categorie-repliee,
+:root[data-ambiance] .puce,
+:root[data-ambiance] .jeton,
+:root[data-ambiance] .compteur,
+:root[data-ambiance] .segments,
+:root[data-ambiance] .barre-edition,
+:root[data-ambiance] .apercu-plan,
+:root[data-ambiance] .menu-champ,
+:root[data-ambiance] .liste-options .option:hover {
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  background: rgba(255, 255, 255, .045);
+  border-color: rgba(255, 255, 255, .09);
+}
+:root[data-ambiance] .case.aujourdhui { border-color: var(--accent); }
+/*
+ * La case du jour choisi RECOUVRE les suivantes : elle s'agrandit et passe
+ * au-dessus. Elle doit donc rester opaque — en la rendant translucide comme
+ * les autres, on voyait les numéros des jours du dessous à travers le texte
+ * des tâches. C'est la seule case qui ne joue pas le jeu du verre, et c'est
+ * pour une raison de lisibilité, pas d'esthétique.
+ */
+:root[data-ambiance] .case.selectionne {
+  background: color-mix(in srgb, var(--accent) 16%, var(--fond));
+  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+}
+:root[data-ambiance] .case.hors-mois { background: rgba(255, 255, 255, .015); }
+
+/* Les panneaux : un peu plus transparents que la carte qui les porte,
+   pour qu'on distingue les deux plans. */
+:root[data-ambiance] .panneau,
+:root[data-ambiance] .carte-categorie {
+  background: color-mix(in srgb, var(--verre) 78%, transparent);
+}
+
+/* Les en-têtes de panneau : une bande légèrement plus claire, comme une
+   arête éclairée par le haut. */
+:root[data-ambiance] .panneau-tete,
+:root[data-ambiance] .carte-tete,
+:root[data-ambiance] .feuille-tete {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .055), transparent);
+  border-color: rgba(255, 255, 255, .08);
+}
 
 /* ══ 1. Nébuleuse ══
    Le bleu roi de ta première image : une grande lueur en haut à gauche,
@@ -145,14 +231,16 @@
 :root[data-ambiance="nebuleuse"] {
   --fond-page: #070c1a;
   --lueur:
-    radial-gradient(1100px 700px at 12% -12%, rgba(56, 110, 255, .40), transparent 62%),
-    radial-gradient(900px 620px at 88% 4%, rgba(124, 77, 255, .26), transparent 60%),
-    radial-gradient(1000px 800px at 50% 118%, rgba(30, 70, 220, .22), transparent 62%),
-    linear-gradient(180deg, #0a1128 0%, #060a17 100%);
+    radial-gradient(52% 42% at 10% -8%, rgba(64, 122, 255, .48), transparent 70%),
+    radial-gradient(44% 38% at 92% 2%, rgba(140, 88, 255, .32), transparent 70%),
+    radial-gradient(38% 34% at 72% 46%, rgba(0, 180, 255, .14), transparent 72%),
+    radial-gradient(60% 45% at 45% 116%, rgba(36, 78, 230, .30), transparent 70%),
+    conic-gradient(from 210deg at 30% 20%, rgba(90, 140, 255, .10), transparent 40%),
+    linear-gradient(165deg, #0b1330 0%, #080d20 55%, #05080f 100%);
 
   --fond: #0b1224;
-  --surface: rgba(21, 30, 56, .62);
-  --verre: rgba(21, 30, 56, .62);
+  --surface: rgba(20, 29, 56, .52);
+  --verre: rgba(20, 29, 56, .52);
   --surface-2: rgba(255, 255, 255, .055);
   --surface-rail: rgba(16, 23, 46, .66);
   --texte: #E9EDF9;
@@ -172,14 +260,15 @@
 :root[data-ambiance="minuit"] {
   --fond-page: #05060e;
   --lueur:
-    radial-gradient(900px 520px at 50% -18%, rgba(109, 91, 255, .30), transparent 62%),
-    radial-gradient(760px 520px at 92% 12%, rgba(43, 108, 255, .16), transparent 60%),
-    radial-gradient(700px 600px at 4% 88%, rgba(90, 60, 200, .14), transparent 62%),
-    linear-gradient(180deg, #0a0b18 0%, #04050c 100%);
+    radial-gradient(48% 36% at 50% -14%, rgba(120, 100, 255, .38), transparent 70%),
+    radial-gradient(40% 34% at 96% 10%, rgba(60, 120, 255, .20), transparent 70%),
+    radial-gradient(46% 40% at 0% 92%, rgba(110, 70, 220, .20), transparent 72%),
+    conic-gradient(from 140deg at 70% 60%, rgba(150, 120, 255, .08), transparent 45%),
+    linear-gradient(170deg, #0b0c1c 0%, #070814 55%, #030409 100%);
 
   --fond: #0a0b16;
-  --surface: rgba(19, 21, 38, .70);
-  --verre: rgba(19, 21, 38, .70);
+  --surface: rgba(18, 20, 38, .58);
+  --verre: rgba(18, 20, 38, .58);
   --surface-2: rgba(255, 255, 255, .05);
   --surface-rail: rgba(14, 16, 30, .74);
   --texte: #ECEAF7;
@@ -199,15 +288,16 @@
 :root[data-ambiance="aurore"] {
   --fond-page: #04100c;
   --lueur:
-    radial-gradient(900px 560px at 18% -10%, rgba(16, 185, 129, .26), transparent 62%),
-    radial-gradient(800px 520px at 86% 6%, rgba(14, 165, 233, .18), transparent 60%),
-    repeating-linear-gradient(0deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 44px),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, .022) 0 1px, transparent 1px 44px),
-    linear-gradient(180deg, #07150f 0%, #030b08 100%);
+    radial-gradient(46% 38% at 14% -8%, rgba(20, 210, 150, .34), transparent 70%),
+    radial-gradient(42% 34% at 90% 4%, rgba(14, 175, 235, .24), transparent 70%),
+    radial-gradient(50% 40% at 60% 110%, rgba(10, 150, 120, .20), transparent 72%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .020) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .020) 0 1px, transparent 1px 46px),
+    linear-gradient(168deg, #08180f 0%, #041009 55%, #020805 100%);
 
   --fond: #06120e;
-  --surface: rgba(14, 30, 25, .66);
-  --verre: rgba(14, 30, 25, .66);
+  --surface: rgba(13, 29, 24, .55);
+  --verre: rgba(13, 29, 24, .55);
   --surface-2: rgba(255, 255, 255, .05);
   --surface-rail: rgba(10, 24, 20, .70);
   --texte: #E6F4EE;

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useDonnees } from '../../data/DonneesProvider'
+import SelecteurListe from '../ui/SelecteurListe'
 import {
   planifierRevisions, planComplet, bornesDuPlan, resumeDuPlan, PLAFOND_SEANCES,
 } from '../../lib/revision'
@@ -141,18 +142,18 @@ export default function PanneauRevision({ tache }) {
                 ensuite. C'est le point sur lequel la recherche est nette ;
                 les chiffres exacts sont un choix de réglage.
               </p>
-              <label className="menu-champ">
+              <div className="menu-champ">
                 <span>Nombre de séances</span>
-                <select
-                  value={plan.nombre ?? ''}
-                  onChange={(e) => change({ nombre: e.target.value ? Number(e.target.value) : null })}
-                >
-                  <option value="">Automatique</option>
-                  {[2, 3, 4, 5, 6, 7, 8, 10, 12].map((n) => (
-                    <option key={n} value={n}>{n} séances</option>
-                  ))}
-                </select>
-              </label>
+                <SelecteurListe
+                  etiquette="Nombre de séances"
+                  valeur={plan.nombre == null ? '' : String(plan.nombre)}
+                  options={[
+                    { id: '', nom: 'Automatique', detail: 'selon le temps disponible' },
+                    ...[2, 3, 4, 5, 6, 7, 8, 10, 12].map((n) => ({ id: String(n), nom: `${n} séances` })),
+                  ]}
+                  onChoisir={(v) => change({ nombre: v ? Number(v) : null })}
+                />
+              </div>
             </>
           ) : (
             <>

@@ -64,3 +64,48 @@ export function composerResume(titres, lien = '/') {
 
   return { titre, corps, tag: ETIQUETTE, url: lien }
 }
+
+/**
+ * L'autre mode : une notification PAR TÂCHE.
+ *
+ * ─────────────────────────────────────────────────────────────────────
+ * POURQUOI DEUX MODES
+ *
+ * Le résumé groupé a été le choix de départ, et il reste le défaut : il
+ * ne peut jamais noyer l'écran, et c'est ce qu'on veut quand on a huit
+ * rappels un lundi matin. Mais il a un défaut réel — on ne peut pas
+ * traiter les rappels un par un : la notification part en entier dès
+ * qu'on la touche, et les sept autres tâches disparaissent avec.
+ *
+ * Une notification par tâche se balaie une par une, et c'est ce que
+ * certains veulent. Le prix est annoncé dans les réglages : huit rappels
+ * font huit notifications.
+ *
+ * L'ÉTIQUETTE, ICI AUSSI
+ *
+ * Chaque message porte une étiquette distincte — sans quoi la norme des
+ * notifications les ferait se remplacer les unes les autres et il n'en
+ * resterait qu'une, ce qui serait le pire des deux modes. Elles sont
+ * numérotées plutôt que hachées : le lendemain, les mêmes étiquettes
+ * remplacent proprement celles de la veille au lieu de s'empiler.
+ *
+ * @param {string[]} titres
+ * @param {string} [lien]
+ * @returns {{titre: string, corps: string, tag: string, url: string}[]}
+ */
+export function composerParTache(titres, lien = '/') {
+  const propres = titres.map((t) => (t ?? '').trim()).filter(Boolean)
+  return propres.map((t, i) => ({
+    titre: raccourcir(t, 70),
+    corps: 'Rappel du jour',
+    tag: `${ETIQUETTE}-${i + 1}`,
+    url: lien,
+  }))
+}
+
+/** Les messages à envoyer, selon le mode choisi dans les réglages. */
+export function composerMessages(titres, lien = '/', mode = 'resume') {
+  if (mode === 'par_tache') return composerParTache(titres, lien)
+  const resume = composerResume(titres, lien)
+  return resume ? [resume] : []
+}

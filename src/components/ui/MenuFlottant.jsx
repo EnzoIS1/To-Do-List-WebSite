@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useEstTelephone } from '../../lib/useEcran'
 
@@ -35,7 +35,7 @@ export default function MenuFlottant({ ancre, titre, onFermer, children, cote = 
   // Position ancrée au bouton, sur grand écran seulement, et bornée à la
   // fenêtre : un menu ouvert depuis le bas de l'écran remonte au-dessus du
   // bouton plutôt que de déborder sous le bord.
-  useLayoutEffect(() => {
+  const placer = useCallback(() => {
     if (surTelephone) { setPos(null); return }
     const bouton = ancre?.current?.getBoundingClientRect()
     const menu = boite.current?.getBoundingClientRect()
@@ -61,6 +61,8 @@ export default function MenuFlottant({ ancre, titre, onFermer, children, cote = 
     setPos({ left: gauche, top: haut })
   }, [surTelephone, ancre, cote])
 
+  useLayoutEffect(placer, [placer])
+
   useEffect(() => {
     const touche = (e) => { if (e.key === 'Escape') onFermer() }
     document.addEventListener('keydown', touche)
@@ -68,33 +70,37 @@ export default function MenuFlottant({ ancre, titre, onFermer, children, cote = 
   }, [onFermer])
 
   /*
-   * Un menu ancré ne suit pas le défilement de la page : on le referme.
+   * AU DÉFILEMENT, LE MENU SUIT — IL NE SE FERME PLUS.
    *
-   * MAIS PAS quand c'est le menu LUI-MÊME qui défile. L'écoute était en
-   * phase de capture sur tout le document, donc n'importe quel défilement
-   * intérieur fermait le menu — y compris celui que le navigateur déclenche
-   * tout seul pour amener un champ qui vient de recevoir le focus dans la
-   * vue. Concrètement : cocher une case en bas d'un menu long le faisait
-   * disparaître, et ça passait pour un bug fantôme. Le panneau de révision,
-   * plus haut que les autres, a rendu le défaut systématique.
+   * Deux versions ratées avant celle-ci, et elles valent d'être écrites :
    *
-   * La feuille du téléphone, elle, est collée au bas de l'écran et n'a
-   * aucune raison de se fermer parce qu'on fait défiler la liste derrière.
+   * 1. Fermer à tout défilement du document, en phase de capture. C'était
+   *    l'idée d'origine — « un menu ancré ne doit pas rester en l'air ».
+   *    Mais ça fermait aussi quand le menu défilait LUI-MÊME, et surtout
+   *    quand le navigateur faisait défiler la page tout seul pour amener
+   *    dans la vue un élément qui venait de recevoir le focus. Résultat :
+   *    une liste ouverte au bas des Paramètres se refermait dans le même
+   *    geste, sans que rien ne l'explique.
+   *
+   * 2. Fermer sauf si le défilement vient du menu. Mieux, mais le cas du
+   *    défilement automatique de la PAGE restait : le menu s'ouvrait et
+   *    disparaissait aussitôt.
+   *
+   * La bonne réponse était ailleurs : recalculer la position au lieu de
+   * fermer. Le menu reste accroché à son bouton, quoi qu'il arrive, et il
+   * n'y a plus une seule situation où il disparaît sans qu'on l'ait
+   * demandé. La feuille du téléphone n'a rien à recalculer : elle est
+   * collée au bas de l'écran.
    */
   useEffect(() => {
     if (surTelephone) return
-    const fermerSiDehors = (e) => {
-      if (e?.target instanceof Node && boite.current?.contains(e.target)) return
-      onFermer()
-    }
-    const fermer = () => onFermer()
-    window.addEventListener('resize', fermer)
-    document.addEventListener('scroll', fermerSiDehors, true)
+    window.addEventListener('resize', placer)
+    document.addEventListener('scroll', placer, true)
     return () => {
-      window.removeEventListener('resize', fermer)
-      document.removeEventListener('scroll', fermerSiDehors, true)
+      window.removeEventListener('resize', placer)
+      document.removeEventListener('scroll', placer, true)
     }
-  }, [surTelephone, onFermer])
+  }, [surTelephone, placer])
 
   const style = surTelephone
     ? undefined

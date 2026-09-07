@@ -29,7 +29,7 @@
  * ici, explicitement, plutôt que délégués à un réglage invisible.
  */
 import { envoyer } from './webpush.js'
-import { composerResume } from './resume.js'
+import { composerMessages } from './resume.js'
 
 const URL_SUPABASE = Deno.env.get('SUPABASE_URL')!
 const CLE_SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -140,9 +140,11 @@ async function utilisateurDuJeton(jeton: string): Promise<string | null> {
  * plus (icône retirée de l'écran d'accueil, navigateur réinstallé). Sans ce
  * ménage, on réessaierait tous les matins jusqu'à la fin des temps.
  */
-async function envoyerA(userId: string, titres: string[]) {
-  const resume = composerResume(titres, LIEN_SITE)
-  if (!resume) return { statut: 'erreur', detail: 'rien à annoncer' }
+async function envoyerA(userId: string, titres: string[], mode = 'resume') {
+  // Un message en mode groupé, autant que de tâches en mode « une par
+  // tâche ». Le reste de la fonction ne change pas : elle envoie une liste.
+  const messages = composerMessages(titres, LIEN_SITE, mode)
+  if (messages.length === 0) return { statut: 'erreur', detail: 'rien à annoncer' }
 
   const r = await rest(`push_subscriptions?user_id=eq.${userId}&select=*`)
   const abonnements = r.ok ? await r.json() : []
@@ -151,15 +153,15 @@ async function envoyerA(userId: string, titres: string[]) {
     return { statut: 'aucun_abonnement', detail: null }
   }
 
-  const message = JSON.stringify(resume)
   const echecs: string[] = []
   let reussites = 0
 
   for (const a of abonnements) {
+   for (const contenu of messages) {
     try {
       const res = await envoyer(
         { endpoint: a.endpoint, p256dh: a.p256dh, auth: a.auth },
-        message,
+        JSON.stringify(contenu),
         { publique: VAPID_PUBLIQUE, privee: VAPID_PRIVEE },
         SUJET_VAPID,
       )
@@ -195,6 +197,7 @@ async function envoyerA(userId: string, titres: string[]) {
     } catch (e) {
       echecs.push(`${a.appareil ?? 'appareil'} : ${(e as Error).message}`)
     }
+   }
   }
 
   return reussites > 0
@@ -256,7 +259,8 @@ Deno.serve(async (requete) => {
   const aEnvoyer = await r.json()
   const bilan = []
   for (const ligne of aEnvoyer) {
-    const resultat = await envoyerA(ligne.user_id, ligne.titres ?? [])
+    // `mode` vient du profil, via la fonction SQL (migration 0009).
+    const resultat = await envoyerA(ligne.user_id, ligne.titres ?? [], ligne.mode ?? 'resume')
     await journaliser(ligne.user_id, ligne.nb ?? 0, resultat)
     bilan.push({ user_id: ligne.user_id, nb: ligne.nb, statut: resultat.statut })
   }

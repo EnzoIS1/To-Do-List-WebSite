@@ -1,5 +1,17 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+/*
+ * Les polices sont EMBARQUÉES, pas chargées depuis Google Fonts.
+ *
+ * Trois raisons : la page ne dépend d'aucun serveur tiers pour s'afficher,
+ * aucune adresse IP n'est envoyée à Google au premier rendu, et le texte
+ * ne saute pas d'une police à l'autre au chargement. Ce sont des polices
+ * variables : un seul fichier couvre toutes les graisses, et chaque
+ * @font-face porte sa plage de caractères — le navigateur ne télécharge
+ * que le latin.
+ */
+import '@fontsource-variable/inter/wght.css'
+import '@fontsource-variable/space-grotesk/wght.css'
 import './styles/tokens.css'
 import './styles/global.css'
 // Après global.css : les ambiances ne font que redéfinir des variables et

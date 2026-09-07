@@ -1,5 +1,6 @@
 import Panneau from './Panneau'
 import TaskList from '../tasks/TaskList'
+import RappelsDuJour from '../rappels/RappelsDuJour'
 import { formatLong, formatRelative, isToday, titreDuMoment, addDays } from '../../lib/dates'
 
 /**
@@ -27,6 +28,9 @@ export default function SoirPanel({
         )
       }
     >
+      {/* Ce que le jour rappelle, et pour quelle tâche. */}
+      <RappelsDuJour jour={jour} />
+
       <TaskList
         taches={duJour}
         loading={loading}
