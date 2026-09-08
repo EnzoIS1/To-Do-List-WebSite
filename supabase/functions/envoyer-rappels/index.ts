@@ -102,8 +102,56 @@ function configurationManquante(): string[] {
     'doit faire 43 caractères — as-tu collé la clé publique ici ?')
   exiger('SUJET_VAPID', SUJET_VAPID, /^mailto:.+@.+/,
     'doit être « mailto: » suivi d\'une adresse e-mail')
+  /*
+   * CLE_PLANIFICATEUR est maintenant OBLIGATOIRE, et c'est un correctif
+   * de sécurité, pas un confort.
+   *
+   * L'accès « planificateur » se décidait par `cleRecue !== CLE_PLANIFICATEUR`.
+   * Si le secret n'était pas renseigné — ou renseigné vide — la comparaison
+   * devenait « '' !== '' », donc fausse : n'importe qui envoyant un en-tête
+   * vide passait pour la tâche planifiée et déclenchait l'envoi du résumé
+   * de TOUS les comptes, sans aucun jeton. Rien ne le signalait, puisque
+   * ce secret n'était pas contrôlé au démarrage.
+   *
+   * Il est donc exigé, et long : 24 caractères au minimum.
+   */
+  exiger('CLE_PLANIFICATEUR', CLE_PLANIFICATEUR, /^.{24,}$/,
+    'doit faire au moins 24 caractères — c\'est le seul secret qui autorise ' +
+    'l\'envoi à tous les comptes')
   return soucis
 }
+
+/**
+ * Comparaison à temps constant.
+ *
+ * `a !== b` s'arrête au premier caractère différent : le temps de réponse
+ * dépend donc du nombre de caractères devinés, ce qui permet en théorie de
+ * retrouver un secret caractère par caractère. Sur un réseau public la
+ * mesure est difficile, mais la parade tient en cinq lignes — autant ne
+ * pas laisser la question ouverte.
+ */
+function memeSecret(recu: string, attendu: string): boolean {
+  if (typeof attendu !== 'string' || attendu.length < 24) return false
+  if (recu.length !== attendu.length) return false
+  let difference = 0
+  for (let i = 0; i < attendu.length; i++) {
+    difference |= recu.charCodeAt(i) ^ attendu.charCodeAt(i)
+  }
+  return difference === 0
+}
+
+/**
+ * L'adresse d'un appareil doit être un vrai service de notification.
+ *
+ * La fonction poste sur cette adresse depuis l'intérieur du réseau de
+ * Supabase, avec la clé de service. Une adresse interne enregistrée comme
+ * « appareil » (169.254.169.254, le service de métadonnées des machines
+ * cloud) en ferait un relais d'attaque — c'est le schéma classique d'une
+ * SSRF. La base le refuse depuis la migration 0010 ; ce contrôle-ci est la
+ * seconde ceinture, pour les lignes plus anciennes et pour le jour où la
+ * fonction lira ses adresses ailleurs.
+ */
+const SERVICES_DE_PUSH = /^https:\/\/[A-Za-z0-9.-]+\.(googleapis\.com|apple\.com|mozilla\.com|windows\.com)\//
 
 const enteteService = {
   apikey: CLE_SERVICE,
@@ -147,7 +195,10 @@ async function envoyerA(userId: string, titres: string[], mode = 'resume') {
   if (messages.length === 0) return { statut: 'erreur', detail: 'rien à annoncer' }
 
   const r = await rest(`push_subscriptions?user_id=eq.${userId}&select=*`)
-  const abonnements = r.ok ? await r.json() : []
+  const toutes = r.ok ? await r.json() : []
+  // On n'appelle QUE des services de notification connus (voir plus haut).
+  const abonnements = toutes.filter((a: { endpoint?: string }) =>
+    typeof a.endpoint === 'string' && SERVICES_DE_PUSH.test(a.endpoint))
 
   if (abonnements.length === 0) {
     return { statut: 'aucun_abonnement', detail: null }
@@ -235,7 +286,9 @@ Deno.serve(async (requete) => {
   const clePlanificateur = requete.headers.get('x-cle-planificateur') ?? ''
 
   // ── Mode essai : une personne, tout de suite ──
-  if (clePlanificateur !== CLE_PLANIFICATEUR) {
+  // `memeSecret` refuse un secret absent, trop court, ou de longueur
+  // différente : un en-tête vide ne peut plus ouvrir le mode planificateur.
+  if (!memeSecret(clePlanificateur, CLE_PLANIFICATEUR)) {
     const userId = jetonPorte ? await utilisateurDuJeton(jetonPorte) : null
     if (!userId) {
       return repondre({

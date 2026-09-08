@@ -25,6 +25,7 @@ supabase/migrations/0006_rappels_automatiques.sql -- le rappel de la veille
 supabase/migrations/0007_rappel_veille_refusable.sql -- pouvoir le retirer
 supabase/migrations/0008_plan_de_revision.sql        -- le rythme de révision choisi
 supabase/migrations/0009_mode_notification.sql       -- groupées ou une par tâche
+supabase/migrations/0010_cloisonnement.sql           -- le cloisonnement des comptes
 ```
 
 `0004`, `0006` et `0007` peuvent être relancées sans risque : les colonnes
@@ -35,6 +36,19 @@ sont en `add column if not exists`, et les rappels du rattrapage en
 faite se rappelle toute seule la veille**, et une séance de révision le jour
 même. C'est un trigger PostgreSQL et non du code côté site, pour que la règle
 tienne quelle que soit la façon dont la tâche est arrivée en base.
+
+`0010` ferme trois passages d'un compte à l'autre, trouvés en rejouant une
+attaque sur un PostgreSQL de test : un rappel pouvait viser la tâche de
+quelqu'un d'autre — et son titre partait alors dans la notification du matin
+de l'attaquant — une tâche pouvait être rangée dans la catégorie d'autrui, et
+une révision rattachée à la tâche d'autrui. La RLS n'y pouvait rien : elle
+vérifie le `user_id` de la ligne écrite, jamais celui de la ligne pointée. Ce
+sont donc des clés étrangères **composites** (`(task_id, user_id)`) qui le
+font maintenant, au niveau du schéma. La migration valide aussi ce que la base
+accepte de stocker : adresse d'abonnement restreinte aux vrais services de
+notification (une adresse interne y était acceptée, et la fonction serveur
+l'aurait appelée), longueurs de texte bornées, couleur hexadécimale, fuseau
+horaire existant.
 
 `0009` ajoute `profiles.mode_notif` : les notifications sont groupées en un
 message par jour (défaut) ou envoyées une par rappel. Elle **supprime puis
@@ -214,12 +228,29 @@ la production. Puis ajouter la ligne au workflow, sous les deux autres :
 **5. Déployer la fonction.**
 
 ```
-npx supabase functions deploy envoyer-rappels --no-verify-jwt
+npx supabase login
+npx supabase link --project-ref TON-PROJET
+npx supabase functions deploy envoyer-rappels
 ```
 
-`--no-verify-jwt` est volontaire : la fonction fait ses propres contrôles —
-la clé du planificateur, ou un jeton de connexion valide — plutôt que de
-s'en remettre à un réglage invisible.
+Le drapeau `--no-verify-jwt` n'est plus nécessaire : le réglage est écrit
+dans `supabase/config.toml`, donc versionné. Il reste volontaire — la
+fonction fait ses propres contrôles (la clé du planificateur, ou un jeton de
+connexion valide) plutôt que de s'en remettre à un réglage invisible.
+
+⚠️ **`CLE_PLANIFICATEUR` doit faire au moins 24 caractères.** C'est le seul
+secret qui autorise l'envoi à TOUS les comptes ; il était facultatif, et une
+fonction déployée sans lui acceptait n'importe quel appel portant un en-tête
+vide. Elle refuse maintenant de démarrer s'il manque ou s'il est trop court.
+Pour en tirer un neuf :
+
+```
+node -e "console.log(crypto.randomUUID() + crypto.randomUUID())"
+```
+
+Il faut alors le changer **aux deux endroits** : le secret de la fonction, et
+la tâche planifiée (`select cron.unschedule('resume-des-rappels');` puis
+recréer le `cron.schedule` ci-dessous avec la nouvelle valeur).
 
 **6. La tâche planifiée.** Dans SQL Editor, en remplaçant les deux valeurs :
 
@@ -330,3 +361,42 @@ Listes partagées, rappels par e-mail, tâches récurrentes, pièces jointes.
 Le schéma prévoit déjà chacun de ces cas (`user_id` partout,
 `reminders.channel`, `tasks.recurrence_rule`) pour que l'ajout ne demande pas
 de migration lourde.
+
+
+## Sécurité — ce qui est vérifié, et ce qui reste à toi
+
+Une revue offensive a été menée sur ce projet : compte « attaquant » contre
+compte « victime » sur un vrai PostgreSQL, fonction serveur relancée dans
+Deno avec des configurations volontairement cassées, dépendances auditées.
+Le détail des trous trouvés et bouchés est dans `0010_cloisonnement.sql` et
+dans les tests. Ce qui tient aujourd'hui, mesuré et rejouable :
+
+- **Cloisonnement des comptes.** Aucune lecture, aucune écriture d'un compte
+  à l'autre, y compris en pointant les identifiants d'autrui. Rejouable :
+  la suite d'attaque décrite dans 0010.
+- **La fonction serveur** refuse tout appel sans clé de planificateur valide
+  (≥ 24 caractères, comparaison à temps constant) ou sans jeton d'utilisateur
+  vérifié auprès de Supabase. Elle n'appelle que de vrais services de
+  notification.
+- **La page** est servie avec une politique de sécurité du contenu :
+  aucun script hors du site, aucune connexion hors de Supabase. Le service
+  worker n'ouvre que des adresses du site lui-même.
+- **Zéro dépendance vulnérable** au moment de cette revue (`npm audit`).
+
+Trois choses que le code ne peut pas faire à ta place, dans le tableau de
+bord Supabase :
+
+1. **Authentication → protection des mots de passe divulgués** : Supabase
+   sait refuser un mot de passe qui figure dans les fuites connues
+   (HaveIBeenPwden). Désactivé par défaut.
+2. **La double authentification** sur ton compte Supabase lui-même : c'est
+   la clé de tout le reste.
+3. **Ne jamais mettre `SUPABASE_SERVICE_ROLE_KEY` ailleurs que dans les
+   secrets de la fonction.** Elle ignore la RLS : dans le site, elle
+   donnerait à n'importe qui l'accès à tous les comptes.
+
+Ce qui n'est PAS couvert et que je ne peux pas vérifier d'ici : le
+comportement réel d'Apple et de Google sur l'envoi, la configuration de ton
+projet Supabase, et la protection contre l'affichage du site dans une iframe
+d'un autre site (`frame-ancestors` n'a aucun effet dans une balise `<meta>`,
+et GitHub Pages n'envoie pas d'en-têtes).

@@ -52,9 +52,31 @@ self.addEventListener('push', (evenement) => {
   )
 })
 
+/**
+ * L'adresse ouverte au clic doit appartenir à CE site.
+ *
+ * Elle vient du contenu de la notification, donc du serveur. Aujourd'hui
+ * c'est le nôtre, et un message ne peut être envoyé qu'avec les clés de
+ * l'appareil — mais un service worker qui ouvre une adresse quelconque
+ * parce qu'un message le lui a dit est un mécanisme d'hameçonnage tout
+ * prêt : la fenêtre s'ouvrirait sans barre d'adresse suspecte, à la suite
+ * d'une notification que l'utilisateur associe au site.
+ *
+ * On ne garde donc que les adresses de la même origine ; tout le reste
+ * retombe sur la racine du site.
+ */
+function adresseSure(brute) {
+  try {
+    const cible = new URL(brute, self.registration.scope)
+    return cible.origin === self.location.origin ? cible.href : self.registration.scope
+  } catch {
+    return self.registration.scope
+  }
+}
+
 self.addEventListener('notificationclick', (evenement) => {
   evenement.notification.close()
-  const cible = evenement.notification.data?.url ?? './'
+  const cible = adresseSure(evenement.notification.data?.url ?? './')
 
   evenement.waitUntil((async () => {
     const fenetres = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })

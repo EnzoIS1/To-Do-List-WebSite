@@ -1427,8 +1427,24 @@ input[type="color"] {
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
 
-/* Une ligne de réglage dont le contrôle est trop large pour tenir à droite. */
-.ligne-reglage.colonne { flex-direction: column; align-items: stretch; gap: var(--gap-s); }
+/* ══ Une ligne de réglage dont le contrôle passe SOUS le texte ══
+   En GRILLE et non en flex, et c'est le correctif : deux lignes de grille
+   ne peuvent pas se chevaucher, quoi qu'il arrive au contenu. La version
+   flex héritait de `.ligne-reglage > div { flex: 1 1 0% }` — une base de
+   hauteur nulle — et d'un `flex-wrap` : selon la largeur, la police et le
+   zoom, la hauteur réservée au paragraphe pouvait ne pas correspondre à
+   sa hauteur réelle, et les segments remontaient sur la dernière ligne du
+   texte. Je n'ai pas reproduit ce chevauchement ici ; la grille le rend
+   impossible plutôt que peu probable. */
+.ligne-reglage.colonne {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--gap-s);
+}
+/* `flex: 1 1 0%` n'a plus cours dans une grille, mais on remet la valeur
+   au propre : la boîte de texte occupe sa ligne, point. */
+.ligne-reglage.colonne > div { flex: none; min-width: 0; }
 .ligne-reglage.colonne .segments { max-width: 320px; }
 
 /* ══ La liste déroulante maison ══
@@ -1469,7 +1485,9 @@ input[type="color"] {
 /* ══ Les rappels d'un jour, sous l'agenda ══
    La clochette du calendrier dit qu'il y a un rappel ; ce bloc dit lequel,
    et pour quelle tâche. */
-.rappels-du-jour { margin-bottom: var(--gap-s); }
+/* Posé sous les listes : la marge passe donc au-dessus, et un filet le
+   sépare de ce qui précède. */
+.rappels-du-jour { margin-top: var(--gap-m); padding-top: var(--gap-s); border-top: 1px solid var(--trait); }
 .rappels-du-jour .titre-bloc { display: flex; align-items: center; gap: 5px; margin-top: 0; }
 .cloche-titre { display: inline-grid; place-items: center; color: var(--accent); }
 .cloche-titre svg { width: 12px; height: 12px; }

@@ -38,7 +38,7 @@ const PRIVEE = 'kSvpXQ3Zx1cRfMHqBv8lNwYtGdJ2eA0iUoP7ZrCbTsE'
 const COMPLETE = {
   SUPABASE_URL: 'https://exemple.supabase.co',
   SUPABASE_SERVICE_ROLE_KEY: 'cle-de-service',
-  CLE_PLANIFICATEUR: 'secret-du-planificateur',
+  CLE_PLANIFICATEUR: 'un-secret-de-planificateur-assez-long',
   VAPID_PUBLIQUE: PUBLIQUE,
   VAPID_PRIVEE: PRIVEE,
   SUJET_VAPID: 'mailto:enzo@exemple.fr',
@@ -115,6 +115,11 @@ for (const [cas, env, attendu] of [
     { ...COMPLETE, VAPID_PUBLIQUE: PRIVEE, VAPID_PRIVEE: PUBLIQUE }, /as-tu collé la clé privée ici/],
   ['sujet sans mailto:',
     { ...COMPLETE, SUJET_VAPID: 'enzo@exemple.fr' }, /SUJET_VAPID/],
+  // Le secret du planificateur : absent, il ouvrait la porte (voir plus bas).
+  ['clé du planificateur absente',
+    { ...COMPLETE, CLE_PLANIFICATEUR: '' }, /CLE_PLANIFICATEUR.*absent/],
+  ['clé du planificateur trop courte',
+    { ...COMPLETE, CLE_PLANIFICATEUR: 'court' }, /CLE_PLANIFICATEUR.*24 caractères/],
 ]) {
   await avecLaFonction(env, async () => {
     const r = await fetch(BASE, { method: 'POST', headers: { Authorization: 'Bearer x' } })
@@ -139,6 +144,35 @@ await avecLaFonction(COMPLETE, async () => {
     method: 'POST', headers: { 'x-cle-planificateur': 'pas-la-bonne' },
   })
   ok('mauvaise clé de planificateur : traitée comme un visiteur', mauvaiseCle.status === 401)
+
+  /*
+   * LA FAILLE QUI ÉTAIT LÀ, ET QUI NE DOIT PAS REVENIR.
+   *
+   * L'accès « planificateur » se décidait par une inégalité de chaînes.
+   * Avec un secret absent ou vide, un en-tête vide passait le contrôle et
+   * déclenchait l'envoi du résumé de TOUS les comptes sans aucun jeton.
+   * Ces trois requêtes sont les trois formes de cet en-tête vide.
+   */
+  for (const [nom, entetes] of [
+    ['en-tête vide', { 'x-cle-planificateur': '' }],
+    ['en-tête absent', {}],
+    ['en-tête d\'espaces', { 'x-cle-planificateur': '   ' }],
+  ]) {
+    const r = await fetch(BASE, { method: 'POST', headers: entetes })
+    ok(`${nom} : refusé, jamais pris pour le planificateur`, r.status === 401, String(r.status))
+  }
+})
+
+console.log('\n4. Le secret vide n\'ouvre plus rien')
+await avecLaFonction({ ...COMPLETE, CLE_PLANIFICATEUR: '' }, async () => {
+  // Avec un secret vide, la fonction refuse de démarrer son service : elle
+  // répond « configuration incomplète » plutôt que d'accepter n'importe qui.
+  for (const entetes of [{ 'x-cle-planificateur': '' }, {}]) {
+    const r = await fetch(BASE, { method: 'POST', headers: entetes })
+    const corps = await corpsDe(r)
+    ok('secret vide : la fonction refuse d\'agir', r.status === 500 &&
+      /CLE_PLANIFICATEUR/.test(corps.detail ?? ''), `${r.status} ${JSON.stringify(corps).slice(0, 90)}`)
+  }
 })
 
 console.log(echecs === 0 ? '\n✓ Tout est vert.\n' : `\n✗ ${echecs} échec(s).\n`)

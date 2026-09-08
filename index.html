@@ -12,19 +12,15 @@
     <meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-title" content="To Do" />
     <title>Ma To Do List</title>
-    <script>
-      /*
-       * Applique le thème enregistré AVANT le premier rendu.
-       * Sans ce script, le site s'affiche une fraction de seconde dans le
-       * thème du système avant que React ne rétablisse le choix de
-       * l'utilisateur : un clignotement blanc désagréable en mode sombre.
-       */
-      try {
-        var t = localStorage.getItem('todo-theme')
-        if (t === 'sombre') document.documentElement.setAttribute('data-theme', 'dark')
-        else if (t === 'clair') document.documentElement.setAttribute('data-theme', 'light')
-      } catch (e) { /* stockage refusé : on garde le thème du système */ }
-    </script>
+    <!--
+      Le script du thème est un FICHIER et non un bloc en ligne, pour une
+      raison de sécurité : la politique de sécurité du contenu (CSP) injectée
+      à la compilation n'autorise que les scripts du site lui-même. Autoriser
+      les scripts en ligne pour cette dizaine de lignes reviendrait à ouvrir
+      la porte à tout code injecté dans la page, ce qui est exactement ce que
+      la CSP sert à empêcher.
+    -->
+    <script src="./theme-initial.js"></script>
   </head>
   <body>
     <!--

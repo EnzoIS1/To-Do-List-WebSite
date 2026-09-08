@@ -34,7 +34,11 @@ function chargerServiceWorker({ fenetresOuvertes = [] } = {}) {
 
   const self = {
     addEventListener: (nom, fn) => { gestionnaires[nom] = fn },
+    // Le service worker vit sous /To-Do-List-WebSite/ : c'est cette origine
+    // qui décide quelles adresses il accepte d'ouvrir.
+    location: { origin: 'https://enzois1.github.io' },
     registration: {
+      scope: 'https://enzois1.github.io/To-Do-List-WebSite/',
       showNotification: (titre, options) => {
         affichees.push({ titre, ...options })
         return Promise.resolve()
@@ -48,7 +52,13 @@ function chargerServiceWorker({ fenetresOuvertes = [] } = {}) {
     skipWaiting: () => {},
   }
 
-  const contexte = vm.createContext({ self, console })
+  /*
+   * `URL` doit être fourni au contexte : un vm.createContext part sans
+   * aucun global du navigateur. Sans lui, le service worker croyait que
+   * toute adresse était invalide et retombait sur la racine — un faux
+   * échec qui aurait pu passer pour un vrai bug du site.
+   */
+  const contexte = vm.createContext({ self, console, URL })
   vm.runInContext(readFileSync(join(racine, 'public', 'sw.js'), 'utf8'), contexte, { filename: 'sw.js' })
 
   const evenementPush = (data) => ({
@@ -135,13 +145,42 @@ console.log('\n4. Le clic')
   const sw = chargerServiceWorker({ fenetresOuvertes: [] })
   const attentes = []
   sw.gestionnaires.notificationclick({
-    notification: { close: () => {}, data: { url: 'https://exemple.fr/liste' } },
+    notification: {
+      close: () => {},
+      data: { url: 'https://enzois1.github.io/To-Do-List-WebSite/#/rappels' },
+    },
     waitUntil: (p) => attentes.push(p),
   })
   await Promise.all(attentes)
   ok('une fenêtre est ouverte sur la bonne adresse',
-    sw.ouvertes.length === 1 && sw.ouvertes[0] === 'https://exemple.fr/liste',
+    sw.ouvertes.length === 1 &&
+    sw.ouvertes[0] === 'https://enzois1.github.io/To-Do-List-WebSite/#/rappels',
     JSON.stringify(sw.ouvertes))
+
+  /*
+   * Le durcissement : une adresse ÉTRANGÈRE ne doit jamais être ouverte.
+   * Un service worker qui ouvre ce qu'un message lui dit d'ouvrir est un
+   * hameçonnage tout prêt — la fenêtre s'ouvre à la suite d'une
+   * notification que l'utilisateur associe au site.
+   */
+  for (const suspecte of [
+    'https://exemple.fr/liste',
+    'https://enzois1.github.io.evil.fr/',
+    'javascript:alert(1)',
+    'data:text/html,<h1>faux</h1>',
+  ]) {
+    const sw2 = chargerServiceWorker()
+    const a2 = []
+    sw2.gestionnaires.notificationclick({
+      notification: { close: () => {}, data: { url: suspecte } },
+      waitUntil: (p) => a2.push(p),
+    })
+    await Promise.all(a2)
+    ok(`adresse étrangère refusée : ${suspecte.slice(0, 34)}`,
+      sw2.ouvertes.length === 1 &&
+      sw2.ouvertes[0] === 'https://enzois1.github.io/To-Do-List-WebSite/',
+      JSON.stringify(sw2.ouvertes))
+  }
 }
 {
   // Notification sans données : on ne doit pas planter.
@@ -152,7 +191,11 @@ console.log('\n4. Le clic')
     waitUntil: (p) => attentes.push(p),
   })
   await Promise.all(attentes)
-  ok('sans données, on ouvre la racine du site', sw.ouvertes[0] === './', JSON.stringify(sw.ouvertes))
+  // « ./ » est maintenant résolu en adresse absolue, sur la portée du
+  // service worker : c'est la même page, écrite complètement.
+  ok('sans données, on ouvre la racine du site',
+    sw.ouvertes[0] === 'https://enzois1.github.io/To-Do-List-WebSite/',
+    JSON.stringify(sw.ouvertes))
 }
 
 console.log(echecs === 0 ? '\n✓ Tout est vert.\n' : `\n✗ ${echecs} échec(s).\n`)

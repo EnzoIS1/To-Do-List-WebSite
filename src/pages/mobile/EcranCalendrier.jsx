@@ -64,12 +64,14 @@ export default function EcranCalendrier() {
 
         <div className="agenda-jour">
           <h2 className="titre-bloc">{formatLong(jourChoisi)} · {duJour.length}</h2>
-          <RappelsDuJour jour={jourChoisi} />
           <TaskList
             taches={duJour} loading={loading} onCocher={cocher}
             onDater={modifier}
             vide="Aucune tâche ce jour-là."
           />
+          {/* En dernier, comme sur ordinateur : un rappel commente une tâche
+              de la liste ci-dessus, il ne la précède pas. */}
+          <RappelsDuJour jour={jourChoisi} />
         </div>
       </div>
 

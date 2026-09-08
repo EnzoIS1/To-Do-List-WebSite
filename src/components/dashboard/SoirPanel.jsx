@@ -28,9 +28,6 @@ export default function SoirPanel({
         )
       }
     >
-      {/* Ce que le jour rappelle, et pour quelle tâche. */}
-      <RappelsDuJour jour={jour} />
-
       <TaskList
         taches={duJour}
         loading={loading}
@@ -53,6 +50,15 @@ export default function SoirPanel({
           />
         </div>
       )}
+
+      {/*
+        Les rappels TOUT EN BAS.
+        Ils étaient en tête du panneau : c'est la place de ce qu'on doit
+        faire, or un rappel n'est pas une tâche de plus — c'est un
+        commentaire sur une tâche déjà listée au-dessus. En tête, il
+        repoussait la journée vers le bas et se lisait deux fois.
+      */}
+      <RappelsDuJour jour={jour} />
     </Panneau>
   )
 }
