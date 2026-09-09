@@ -1008,6 +1008,23 @@ input[type="color"] {
   border: 1px solid var(--trait); border-radius: var(--rayon);
   background: var(--fond); color: var(--texte);
 }
+/*
+ * Un champ dont l'étiquette passe AU-DESSUS.
+ *
+ * La disposition en ligne — étiquette à gauche, champ à droite sur 62 % —
+ * marche pour une liste ou une date seule. Elle ne marche plus dès que le
+ * champ doit être large (un titre de tâche) ou accompagné d'un bouton :
+ * sur un téléphone de 390 px, il resterait une trentaine de pixels au
+ * champ de date et le bouton passerait à la ligne tout seul.
+ */
+.menu-champ.empile { display: block; }
+.menu-champ.empile > span { display: block; margin-bottom: 5px; }
+.menu-champ.empile input:not([type="color"]) { width: 100%; max-width: none; }
+
+.champ-et-action { display: flex; align-items: center; gap: 6px; }
+.champ-et-action input { flex: 1; min-width: 0; }
+.champ-et-action .bouton-plein { flex: none; white-space: nowrap; }
+
 .menu-bloc { border-top: 1px solid var(--trait); margin-top: 4px; padding-top: 6px; }
 .menu-bloc h4 {
   margin: 0 0 4px; padding: 0 10px;
@@ -1445,7 +1462,12 @@ input[type="color"] {
 /* `flex: 1 1 0%` n'a plus cours dans une grille, mais on remet la valeur
    au propre : la boîte de texte occupe sa ligne, point. */
 .ligne-reglage.colonne > div { flex: none; min-width: 0; }
-.ligne-reglage.colonne .segments { max-width: 320px; }
+/* Le groupe de segments s'arrête où s'arrêtent ses boutons.
+   Un élément de grille est étiré sur toute la colonne par défaut : le
+   cadre gris se prolongeait donc à droite des deux boutons, sur un vide
+   qui ne se clique pas et qui ne sépare rien. `justify-self: start` le
+   ramène à la largeur de son contenu. */
+.ligne-reglage.colonne .segments { justify-self: start; }
 
 /* ══ La liste déroulante maison ══
    Le champ fermé, d'abord : une pastille comme les autres commandes, avec

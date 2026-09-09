@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import MenuFlottant from '../ui/MenuFlottant'
 import SelecteurListe from '../ui/SelecteurListe'
 import PanneauRevision from './PanneauRevision'
@@ -29,6 +30,40 @@ export default function MenuTache({ tache, ancre, onFermer }) {
   const mesRevisions = revisionsDe(tache.id)
   const source = tache.revision_of ? tasks.find((t) => t.id === tache.revision_of) : null
 
+  // Le titre s'édite ici, en local, et n'est envoyé qu'à la validation.
+  // Enregistrer à chaque frappe ferait une requête par lettre.
+  const [titre, setTitre] = useState(tache.title)
+
+  function enregistrerTitre() {
+    const propre = titre.trim()
+    // Un titre vide effacerait la tâche de la liste sans la supprimer :
+    // on revient à l'ancien plutôt que d'enregistrer du vide.
+    if (!propre) return setTitre(tache.title)
+    if (propre !== tache.title) modifier(tache.id, { title: propre })
+  }
+
+  /*
+   * LE JOUR PRÉCIS : CHOISIR, PUIS VALIDER
+   *
+   * Avant, le champ posait le rappel sur l'évènement `change` du champ de
+   * date. Sur ordinateur c'est invisible ; sur téléphone c'est un bug :
+   * le sélecteur natif s'ouvre sur la date du jour et la valide dès qu'on
+   * le touche, avant même d'avoir choisi. Résultat, un rappel pour
+   * aujourd'hui apparaissait tout seul.
+   *
+   * Le champ ne fait donc plus qu'une chose : retenir la date. C'est le
+   * bouton qui pose le rappel. Un geste de plus, mais plus aucun rappel
+   * qu'on n'a pas demandé.
+   */
+  const [jourChoisi, setJourChoisi] = useState('')
+  const dejaPose = mesRappels.some((r) => r.remind_on === jourChoisi)
+
+  function poserLeJour() {
+    if (!jourChoisi || dejaPose) return
+    creerRappel({ taskId: tache.id, remindOn: jourChoisi })
+    setJourChoisi('')
+  }
+
   return (
     <MenuFlottant ancre={ancre} titre={tache.title} onFermer={onFermer}>
       <div className="menu-corps">
@@ -39,6 +74,29 @@ export default function MenuTache({ tache, ancre, onFermer }) {
             {source.exam_date && ` Examen le ${formatLong(source.exam_date)}.`}
           </p>
         )}
+
+        {/*
+          ── Le titre ──
+          Il n'était modifiable nulle part : une faute de frappe à la
+          création restait à vie, et comme c'est ce titre qui s'affiche
+          dans la liste des rappels et dans la notification, la faute se
+          répétait à chaque rappel. Il se corrige donc ici, au même
+          endroit que le reste des réglages de la tâche.
+        */}
+        <label className="menu-champ empile">
+          <span>Titre</span>
+          <input
+            type="text"
+            value={titre}
+            maxLength={500}
+            onChange={(e) => setTitre(e.target.value)}
+            onBlur={enregistrerTitre}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur() }
+              if (e.key === 'Escape') setTitre(tache.title)
+            }}
+          />
+        </label>
 
         {/* ── Catégorie : disponible partout, même sur une tâche cochée ── */}
         <div className="menu-champ">
@@ -138,17 +196,26 @@ export default function MenuTache({ tache, ancre, onFermer }) {
             </p>
           )}
 
-          <label className="menu-champ">
+          <div className="menu-champ empile">
             <span>Un jour précis</span>
-            <input
-              type="date"
-              min={today()}
-              value=""
-              onChange={(e) => {
-                if (e.target.value) creerRappel({ taskId: tache.id, remindOn: e.target.value })
-              }}
-            />
-          </label>
+            <div className="champ-et-action">
+              <input
+                type="date"
+                min={today()}
+                value={jourChoisi}
+                aria-label="Jour du rappel"
+                onChange={(e) => setJourChoisi(e.target.value)}
+              />
+              <button
+                type="button"
+                className="bouton-plein"
+                disabled={!jourChoisi || dejaPose}
+                onClick={poserLeJour}
+              >
+                {dejaPose ? 'Déjà posé' : 'Ajouter'}
+              </button>
+            </div>
+          </div>
 
           {mesRappels.length > 0 && (
             <ul className="menu-liste">
