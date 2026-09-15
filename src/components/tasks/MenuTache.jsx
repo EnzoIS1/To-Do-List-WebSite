@@ -25,7 +25,7 @@ export default function MenuTache({ tache, ancre, onFermer }) {
   const {
     choixCategories, modifier, supprimer,
     rappelsDe, creerRappel, supprimerRappel, basculerRappelAuto,
-    revisionsDe, tasks, fonctionActive,
+    revisionsDe, tasks, fonctionActive, confirmerSuppression,
   } = useDonnees()
 
   const mesRappels = rappelsDe(tache.id)
@@ -261,7 +261,19 @@ export default function MenuTache({ tache, ancre, onFermer }) {
 
         <button
           type="button" className="menu-ligne danger"
-          onClick={() => { onFermer(); supprimer(tache.id) }}
+          onClick={() => {
+            /* La suppression est définitive et il n'y a pas d'annulation.
+               La confirmation est éteinte par défaut — la demander à tout
+               le monde alourdirait le geste le plus courant — mais elle
+               existe pour qui préfère un filet. */
+            if (confirmerSuppression) {
+              const quoi = mesRevisions.length > 0
+                ? `« ${tache.title} » et ses ${mesRevisions.length} révisions`
+                : `« ${tache.title} »`
+              if (!window.confirm(`Supprimer ${quoi} ? C'est définitif.`)) return
+            }
+            onFermer(); supprimer(tache.id)
+          }}
         >
           Supprimer la tâche
           {mesRevisions.length > 0 && ` et ses ${mesRevisions.length} révisions`}

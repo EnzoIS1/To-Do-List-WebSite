@@ -75,3 +75,24 @@ test('le nom du métier est lisible, et null si inconnu', () => {
   assert.equal(nomDuMetier('etudiant'), 'Étudiant')
   assert.equal(nomDuMetier('astronaute'), null)
 })
+
+test('courses et notes sont optionnelles mais allumées pour TOUS les métiers', () => {
+  // Elles ont quitté la base pour devenir réglables — mais personne ne
+  // doit les perdre au passage : tout métier les allume par défaut.
+  for (const id of ['courses', 'notes']) {
+    const f = FONCTIONNALITES.find((x) => x.id === id)
+    assert.equal(f.base, undefined, `${id} ne doit plus être de base`)
+    for (const metier of ['etudiant', 'salarie', 'cadre', 'independant']) {
+      assert.equal(fonctionActive({}, metier, id), true, `${id} éteinte pour ${metier}`)
+    }
+  }
+})
+
+test('toute fonctionnalité avec un panneau a un identifiant de panneau', () => {
+  // `panneau` est ce qui rend l'emplacement réglable : une fonctionnalité
+  // affichée sur le tableau de bord sans cet identifiant serait coincée là.
+  for (const f of FONCTIONNALITES.filter((x) => x.panneau)) {
+    assert.equal(typeof f.panneau, 'string')
+    assert.ok(f.panneau.length > 0, f.id)
+  }
+})

@@ -8,7 +8,9 @@ import { occurrencesDues } from '../lib/recurrence'
 import { fonctionActive, defautsDuMetier } from '../lib/fonctionnalites'
 import {
   joursResume, categorieCoursesChoisie, emplacementDe,
-  avecEmplacement, avecReglage,
+  avecEmplacement, avecReglage, premierJour, formatBilan,
+  delaiRelanceDefaut, echeanceRepetition, categorieNotes,
+  confirmerSuppression, nombreRevisionsDefaut,
 } from '../lib/reglages'
 import { useReglage, joursDArchivage } from '../lib/useReglage'
 import {
@@ -338,6 +340,15 @@ export function DonneesProvider({ children }) {
       /* ── Les réglages libres (migration 0014) ── */
       reglages: profil?.reglages ?? {},
       joursResume: joursResume(profil?.reglages),
+      /* Un réglage, deux endroits : la grille du calendrier et le
+         découpage du bilan hebdomadaire. */
+      premierJour: premierJour(profil?.reglages),
+      formatBilan: formatBilan(profil?.reglages),
+      delaiRelanceDefaut: delaiRelanceDefaut(profil?.reglages),
+      echeanceRepetition: echeanceRepetition(profil?.reglages),
+      categorieNotesId: categorieNotes(profil?.reglages),
+      confirmerSuppression: confirmerSuppression(profil?.reglages),
+      nombreRevisionsDefaut: nombreRevisionsDefaut(profil?.reglages),
       emplacementDe: (id) => emplacementDe(profil?.reglages, id),
       definirEmplacement: (id, emplacement) => modifierProfil({
         reglages: avecEmplacement(profil?.reglages, id, emplacement),

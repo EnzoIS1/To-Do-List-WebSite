@@ -44,6 +44,7 @@ export default function PanneauRecurrence({ tache }) {
   const {
     categories, recurrences: regles, recurrenceDe,
     creerRecurrence, supprimerRecurrence, modifierRecurrence, modifier,
+    echeanceRepetition,
   } = useDonnees()
 
   // La tâche est-elle déjà une occurrence d'une règle existante ?
@@ -58,7 +59,14 @@ export default function PanneauRecurrence({ tache }) {
   const [tousLes, setTousLes] = useState(1)
   const [unite, setUnite] = useState(dansLesCourses ? 'semaine' : 'jour')
   const [fin, setFin] = useState('')
-  const [avecEcheance, setAvecEcheance] = useState(!dansLesCourses)
+  /* 'auto' garde la déduction d'origine (datée sauf dans les courses) ;
+     'oui' et 'non' l'emportent, parce qu'une règle explicite doit battre
+     une déduction. */
+  const [avecEcheance, setAvecEcheance] = useState(
+    echeanceRepetition === 'oui' ? true
+      : echeanceRepetition === 'non' ? false
+        : !dansLesCourses
+  )
   const [occupe, setOccupe] = useState(false)
   const [erreur, setErreur] = useState(null)
 

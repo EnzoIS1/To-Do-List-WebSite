@@ -9,6 +9,8 @@ import SoirPanel from '../components/dashboard/SoirPanel'
 import ShoppingPanel from '../components/dashboard/ShoppingPanel'
 import PanneauBilan from '../components/dashboard/PanneauBilan'
 import PanneauAttentes from '../components/dashboard/PanneauAttentes'
+import PanneauCourses from '../components/dashboard/PanneauCourses'
+import PanneauNotes from '../components/dashboard/PanneauNotes'
 import InboxPanel from '../components/dashboard/InboxPanel'
 import CategoryColumn from '../components/categories/CategoryColumn'
 import Panneau from '../components/dashboard/Panneau'
@@ -32,7 +34,9 @@ export const PANNEAUX = [
  * Les panneaux qui dépendent d'une fonctionnalité optionnelle.
  * Ceux qui n'y figurent pas sont de base et s'affichent toujours.
  */
-const PANNEAUX_OPTIONNELS = { bilan: 'bilan', attentes: 'delegation' }
+const PANNEAUX_OPTIONNELS = {
+  bilan: 'bilan', attentes: 'delegation', courses: 'courses', notes: 'notes',
+}
 
 /**
  * Disposition de départ, en 12 colonnes.
@@ -143,19 +147,8 @@ export default function DashboardPage() {
         categories={choixCategories}
       />
     ),
-    courses: (
-      <ShoppingPanel
-        categorie={categorieCourses} taches={tasks} loading={loading}
-        creer={creer} cocher={cocher} supprimer={supprimer}
-        onCreerCategorie={() => creerCategorie({ name: 'Courses', color: '#9C5227' })}
-      />
-    ),
-    notes: (
-      <InboxPanel
-        taches={tasks} loading={loading} cocher={cocher}
-        ranger={modifier} creer={creer}
-      />
-    ),
+    courses: <PanneauCourses />,
+    notes: <PanneauNotes />,
     bilan: <PanneauBilan />,
     attentes: <PanneauAttentes />,
     /*

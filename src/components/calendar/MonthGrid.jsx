@@ -1,4 +1,5 @@
 import { monthGrid, monthOf, isToday } from '../../lib/dates'
+import { useDonnees } from '../../data/DonneesProvider'
 import { libelleRappel } from '../../lib/rappels'
 
 const JOURS = [
@@ -40,7 +41,12 @@ export default function MonthGrid({
   mois, taches, jourChoisi, onJourClique, couleurDe, apercuMax = 2, mode = 'noms',
   rappelsParJour,
 }) {
-  const jours = monthGrid(mois.year, mois.month)
+  const { premierJour } = useDonnees()
+  // L'en-tête est tourné du même nombre de crans que la grille : sinon
+  // les lettres ne correspondraient plus aux colonnes.
+  const debut = premierJour
+  const enTetes = [...JOURS.slice(debut - 1), ...JOURS.slice(0, debut - 1)]
+  const jours = monthGrid(mois.year, mois.month, debut)
 
   const parJour = taches.reduce((acc, t) => {
     if (!t.due_date) return acc
@@ -51,7 +57,7 @@ export default function MonthGrid({
   return (
     <div className="calendrier">
       <div className="entete-jours">
-        {JOURS.map((j, i) => (
+        {enTetes.map((j, i) => (
           <span key={i}>
             <span className="jour-long">{j.long}</span>
             <span className="jour-court">{j.court}</span>

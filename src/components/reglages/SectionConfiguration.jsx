@@ -5,6 +5,7 @@ import SelecteurListe from '../ui/SelecteurListe'
 import { FONCTIONNALITES } from '../../lib/fonctionnalites'
 import {
   EMPLACEMENTS, JOURS_SEMAINE, TOUS_LES_JOURS, EN_SEMAINE, resumeDesJours,
+  PREMIERS_JOURS, FORMATS_BILAN, ECHEANCES_REPETITION, DELAIS_RELANCE_PROPOSES,
 } from '../../lib/reglages'
 
 /**
@@ -113,10 +114,184 @@ function ReglageCategorieCourses() {
   )
 }
 
-/** Les réglages propres, par fonctionnalité. */
+/* ── Tâches : la confirmation avant suppression ──────────────────── */
+function ReglageSuppression() {
+  const { confirmerSuppression, definirReglage } = useDonnees()
+  return (
+    <>
+      <p className="aide">
+        Supprimer une tâche est définitif : il n'y a pas d'annulation. La
+        confirmation est éteinte par défaut — la demander alourdirait le
+        geste le plus courant — mais elle existe pour qui préfère un filet.
+      </p>
+      <label className="menu-champ">
+        <span>Demander confirmation avant de supprimer</span>
+        <input
+          type="checkbox" checked={confirmerSuppression}
+          onChange={(e) => definirReglage('confirmerSuppression', e.target.checked)}
+        />
+      </label>
+    </>
+  )
+}
+
+/* ── Calendrier : le premier jour de la semaine ───────────────────── */
+function ReglagePremierJour() {
+  const { premierJour, definirReglage } = useDonnees()
+  return (
+    <>
+      <p className="aide">
+        La colonne de gauche du calendrier. <strong>Ce réglage vaut aussi
+        pour le bilan de la semaine</strong> : un calendrier qui commence
+        le dimanche et un bilan qui commence le lundi donneraient deux
+        semaines différentes dans la même application.
+      </p>
+      <div className="menu-champ">
+        <span>La semaine commence le</span>
+        <SelecteurListe
+          etiquette="Premier jour de la semaine"
+          valeur={String(premierJour)}
+          options={PREMIERS_JOURS.map((j) => ({ id: String(j.id), nom: j.nom }))}
+          onChoisir={(v) => definirReglage('premierJour', Number(v))}
+        />
+      </div>
+    </>
+  )
+}
+
+/* ── Répétitions : l'échéance des occurrences ─────────────────────── */
+function ReglageEcheanceRepetition() {
+  const { echeanceRepetition, definirReglage } = useDonnees()
+  const choisi = ECHEANCES_REPETITION.find((e) => e.id === echeanceRepetition)
+  return (
+    <>
+      <p className="aide">
+        Ce qui est proposé quand tu crées une répétition. Une occurrence
+        datée déclenche le rappel automatique de la veille — c'est utile
+        pour une révision, envahissant pour une liste de courses.
+      </p>
+      <div className="menu-champ">
+        <span>Occurrences datées</span>
+        <SelecteurListe
+          etiquette="Échéance des occurrences"
+          valeur={echeanceRepetition}
+          options={ECHEANCES_REPETITION.map((e) => ({ id: e.id, nom: e.nom, detail: e.aide }))}
+          onChoisir={(v) => definirReglage('echeanceRepetition', v)}
+        />
+      </div>
+      <p className="aide">{choisi?.aide}</p>
+    </>
+  )
+}
+
+/* ── Notes : où atterrissent les nouvelles ────────────────────────── */
+function ReglageCategorieNotes() {
+  const { choixCategories, categorieNotesId, definirReglage } = useDonnees()
+  return (
+    <>
+      <p className="aide">
+        Les notes arrivent sans catégorie par défaut, ce qui est le propre
+        d'une boîte de réception : on range ensuite. Si toutes tes notes
+        finissent au même endroit, autant les y mettre tout de suite.
+      </p>
+      <div className="menu-champ">
+        <span>Nouvelles notes rangées dans</span>
+        <SelecteurListe
+          etiquette="Catégorie des nouvelles notes"
+          valeur={categorieNotesId ?? ''}
+          options={[
+            { id: '', nom: 'Aucune catégorie', detail: 'à ranger plus tard' },
+            ...choixCategories.map((c) => ({ id: c.id, nom: c.chemin ?? c.name })),
+          ]}
+          onChoisir={(id) => definirReglage('categorieNotes', id || null)}
+        />
+      </div>
+    </>
+  )
+}
+
+/* ── Révision : le nombre de séances proposé ──────────────────────── */
+function ReglageNombreRevisions() {
+  const { nombreRevisionsDefaut, definirReglage } = useDonnees()
+  return (
+    <>
+      <p className="aide">
+        Le nombre de séances proposé quand tu actives les révisions.
+        « Automatique » l'adapte au temps qui reste avant l'échéance.
+        Les tâches qui ont déjà un rythme enregistré gardent le leur.
+      </p>
+      <div className="menu-champ">
+        <span>Séances par défaut</span>
+        <SelecteurListe
+          etiquette="Nombre de séances par défaut"
+          valeur={nombreRevisionsDefaut == null ? '' : String(nombreRevisionsDefaut)}
+          options={[
+            { id: '', nom: 'Automatique', detail: 'selon le temps disponible' },
+            ...[2, 3, 4, 5, 6, 7, 8, 10, 12].map((n) => ({ id: String(n), nom: `${n} séances` })),
+          ]}
+          onChoisir={(v) => definirReglage('nombreRevisions', v ? Number(v) : null)}
+        />
+      </div>
+    </>
+  )
+}
+
+/* ── Délégation : le délai de relance par défaut ──────────────────── */
+function ReglageDelaiRelance() {
+  const { delaiRelanceDefaut, definirReglage } = useDonnees()
+  return (
+    <>
+      <p className="aide">
+        Le délai proposé quand tu notes une nouvelle attente. J'ai mis une
+        semaine par défaut : c'est mon choix, pas le tien.
+      </p>
+      <div className="menu-puces" style={{ padding: '4px 0' }}>
+        {DELAIS_RELANCE_PROPOSES.map((d) => (
+          <button
+            key={d.jours} type="button"
+            className={`puce${delaiRelanceDefaut === d.jours ? ' posee' : ''}`}
+            aria-pressed={delaiRelanceDefaut === d.jours}
+            onClick={() => definirReglage('delaiRelance', d.jours)}
+          >{d.nom}</button>
+        ))}
+      </div>
+    </>
+  )
+}
+
+/* ── Bilan : le format du texte copié ─────────────────────────────── */
+function ReglageFormatBilan() {
+  const { formatBilan, definirReglage } = useDonnees()
+  return (
+    <>
+      <p className="aide">
+        Ce que produit le bouton « Copier ». Le texte reste brut dans les
+        deux cas : il doit survivre à un collage dans un mail ou un carnet.
+      </p>
+      <div className="menu-champ">
+        <span>Format copié</span>
+        <SelecteurListe
+          etiquette="Format du bilan copié"
+          valeur={formatBilan}
+          options={FORMATS_BILAN.map((f) => ({ id: f.id, nom: f.nom, detail: f.aide }))}
+          onChoisir={(v) => definirReglage('formatBilan', v)}
+        />
+      </div>
+    </>
+  )
+}
+
+/** Les réglages propres, par fonctionnalité. Chacune en a au moins un. */
 const REGLAGES = {
+  taches: ReglageSuppression,
+  calendrier: ReglagePremierJour,
   rappels: ReglageJoursResume,
+  repetitions: ReglageEcheanceRepetition,
   courses: ReglageCategorieCourses,
+  notes: ReglageCategorieNotes,
+  revision: ReglageNombreRevisions,
+  delegation: ReglageDelaiRelance,
+  bilan: ReglageFormatBilan,
 }
 
 export default function SectionConfiguration() {

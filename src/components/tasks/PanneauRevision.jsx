@@ -42,12 +42,22 @@ const PAS_COURANTS = [
 ]
 
 export default function PanneauRevision({ tache }) {
-  const { revisionsDe, activerRevision, desactiverRevision } = useDonnees()
+  const { revisionsDe, activerRevision, desactiverRevision, nombreRevisionsDefaut } = useDonnees()
 
   const mesRevisions = revisionsDe(tache.id)
   const active = mesRevisions.length > 0
 
-  const [plan, setPlan] = useState(() => planComplet(tache.revision_plan))
+  /*
+   * Le plan déjà enregistré sur la tâche l'emporte toujours : c'est un
+   * choix que quelqu'un a fait pour CETTE tâche. Le réglage par défaut ne
+   * s'applique qu'aux tâches qui n'en ont pas encore — sinon régler un
+   * défaut réécrirait rétroactivement des plans existants.
+   */
+  const [plan, setPlan] = useState(() => {
+    const base = planComplet(tache.revision_plan)
+    if (tache.revision_plan || nombreRevisionsDefaut == null) return base
+    return { ...base, nombre: nombreRevisionsDefaut }
+  })
   const [reglages, setReglages] = useState(false)
   const [occupe, setOccupe] = useState(false)
   const [erreur, setErreur] = useState(null)

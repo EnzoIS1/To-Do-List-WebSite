@@ -58,10 +58,18 @@ export function isToday(key) { return key === today() }
  * @param {number} year  année, ex. 2026
  * @param {number} month mois de 1 à 12 (pas l'index 0-11 de JavaScript)
  */
-export function monthGrid(year, month) {
+export function monthGrid(year, month, premier = 1) {
   const first = new Date(year, month - 1, 1)
-  // getDay() : 0 = dimanche … 6 = samedi. On veut lundi en tête.
-  const offset = (first.getDay() + 6) % 7
+  /*
+   * getDay() : 0 = dimanche … 6 = samedi.
+   *
+   * On ramène d'abord en norme ISO (1 = lundi … 7 = dimanche), puis on
+   * mesure l'écart avec le premier jour choisi. Le `+ 7) % 7` gère le
+   * passage par-dessus la fin de semaine : avec dimanche en tête, un mois
+   * qui commence un lundi doit reculer de 1, pas avancer de 6.
+   */
+  const iso = first.getDay() === 0 ? 7 : first.getDay()
+  const offset = (iso - premier + 7) % 7
   const start = new Date(year, month - 1, 1 - offset)
   const days = []
   for (let i = 0; i < 42; i++) {

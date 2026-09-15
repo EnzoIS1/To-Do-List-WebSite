@@ -3,6 +3,8 @@ import { useDonnees } from '../data/DonneesProvider'
 import { FONCTIONNALITES } from '../lib/fonctionnalites'
 import PanneauBilan from '../components/dashboard/PanneauBilan'
 import PanneauAttentes from '../components/dashboard/PanneauAttentes'
+import PanneauCourses from '../components/dashboard/PanneauCourses'
+import PanneauNotes from '../components/dashboard/PanneauNotes'
 
 /**
  * La page dédiée d'une fonctionnalité.
@@ -34,6 +36,8 @@ import PanneauAttentes from '../components/dashboard/PanneauAttentes'
 const PANNEAUX = {
   bilan: PanneauBilan,
   delegation: PanneauAttentes,
+  courses: PanneauCourses,
+  notes: PanneauNotes,
 }
 
 export default function PageFonction() {

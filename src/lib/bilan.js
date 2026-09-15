@@ -25,15 +25,24 @@ import { fromDateKey, toDateKey, addDays, today } from './dates.js'
  * ─────────────────────────────────────────────────────────────────────
  */
 
-/** Le lundi de la semaine qui contient `jour`. */
-export function debutDeSemaine(jour = today()) {
+/**
+ * Le premier jour de la semaine qui contient `jour`.
+ *
+ * `premier` suit la norme ISO : 1 = lundi, 7 = dimanche. C'est LE MÊME
+ * réglage que celui du calendrier — un calendrier qui commence le
+ * dimanche et un bilan qui commence le lundi donneraient deux semaines
+ * différentes dans la même application.
+ */
+export function debutDeSemaine(jour = today(), premier = 1) {
   const d = fromDateKey(jour)
-  const position = (d.getDay() + 6) % 7   // lundi = 0, dimanche = 6
+  const iso = d.getDay() === 0 ? 7 : d.getDay()
+  const position = (iso - premier + 7) % 7
   return addDays(jour, -position)
 }
 
-/** Le dimanche de la même semaine. */
-export const finDeSemaine = (jour = today()) => addDays(debutDeSemaine(jour), 6)
+/** Le dernier jour de la même semaine. */
+export const finDeSemaine = (jour = today(), premier = 1) =>
+  addDays(debutDeSemaine(jour, premier), 6)
 
 /**
  * Le jour où une tâche a été terminée, en date locale.

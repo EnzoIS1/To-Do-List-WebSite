@@ -30,7 +30,8 @@ const DESTINATIONS = [
   { to: '/calendrier', nom: 'Calendrier', icone: 'calendrier' },
   { to: '/rappels', nom: 'Rappels', icone: 'cloche', compteur: true },
   { to: '/listes', nom: 'Listes', icone: 'liste' },
-  { to: '/notes', nom: 'Prise de note', icone: 'note' },
+  // `module` : la destination disparaît si la fonctionnalité est éteinte.
+  { to: '/notes', nom: 'Prise de note', icone: 'note', module: 'notes' },
 ]
 
 /** Les initiales servent d'avatar tant qu'il n'y a pas de photo à afficher. */
@@ -67,7 +68,7 @@ export default function Rail({ dateParDefaut = null }) {
 
         <div className="rail-groupe">
           {[
-            ...DESTINATIONS,
+            ...DESTINATIONS.filter((d) => !d.module || fonctionActive(d.module)),
             ...pagesDeFonctions.map((f) => ({ to: `/f/${f.id}`, nom: f.nom, icone: 'liste' })),
           ].map((d) => (
             <NavLink

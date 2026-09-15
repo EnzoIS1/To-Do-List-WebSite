@@ -18,13 +18,13 @@ import { formatLong, addDays, today } from '../../lib/dates'
  * survivre à un collage dans un mail, dans Teams ou dans un carnet.
  */
 export default function PanneauBilan() {
-  const { tasks, nomCategorieDe } = useDonnees()
+  const { tasks, nomCategorieDe, premierJour, formatBilan } = useDonnees()
   const [reculDeSemaines, setRecul] = useState(0)
   const [copie, setCopie] = useState(false)
 
   const jourRef = addDays(today(), -7 * reculDeSemaines)
-  const debut = debutDeSemaine(jourRef)
-  const fin = finDeSemaine(jourRef)
+  const debut = debutDeSemaine(jourRef, premierJour)
+  const fin = finDeSemaine(jourRef, premierJour)
 
   const groupes = useMemo(
     () => bilanDeLaPeriode(tasks, debut, fin),
@@ -33,7 +33,8 @@ export default function PanneauBilan() {
   const total = compterBilan(groupes)
 
   async function copier() {
-    const texte = bilanEnTexte(groupes, nomCategorieDe)
+    // Le format choisi décide si la catégorie accompagne le titre.
+    const texte = bilanEnTexte(groupes, formatBilan === 'simple' ? () => null : nomCategorieDe)
     try {
       await navigator.clipboard.writeText(texte)
       setCopie(true)

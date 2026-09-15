@@ -88,3 +88,34 @@ test('un bilan vide le dit au lieu de rendre une chaîne vide', () => {
   assert.equal(bilanEnTexte([]), 'Rien de terminé sur la période.')
   assert.equal(compterBilan([]), 0)
 })
+
+/* ── Le premier jour de la semaine est réglable ─────────────────────── */
+
+test('avec dimanche en tête, la semaine glisse d un cran', () => {
+  // 2026-09-15 est un mardi. Lundi = 14, dimanche précédent = 13.
+  assert.equal(debutDeSemaine('2026-09-15', 1), '2026-09-14')
+  assert.equal(debutDeSemaine('2026-09-15', 7), '2026-09-13')
+  assert.equal(finDeSemaine('2026-09-15', 7), '2026-09-19')
+})
+
+test('le jour choisi est à lui-même son début de semaine', () => {
+  assert.equal(debutDeSemaine('2026-09-13', 7), '2026-09-13') // un dimanche
+  assert.equal(debutDeSemaine('2026-09-14', 1), '2026-09-14') // un lundi
+})
+
+test('le dimanche bascule de semaine selon le réglage', () => {
+  // C'est le cas qui distingue vraiment les deux conventions : le
+  // dimanche 20 ferme la semaine du lundi 14, mais OUVRE celle du 20.
+  assert.equal(debutDeSemaine('2026-09-20', 1), '2026-09-14')
+  assert.equal(debutDeSemaine('2026-09-20', 7), '2026-09-20')
+})
+
+test('la semaine fait toujours sept jours, quel que soit le départ', () => {
+  for (const premier of [1, 7]) {
+    for (const jour of ['2026-09-13', '2026-09-15', '2026-09-20', '2026-10-01']) {
+      const d = debutDeSemaine(jour, premier)
+      const f = finDeSemaine(jour, premier)
+      assert.ok(d <= jour && jour <= f, `${jour} hors de sa propre semaine (${premier})`)
+    }
+  }
+})

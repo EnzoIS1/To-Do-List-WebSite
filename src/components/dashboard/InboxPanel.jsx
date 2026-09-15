@@ -1,6 +1,7 @@
 import Panneau from './Panneau'
 import TaskList from '../tasks/TaskList'
 import QuickAdd from '../tasks/QuickAdd'
+import { useDonnees } from '../../data/DonneesProvider'
 
 /**
  * Prise de note : ce qu'on écrit à la volée, sans avoir décidé du rangement.
@@ -20,6 +21,9 @@ import QuickAdd from '../tasks/QuickAdd'
  * ─────────────────────────────────────────────────────────────────────
  */
 export default function InboxPanel({ taches, loading, cocher, ranger, creer }) {
+  /* Une note peut atterrir directement dans une catégorie : sans réglage
+     elle reste sans catégorie, comme avant. */
+  const { categorieNotesId } = useDonnees()
   const aTrier = taches.filter((t) => !t.due_date && !t.category_id)
   const restantes = aTrier.filter((t) => !t.is_done).length
 
@@ -32,7 +36,7 @@ export default function InboxPanel({ taches, loading, cocher, ranger, creer }) {
           <span className="compteur compteur-alerte" title="Notes à ranger">{restantes}</span>
         )
       }
-      pied={creer && <QuickAdd onCreer={creer} sansDate placeholder="Noter une idée…" />}
+      pied={creer && <QuickAdd onCreer={creer} sansDate categoryId={categorieNotesId ?? undefined} placeholder="Noter une idée…" />}
     >
       <TaskList
         taches={aTrier}

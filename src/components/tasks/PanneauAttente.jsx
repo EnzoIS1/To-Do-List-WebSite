@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useDonnees } from '../../data/DonneesProvider'
 import {
-  DELAIS_RELANCE, DELAI_RELANCE_DEFAUT, jourDeRelance, libelleAttente, etatAttente,
+  DELAIS_RELANCE, jourDeRelance, libelleAttente, etatAttente,
 } from '../../lib/delegation'
 import { formatLong, formatRelative, today } from '../../lib/dates'
 
@@ -31,7 +31,7 @@ import { formatLong, formatRelative, today } from '../../lib/dates'
  * ─────────────────────────────────────────────────────────────────────
  */
 export default function PanneauAttente({ tache }) {
-  const { modifier } = useDonnees()
+  const { modifier, delaiRelanceDefaut } = useDonnees()
 
   const enAttente = Boolean(tache.attente_de)
   const [nom, setNom] = useState(tache.attente_de ?? '')
@@ -53,7 +53,7 @@ export default function PanneauAttente({ tache }) {
       // Les deux autres champs ont un défaut qui va dans 95 % des cas :
       // on attend depuis aujourd'hui, on relance dans une semaine.
       attente_depuis: tache.attente_depuis ?? today(),
-      relance_apres: tache.relance_apres ?? DELAI_RELANCE_DEFAUT,
+      relance_apres: tache.relance_apres ?? delaiRelanceDefaut,
     })
   }
 

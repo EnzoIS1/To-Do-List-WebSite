@@ -66,17 +66,25 @@ export const FONCTIONNALITES = [
     detail: 'Les rappels s\'affichent en haut du tableau de bord. Si les notifications sont activées, un résumé part à 7 h.',
   },
   {
-    id: 'courses', nom: 'Liste de courses', base: true,
-    resume: 'Un panneau à part pour les articles à acheter.',
-    detail: 'Ce sont des tâches ordinaires, sans échéance, rangées dans la catégorie Courses.',
-  },
-  {
     id: 'repetitions', nom: 'Répétitions', base: true,
     resume: 'Faire revenir une tâche ou un article tous les jours, toutes les semaines, tous les mois.',
     detail: 'Depuis le menu « ⋯ » d\'une tâche. Avec ou sans date de fin, avec ou sans échéance sur chaque occurrence.',
   },
+
+  /* ── Utiles à tout le monde, mais débrayables ──
+     Elles sont listées dans TOUS les métiers : elles sont donc allumées
+     par défaut quel que soit le métier choisi, exactement comme quand
+     elles étaient « de base ». La seule différence est qu'on peut
+     désormais les éteindre — et leur donner un emplacement. */
   {
-    id: 'notes', nom: 'Prise de notes', base: true,
+    id: 'courses', nom: 'Liste de courses', panneau: 'courses',
+    metiers: ['etudiant', 'salarie', 'cadre', 'independant'],
+    resume: 'Un panneau à part pour les articles à acheter.',
+    detail: 'Ce sont des tâches ordinaires, sans échéance, rangées dans la catégorie de ton choix.',
+  },
+  {
+    id: 'notes', nom: 'Prise de notes', panneau: 'notes',
+    metiers: ['etudiant', 'salarie', 'cadre', 'independant'],
     resume: 'Un endroit pour écrire ce qui n\'est pas encore une tâche.',
     detail: 'Une note se transforme en tâche quand elle est prête, sans être ressaisie.',
   },
