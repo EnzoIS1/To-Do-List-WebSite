@@ -64,6 +64,26 @@ export function useReminders() {
     return { error }
   }, [])
 
+  /**
+   * Écarter plusieurs rappels d'un coup — en UNE requête, pas une par
+   * rappel. Dix appels `marquerVu()` en parallèle, c'est dix allers-retours
+   * réseau et dix rendus successifs pendant lesquels la liste se vide par
+   * saccades ; si l'un échoue au milieu, on se retrouve à moitié écarté
+   * sans savoir lequel. `.in('id', ids)` fait le tout en une fois, et
+   * l'état local ne bouge que si la base a dit oui.
+   */
+  const marquerPlusieursVus = useCallback(async (ids) => {
+    if (ids.length === 0) return { error: null }
+    const vu = new Date().toISOString()
+    const { error } = await supabase
+      .from('reminders').update({ seen_at: vu }).in('id', ids)
+    if (!error) {
+      const aEcarter = new Set(ids)
+      setRappels((r) => r.map((x) => (aEcarter.has(x.id) ? { ...x, seen_at: vu } : x)))
+    }
+    return { error }
+  }, [])
+
   /** Les rappels arrivés à échéance et pas encore écartés. */
   const echus = useMemo(() => {
     const jour = today()
@@ -79,5 +99,6 @@ export function useReminders() {
     rappels, rappelsEchus: echus, rappelsDe,
     rappelsLoading: loading, rechargerRappels: recharger,
     creerRappel: creer, supprimerRappel: supprimer, marquerRappelVu: marquerVu,
+    marquerPlusieursVus,
   }
 }

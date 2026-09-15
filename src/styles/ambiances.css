@@ -325,17 +325,17 @@
    endroits — c'est ce qui fait qu'on reconnaît l'ambiance en changeant
    de thème — mais posées sur un blanc bleuté au lieu d'un bleu nuit. */
 :root[data-ambiance="nebuleuse"][data-ambiance-ton="clair"] {
-  --fond-page: #E4ECFB;
+  --fond-page: #D3E1F8;
   --lueur:
-    radial-gradient(52% 42% at 10% -8%, rgba(76, 130, 255, .42), transparent 70%),
-    radial-gradient(44% 38% at 92% 2%, rgba(142, 100, 255, .28), transparent 70%),
-    radial-gradient(38% 34% at 72% 46%, rgba(0, 170, 255, .13), transparent 72%),
-    radial-gradient(60% 45% at 45% 116%, rgba(60, 110, 238, .26), transparent 70%),
-    linear-gradient(165deg, #EDF3FF 0%, #DFE9FB 55%, #CFDDF5 100%);
+    radial-gradient(52% 42% at 10% -8%, rgba(58, 118, 255, .58), transparent 70%),
+    radial-gradient(44% 38% at 92% 2%, rgba(134, 86, 255, .40), transparent 70%),
+    radial-gradient(38% 34% at 72% 46%, rgba(0, 165, 255, .20), transparent 72%),
+    radial-gradient(60% 45% at 45% 116%, rgba(44, 98, 236, .38), transparent 70%),
+    linear-gradient(165deg, #E2ECFE 0%, #CFDFF9 55%, #B6CEF1 100%);
 
   --fond: #FFFFFF;
-  --surface: rgba(255, 255, 255, .56);
-  --verre: rgba(255, 255, 255, .56);
+  --surface: rgba(255, 255, 255, .50);
+  --verre: rgba(255, 255, 255, .50);
   --surface-2: rgba(22, 40, 90, .055);
   --surface-rail: rgba(255, 255, 255, .74);
   --texte: #101A33;
@@ -344,8 +344,8 @@
   --trait: rgba(22, 40, 90, .13);
   --accent: #2F5FD6;
   --accent-doux: color-mix(in srgb, var(--accent) 14%, transparent);
-  --alerte: #C0462C;
-  --alerte-douce: rgba(192, 70, 44, .12);
+  --alerte: #BA442B;
+  --alerte-douce: rgba(186, 68, 43, .12);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -381,16 +381,16 @@
 /* Jour : la même lueur violette, mais à l'aube — un lilas très pâle qui
    vire au rosé sur la droite. */
 :root[data-ambiance="minuit"][data-ambiance-ton="clair"] {
-  --fond-page: #EBE5F9;
+  --fond-page: #DED4F5;
   --lueur:
-    radial-gradient(48% 36% at 50% -14%, rgba(138, 108, 255, .38), transparent 70%),
-    radial-gradient(40% 34% at 96% 10%, rgba(255, 138, 188, .26), transparent 70%),
-    radial-gradient(46% 40% at 0% 92%, rgba(118, 86, 234, .24), transparent 72%),
-    linear-gradient(170deg, #F5F0FF 0%, #EBE4FA 55%, #DED4F4 100%);
+    radial-gradient(48% 36% at 50% -14%, rgba(128, 94, 255, .54), transparent 70%),
+    radial-gradient(40% 34% at 96% 10%, rgba(255, 126, 180, .38), transparent 70%),
+    radial-gradient(46% 40% at 0% 92%, rgba(106, 70, 232, .36), transparent 72%),
+    linear-gradient(170deg, #EDE6FF 0%, #E0D6F9 55%, #CBBAEF 100%);
 
   --fond: #FFFFFF;
-  --surface: rgba(255, 255, 255, .56);
-  --verre: rgba(255, 255, 255, .56);
+  --surface: rgba(255, 255, 255, .50);
+  --verre: rgba(255, 255, 255, .50);
   --surface-2: rgba(50, 30, 90, .055);
   --surface-rail: rgba(255, 255, 255, .74);
   --texte: #1B1433;
@@ -399,8 +399,8 @@
   --trait: rgba(50, 30, 90, .13);
   --accent: #5B3FCC;
   --accent-doux: color-mix(in srgb, var(--accent) 14%, transparent);
-  --alerte: #B93F5C;
-  --alerte-douce: rgba(185, 63, 92, .12);
+  --alerte: #B73E5B;
+  --alerte-douce: rgba(183, 62, 91, .12);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -438,28 +438,28 @@
    c'est la signature de cette ambiance — mais en gris-vert au lieu de
    blanc, sans quoi elle disparaîtrait complètement. */
 :root[data-ambiance="aurore"][data-ambiance-ton="clair"] {
-  --fond-page: #DDF0E8;
+  --fond-page: #C9E7DB;
   --lueur:
-    radial-gradient(46% 38% at 14% -8%, rgba(16, 190, 138, .38), transparent 70%),
-    radial-gradient(42% 34% at 90% 4%, rgba(14, 158, 214, .26), transparent 70%),
-    radial-gradient(50% 40% at 60% 110%, rgba(10, 148, 116, .24), transparent 72%),
-    repeating-linear-gradient(0deg, rgba(10, 60, 45, .030) 0 1px, transparent 1px 46px),
-    repeating-linear-gradient(90deg, rgba(10, 60, 45, .030) 0 1px, transparent 1px 46px),
-    linear-gradient(168deg, #EBF9F4 0%, #DEF1EA 55%, #CBE7DD 100%);
+    radial-gradient(46% 38% at 14% -8%, rgba(12, 190, 134, .54), transparent 70%),
+    radial-gradient(42% 34% at 90% 4%, rgba(12, 152, 212, .38), transparent 70%),
+    radial-gradient(50% 40% at 60% 110%, rgba(8, 146, 112, .36), transparent 72%),
+    repeating-linear-gradient(0deg, rgba(8, 58, 44, .045) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(90deg, rgba(8, 58, 44, .045) 0 1px, transparent 1px 46px),
+    linear-gradient(168deg, #DEF5ED 0%, #CDEBE0 55%, #B3DCCB 100%);
 
   --fond: #FFFFFF;
-  --surface: rgba(255, 255, 255, .56);
-  --verre: rgba(255, 255, 255, .56);
+  --surface: rgba(255, 255, 255, .50);
+  --verre: rgba(255, 255, 255, .50);
   --surface-2: rgba(10, 60, 45, .05);
   --surface-rail: rgba(255, 255, 255, .74);
   --texte: #0D241E;
   --texte-doux: #38524A;
   --discret: #5F7970;
   --trait: rgba(10, 60, 45, .13);
-  --accent: #0A7E65;
+  --accent: #0A7A62;
   --accent-doux: color-mix(in srgb, var(--accent) 14%, transparent);
-  --alerte: #B3541F;
-  --alerte-douce: rgba(179, 84, 31, .12);
+  --alerte: #AC511E;
+  --alerte-douce: rgba(172, 81, 30, .12);
 }
 
 /* Sur téléphone, la marge du bureau mangerait l'écran. */

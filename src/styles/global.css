@@ -1059,6 +1059,16 @@ input[type="color"] {
 /* ══ Bandeau des rappels arrivés à échéance ══ */
 .bandeau-rappels { margin: 0 var(--gap-m) var(--gap-s); }
 .tableau > .bandeau-rappels { margin: 0 var(--gap-m) var(--gap-s); }
+/* Le titre et « Tout écarter » sur la même ligne : l'action porte sur la
+   liste entière, elle appartient donc à son en-tête et pas au bas de la
+   pile, où on l'atteindrait après avoir fait défiler ce qu'on veut
+   justement ranger. */
+.bandeau-tete {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--gap-m); flex-wrap: wrap;
+}
+.bandeau-tete .titre-bloc { margin-bottom: 4px; }
+.replier-rappels { margin-top: 5px; }
 .bandeau-rappels ul { list-style: none; margin: 0; padding: 0; }
 .bandeau-rappels li {
   display: flex; align-items: center; gap: var(--gap-m);
