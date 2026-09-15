@@ -1028,6 +1028,54 @@ input[type="color"] {
 .champ-et-action input { flex: 1; min-width: 0; }
 .champ-et-action .bouton-plein { flex: none; white-space: nowrap; }
 
+/* ══ Les sections repliables des paramètres ══
+   La tête est un bouton pleine largeur : la cible de clic doit être la
+   ligne entière, pas le petit chevron. */
+.section-repliable {
+  border: 1px solid var(--trait); border-radius: var(--rayon-panneau, var(--rayon));
+  background: var(--surface); overflow: hidden;
+}
+.section-repliable + .section-repliable { margin-top: var(--gap-s); }
+.section-tete {
+  display: flex; align-items: center; gap: var(--gap-s); width: 100%;
+  padding: 12px var(--gap-m); text-align: left;
+  background: transparent; border: none; color: var(--texte);
+}
+.section-tete:hover { background: var(--surface-2); }
+.section-chevron { flex: none; display: grid; place-items: center; color: var(--discret); }
+.section-chevron svg { width: 16px; height: 16px; transition: transform .18s ease; }
+.section-repliable.ouverte .section-chevron svg { transform: rotate(90deg); }
+.section-titre { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.section-titre strong { font-size: 14.5px; font-weight: 650; }
+.section-titre span { font-size: 12px; color: var(--discret); line-height: 1.4; }
+/* L'aperçu dit l'essentiel sans ouvrir : le thème en cours, le nombre de
+   catégories, la couleur d'accent. */
+.section-apercu {
+  flex: none; display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--texte-doux);
+}
+.apercu-pastille {
+  display: inline-block; width: 16px; height: 16px; border-radius: 50%;
+  border: 1px solid var(--trait);
+}
+.section-corps { padding: 0 var(--gap-m) var(--gap-m); }
+.section-corps > .aide:first-child { margin-top: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .section-chevron svg { transition: none; }
+}
+
+/* ══ La configuration des fonctionnalités ══ */
+.liste-config { list-style: none; margin: var(--gap-s) 0 0; padding: 0; display: grid; gap: 6px; }
+.ligne-config {
+  border: 1px solid var(--trait); border-radius: var(--rayon); padding: 10px var(--gap-m);
+}
+.config-tete { display: flex; align-items: center; gap: var(--gap-m); }
+.config-texte { flex: 1; min-width: 0; }
+.config-texte strong { font-size: 13.5px; }
+.config-texte .aide { margin: 1px 0 0; }
+.config-corps { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--trait); }
+.config-corps .aide { margin: 0; }
+
 /* ══ La page Fonctionnalités ══
    Le métier en puces plutôt qu'en cartes : quatre cartes hautes pour
    quatre mots prenaient un écran entier pour un choix qu'on fait une
@@ -1052,7 +1100,8 @@ input[type="color"] {
 /* Éteinte, la carte s'efface sans disparaître : on doit pouvoir la
    retrouver pour la rallumer. */
 .carte-fonction.eteinte { opacity: .62; }
-.fonction-tete { display: flex; align-items: flex-start; gap: var(--gap-m); }
+.fonction-tete { display: flex; align-items: center; gap: var(--gap-m); }
+.fonction-texte strong { display: block; font-size: 14px; }
 .fonction-texte { flex: 1; min-width: 0; }
 .fonction-texte .aide { margin: 2px 0 0; }
 .fonction-detail { margin-top: 6px; }
@@ -1267,6 +1316,28 @@ input[type="color"] {
 }
 .interrupteur.allume .interrupteur-piste { background: var(--accent); }
 .interrupteur.allume .interrupteur-bouton { transform: translateX(16px); }
+/*
+ * L'INTERRUPTEUR COMPACT — le correctif du bug de la page Fonctionnalités.
+ *
+ * `.interrupteur` fait `width: 100%` parce qu'il a été dessiné pour une
+ * ligne entière, avec son titre et son explication à droite de la piste.
+ * Posé dans une rangée flex à côté d'un texte, il réclamait donc toute la
+ * largeur : le titre se retrouvait comprimé à un mot par ligne, et la
+ * piste passait par-dessus.
+ *
+ * La variante compacte ne garde que la piste. C'est l'étiquette de la
+ * carte qui dit ce qu'on allume — la répéter dans le bouton serait de
+ * toute façon redondant — donc `aria-label` porte l'information pour les
+ * lecteurs d'écran.
+ */
+.interrupteur.compact {
+  width: auto; flex: none; align-items: center;
+  padding: 4px; margin: 0;
+  background: transparent; border-color: transparent;
+}
+.interrupteur.compact:hover:not(:disabled) { border-color: transparent; }
+.interrupteur.compact .interrupteur-piste { margin-top: 0; }
+
 .interrupteur-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .interrupteur-texte strong { font-size: 13.5px; color: var(--texte); }
 .interrupteur-texte span { font-size: 12px; color: var(--discret); line-height: 1.4; }

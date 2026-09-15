@@ -136,7 +136,7 @@ export default function PageFonctionnalites() {
                         role="switch"
                         aria-checked={active}
                         aria-label={`${f.nom} : ${active ? 'allumée' : 'éteinte'}`}
-                        className={`interrupteur${active ? ' allume' : ''}`}
+                        className={`interrupteur compact${active ? ' allume' : ''}`}
                         onClick={() => appliquer(basculerFonction(f.id, !active))}
                       >
                         <span className="interrupteur-piste"><span className="interrupteur-bouton" /></span>

@@ -73,8 +73,9 @@ export default function SectionNotifications() {
   }
 
   return (
-    <section>
-      <h2>Notifications</h2>
+    <>
+      {/* Pas de <section> ni de <h2> ici : la tête est fournie par
+          <SectionRepliable>, qui porte aussi le repli et l'aperçu. */}
       <p className="aide">
         Un message le matin, à l'heure que tu choisis. Regroupé par défaut,
         ou une notification par tâche — le réglage est plus bas.
@@ -229,6 +230,6 @@ export default function SectionNotifications() {
       {/* Le mode d'emploi, replié : trois autorisations à donner à trois
           endroits différents, et une condition propre à iOS. */}
       <AideNotifications />
-    </section>
+    </>
   )
 }
