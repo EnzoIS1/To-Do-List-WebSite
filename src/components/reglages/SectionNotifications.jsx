@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../../auth/AuthProvider'
-import { useProfil } from '../../data/useProfil'
+import { useDonnees } from '../../data/DonneesProvider'
 import {
   notificationsPossibles, installeSurEcranAccueil, estAppareilApple,
   etatAutorisation, activerNotifications, desactiverNotifications,
@@ -36,7 +36,7 @@ const HEURES = Array.from({ length: 24 }, (_, h) => h)
  */
 export default function SectionNotifications() {
   const { user } = useAuth()
-  const { profil, modifier } = useProfil()
+  const { profil, modifierProfil: modifier } = useDonnees()
 
   const [autorisation, setAutorisation] = useState(() => etatAutorisation())
   const [abonnement, setAbonnement] = useState(null)

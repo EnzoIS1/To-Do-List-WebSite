@@ -1,7 +1,11 @@
-import { createContext, useCallback, useContext, useMemo } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 import { useTasks } from './useTasks'
 import { useCategories } from './useCategories'
 import { useReminders } from './useReminders'
+import { useRecurrences } from './useRecurrences'
+import { useProfil } from './useProfil'
+import { occurrencesDues } from '../lib/recurrence'
+import { moduleActif, defautsDuMetier } from '../lib/metiers'
 import { useReglage, joursDArchivage } from '../lib/useReglage'
 import {
   planifierRevisions, replanifierRevisions, planComplet, bornesDuPlan,
@@ -34,6 +38,8 @@ export function DonneesProvider({ children }) {
   })
   const categories = useCategories()
   const rappels = useReminders()
+  const recurrences = useRecurrences()
+  const { profil, modifier: modifierProfil } = useProfil()
 
   const { tasks, creerPlusieurs, modifier, supprimerPlusieurs, cocher } = taches
   const { rechargerRappels } = rappels
@@ -52,6 +58,68 @@ export function DonneesProvider({ children }) {
     await rechargerRappels()
     return resultat
   }, [rechargerRappels])
+
+  /*
+   * ══ LA FABRICATION DES OCCURRENCES DUES ══
+   *
+   * Une fois par chargement, au moment où les règles arrivent. Pas à
+   * chaque rendu, pas sur une minuterie : les récurrences se comptent en
+   * jours, une vérification à l'ouverture suffit largement.
+   *
+   * L'ORDRE DES DEUX ÉCRITURES EST LE POINT DÉLICAT. On crée les tâches
+   * d'abord, on avance le curseur ensuite. Si le réseau tombe entre les
+   * deux, on aura au pire un doublon à la prochaine ouverture — visible,
+   * et supprimable d'un clic. Dans l'autre ordre, on aurait des
+   * occurrences définitivement perdues, sans que rien ne le signale.
+   * Entre un doublon qu'on voit et un oubli qu'on ne voit pas, le doublon
+   * est le bon choix.
+   *
+   * `fabricationFaite` protège du double passage en mode strict de React,
+   * qui monte les effets deux fois en développement : sans ce garde-fou,
+   * chaque ouverture en local créerait tout en double.
+   */
+  const {
+    recurrences: reglesRecurrentes, recurrencesLoading, avancerCurseur,
+  } = recurrences
+  const fabricationFaite = useRef(false)
+
+  useEffect(() => {
+    if (recurrencesLoading) { fabricationFaite.current = false; return }
+    if (fabricationFaite.current) return
+    fabricationFaite.current = true
+
+    const jour = today()
+    const aFaire = reglesRecurrentes.filter((r) => r.actif && r.prochaine <= jour)
+    if (aFaire.length === 0) return
+
+    let annule = false
+    ;(async () => {
+      for (const regle of aFaire) {
+        if (annule) return
+        const { jours, prochaine, termine } = occurrencesDues(regle, jour)
+        if (jours.length === 0) continue
+        const { error } = await creerPlusieurs(jours.map((j) => ({
+          title: regle.title,
+          quantity: regle.quantity,
+          category_id: regle.category_id,
+          // Sans échéance, pas de rappel automatique de la veille : c'est
+          // ce qui évite qu'une liste de courses notifie toutes les semaines.
+          due_date: regle.avec_echeance ? j : null,
+          recurrence_id: regle.id,
+        })))
+        // En cas d'échec, on laisse le curseur où il est : la prochaine
+        // ouverture réessaiera au lieu de sauter l'occurrence.
+        if (error) continue
+        await avancerCurseur(regle.id, prochaine, termine)
+      }
+      if (!annule) await rechargerRappels()
+    })()
+
+    return () => { annule = true }
+  }, [
+    recurrencesLoading, reglesRecurrentes,
+    creerPlusieurs, avancerCurseur, rechargerRappels,
+  ])
 
   /** Les tâches de révision engendrées par une tâche source, par date. */
   const revisionsDe = useCallback(
@@ -216,6 +284,32 @@ export function DonneesProvider({ children }) {
       triTaches,
       setTriTaches,
       ...rappels,
+      ...recurrences,
+
+      /*
+       * ══ LE PROFIL, LE MÉTIER ET LES MODULES ══
+       *
+       * Le profil est chargé ICI et nulle part ailleurs. Il l'était aussi
+       * dans la section Notifications, par un second appel à useProfil :
+       * deux copies du même profil, donc deux états qui divergent. Changer
+       * de métier dans les réglages n'aurait pas mis à jour l'affichage du
+       * reste de l'application avant un rechargement complet de la page.
+       */
+      profil,
+      modifierProfil,
+      metier: profil?.metier ?? null,
+      modules: profil?.modules ?? {},
+      /** Le seul test à utiliser dans les composants. Défaut : allumé. */
+      moduleActif: (id) => moduleActif(profil?.modules, id),
+      /**
+       * Choisir un métier applique ses défauts. C'est une remise à zéro
+       * assumée des modules — d'où la confirmation côté réglages : sans
+       * elle, on perdrait sans prévenir les modules réglés à la main.
+       */
+      choisirMetier: (id) => modifierProfil({ metier: id, modules: defautsDuMetier(id) }),
+      basculerModule: (id, actif) => modifierProfil({
+        modules: { ...(profil?.modules ?? {}), [id]: actif },
+      }),
       /*
        * Le rappel automatique se refuse sur la TÂCHE, pas en effaçant la
        * ligne du rappel.
@@ -266,7 +360,8 @@ export function DonneesProvider({ children }) {
       },
     }
   }, [
-    taches, categories, rappels, delaiArchivage, setDelaiArchivage,
+    taches, categories, rappels, recurrences, profil, modifierProfil,
+    delaiArchivage, setDelaiArchivage,
     triTaches, setTriTaches, suivi,
     cocherEtReplanifier, revisionsDe, activerRevision, desactiverRevision, tasks,
     rappelsVivants,

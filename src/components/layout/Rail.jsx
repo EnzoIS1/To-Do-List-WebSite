@@ -29,7 +29,8 @@ const DESTINATIONS = [
   { to: '/calendrier', nom: 'Calendrier', icone: 'calendrier' },
   { to: '/rappels', nom: 'Rappels', icone: 'cloche', compteur: true },
   { to: '/listes', nom: 'Listes', icone: 'liste' },
-  { to: '/notes', nom: 'Prise de note', icone: 'note' },
+  // `module` : la destination disparaît si la fonctionnalité est éteinte.
+  { to: '/notes', nom: 'Prise de note', icone: 'note', module: 'notes' },
 ]
 
 /** Les initiales servent d'avatar tant qu'il n'y a pas de photo à afficher. */
@@ -44,7 +45,7 @@ function initiales(email) {
 
 export default function Rail({ dateParDefaut = null }) {
   const { user } = useAuth()
-  const { rappelsEchus, tasks } = useDonnees()
+  const { rappelsEchus, tasks, moduleActif } = useDonnees()
 
   // Le compte n'annonce que ce qui est réellement à faire : un rappel dont
   // la tâche est cochée gonflerait la pastille sans rien vouloir dire.
@@ -58,7 +59,7 @@ export default function Rail({ dateParDefaut = null }) {
         <BoutonAjout dateParDefaut={dateParDefaut} />
 
         <div className="rail-groupe">
-          {DESTINATIONS.map((d) => (
+          {DESTINATIONS.filter((d) => !d.module || moduleActif(d.module)).map((d) => (
             <NavLink
               key={d.to}
               to={d.to}

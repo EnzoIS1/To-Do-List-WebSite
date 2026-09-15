@@ -56,10 +56,17 @@ export default function DashboardPage() {
   const {
     tasks, loading, creer, modifier, cocher, supprimer,
     choixCategories, categorieCourses, arbre, arbreSansCourses, couleurDe,
-    creerCategorie, modifierCategorie, supprimerCategorie,
+    creerCategorie, modifierCategorie, supprimerCategorie, moduleActif,
   } = useDonnees()
 
-  const visible = (id) => !masques.includes(id)
+  /*
+   * Deux raisons de ne pas afficher un panneau, et elles ne se confondent
+   * pas : `masques` est un choix de disposition (« pas sur CET écran »),
+   * le module est un choix de périmètre (« cette fonctionnalité ne me sert
+   * pas »). Les panneaux dont l'identifiant n'est pas un module — le
+   * calendrier, les catégories — passent toujours.
+   */
+  const visible = (id) => !masques.includes(id) && moduleActif(id)
   const tachesFiltrees = useMemo(
     () => filtrer(tasks, categoriesActives, arbre),
     [tasks, categoriesActives, arbre]

@@ -19,7 +19,7 @@ export function useProfil() {
     if (!user) { setProfil(null); setLoading(false); return }
     const { data } = await supabase
       .from('profiles')
-      .select('id, display_name, resume_actif, heure_resume, fuseau, mode_notif')
+      .select('id, display_name, resume_actif, heure_resume, fuseau, mode_notif, metier, modules')
       .eq('id', user.id)
       .maybeSingle()
     setProfil(data ?? null)

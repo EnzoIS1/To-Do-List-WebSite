@@ -2,6 +2,7 @@ import { useState } from 'react'
 import MenuFlottant from '../ui/MenuFlottant'
 import SelecteurListe from '../ui/SelecteurListe'
 import PanneauRevision from './PanneauRevision'
+import PanneauRecurrence from './PanneauRecurrence'
 import { useDonnees } from '../../data/DonneesProvider'
 import { DECALAGES_RAPPEL, jourDuRappel, libelleRappel } from '../../lib/rappels'
 import { formatLong, formatRelative, isPast, today } from '../../lib/dates'
@@ -23,7 +24,7 @@ export default function MenuTache({ tache, ancre, onFermer }) {
   const {
     choixCategories, modifier, supprimer,
     rappelsDe, creerRappel, supprimerRappel, basculerRappelAuto,
-    revisionsDe, tasks,
+    revisionsDe, tasks, moduleActif,
   } = useDonnees()
 
   const mesRappels = rappelsDe(tache.id)
@@ -246,8 +247,11 @@ export default function MenuTache({ tache, ancre, onFermer }) {
           )}
         </div>
 
+        {/* ── Répétition : le même moteur sert les courses et les tâches ── */}
+        {!tache.revision_of && moduleActif('recurrence') && <PanneauRecurrence tache={tache} />}
+
         {/* ── Révisions : le rythme est réglable, voir PanneauRevision ── */}
-        {!tache.revision_of && <PanneauRevision tache={tache} />}
+        {!tache.revision_of && moduleActif('revision') && <PanneauRevision tache={tache} />}
 
         <hr className="menu-trait" />
 

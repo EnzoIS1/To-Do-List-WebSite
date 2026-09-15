@@ -1002,7 +1002,7 @@ input[type="color"] {
   padding: 7px 10px; font-size: 13px; color: var(--texte-doux);
 }
 .menu-champ > span { flex: none; }
-.menu-champ input:not([type="color"]), .menu-champ select {
+.menu-champ input:not([type="color"]):not([type="checkbox"]), .menu-champ select {
   font: inherit; font-size: 13px; min-width: 0; flex: 1; max-width: 62%;
   padding: 6px 8px; color-scheme: inherit;
   border: 1px solid var(--trait); border-radius: var(--rayon);
@@ -1019,11 +1019,26 @@ input[type="color"] {
  */
 .menu-champ.empile { display: block; }
 .menu-champ.empile > span { display: block; margin-bottom: 5px; }
-.menu-champ.empile input:not([type="color"]) { width: 100%; max-width: none; }
+.menu-champ.empile input:not([type="color"]):not([type="checkbox"]) { width: 100%; max-width: none; }
+/* Une case à cocher garde sa taille native : étirée à 62 % de la
+   ligne, elle deviendrait un rectangle qu'on ne reconnaît plus. */
+.menu-champ input[type="checkbox"] { flex: none; width: 18px; height: 18px; accent-color: var(--accent); }
 
 .champ-et-action { display: flex; align-items: center; gap: 6px; }
 .champ-et-action input { flex: 1; min-width: 0; }
 .champ-et-action .bouton-plein { flex: none; white-space: nowrap; }
+
+.sous-titre-reglage {
+  margin: var(--gap-l) 0 2px; font-size: 13px; font-weight: 700;
+  letter-spacing: .04em; color: var(--texte);
+}
+.liste-modules { list-style: none; margin: var(--gap-s) 0 0; padding: 0; display: grid; gap: var(--gap-s); }
+.liste-modules .ligne-reglage { align-items: center; }
+
+.marque-recurrence {
+  flex: none; font-size: 13px; line-height: 1; color: var(--accent);
+  opacity: .8; cursor: default;
+}
 
 .menu-bloc { border-top: 1px solid var(--trait); margin-top: 4px; padding-top: 6px; }
 .menu-bloc h4 {
@@ -1054,7 +1069,7 @@ input[type="color"] {
 /* Sur téléphone, tout ce qui se touche fait au moins 44 px. */
 .feuille .menu-ligne, .feuille .menu-champ { min-height: 46px; font-size: 14px; }
 .feuille .puce { min-height: 42px; font-size: 13.5px; }
-.feuille .menu-champ input:not([type="color"]), .feuille .menu-champ select { min-height: 40px; font-size: 14px; }
+.feuille .menu-champ input:not([type="color"]):not([type="checkbox"]), .feuille .menu-champ select { min-height: 40px; font-size: 14px; }
 
 /* ══ Bandeau des rappels arrivés à échéance ══ */
 .bandeau-rappels { margin: 0 var(--gap-m) var(--gap-s); }

@@ -60,6 +60,12 @@ export default function TaskItem({ tache, teinte, etiquette, badge, onCocher, on
         <span className="titre">{tache.title}</span>
       </label>
 
+      {/* Une tâche née d'une répétition le dit : sans ça, on la supprime en
+          croyant s'en débarrasser, et elle revient la semaine suivante. */}
+      {tache.recurrence_id && (
+        <span className="marque-recurrence" title="Cette tâche revient" aria-label="Tâche répétée">↻</span>
+      )}
+
       {badge && <span className="badge-revision">{badge}</span>}
       {etiquette && <span className="etiquette">{etiquette}</span>}
       {tache.quantity && <span className="quantite">{tache.quantity}</span>}

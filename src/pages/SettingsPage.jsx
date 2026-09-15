@@ -4,6 +4,7 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useDonnees } from '../data/DonneesProvider'
 import { DELAIS_ARCHIVAGE } from '../lib/useReglage'
 import SectionNotifications from '../components/reglages/SectionNotifications'
+import SectionMetier from '../components/reglages/SectionMetier'
 
 const OPTIONS_THEME = [
   { valeur: 'clair',   nom: 'Clair',   aide: 'Toujours le fond blanc.' },
@@ -74,6 +75,8 @@ export default function SettingsPage() {
           ))}
         </div>
       </section>
+
+      <SectionMetier />
 
       <section>
         <h2>Ambiance</h2>
