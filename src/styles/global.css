@@ -1112,6 +1112,46 @@ input[type="color"] {
 }
 .aide.erreur { color: var(--alerte); }
 
+/* ══ Le suivi de délégation ══ */
+.menu-etiquette {
+  display: block; padding: 4px 10px 2px; font-size: 12px; color: var(--texte-doux);
+}
+.liste-attentes { list-style: none; margin: 0; padding: 0 var(--gap-m) var(--gap-s); }
+.liste-attentes > li + li { margin-top: var(--gap-m); }
+.liste-attentes > li > h4 {
+  display: flex; align-items: center; gap: 6px; margin: 0 0 4px;
+  font-size: 11px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--discret);
+}
+/* Une personne à relancer se signale sur son NOM, pas sur chaque ligne :
+   c'est la personne qu'on va contacter, pas les tâches une par une. */
+.liste-attentes > li > h4.a-relancer { color: var(--alerte); }
+.liste-attentes > li > h4 span {
+  padding: 1px 6px; border-radius: 999px;
+  background: var(--surface-2); color: var(--texte-doux);
+  font-size: 10px; letter-spacing: 0;
+}
+.liste-attentes ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.attente {
+  display: flex; align-items: center; gap: var(--gap-s);
+  padding: 8px 10px; border: 1px solid var(--trait);
+  border-radius: var(--rayon); background: var(--surface-2);
+}
+.attente-pastille {
+  flex: none; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--teinte, var(--discret));
+}
+.attente-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.attente-texte strong { font-size: 13.5px; color: var(--texte); }
+.attente-texte span { font-size: 12px; color: var(--discret); }
+/* Le dépassement se voit sur la bordure : le fond resterait discret sur
+   une liste dense, et colorer le texte le rendrait moins lisible. */
+.attente.depasse { border-color: var(--alerte); }
+.attente.depasse .attente-texte span { color: var(--alerte); }
+.attente.a-relancer { border-color: var(--accent); }
+.attente-actions { flex: none; display: flex; gap: 5px; }
+.compteur.alerte { background: var(--alerte-douce); color: var(--alerte); }
+
 /* ══ Le bilan de la semaine ══ */
 .bilan-navigation {
   display: flex; align-items: center; justify-content: space-between;

@@ -8,6 +8,7 @@ import CalendarPanel from '../components/dashboard/CalendarPanel'
 import SoirPanel from '../components/dashboard/SoirPanel'
 import ShoppingPanel from '../components/dashboard/ShoppingPanel'
 import PanneauBilan from '../components/dashboard/PanneauBilan'
+import PanneauAttentes from '../components/dashboard/PanneauAttentes'
 import InboxPanel from '../components/dashboard/InboxPanel'
 import CategoryColumn from '../components/categories/CategoryColumn'
 import Panneau from '../components/dashboard/Panneau'
@@ -24,13 +25,14 @@ export const PANNEAUX = [
   { id: 'notes', nom: 'Prise de note' },
   { id: 'categories', nom: 'Catégories' },
   { id: 'bilan', nom: 'Bilan de la semaine' },
+  { id: 'attentes', nom: 'En attente' },
 ]
 
 /**
  * Les panneaux qui dépendent d'une fonctionnalité optionnelle.
  * Ceux qui n'y figurent pas sont de base et s'affichent toujours.
  */
-const PANNEAUX_OPTIONNELS = { bilan: 'bilan' }
+const PANNEAUX_OPTIONNELS = { bilan: 'bilan', attentes: 'delegation' }
 
 /**
  * Disposition de départ, en 12 colonnes.
@@ -43,6 +45,7 @@ const DISPOSITION_DEFAUT = [
   { i: 'notes', x: 4, y: 21, w: 4, h: 5, minW: 2, minH: 4 },
   { i: 'categories', x: 8, y: 0, w: 4, h: 26, minW: 3, minH: 8 },
   { i: 'bilan', x: 0, y: 26, w: 8, h: 10, minW: 3, minH: 6 },
+  { i: 'attentes', x: 8, y: 26, w: 4, h: 10, minW: 3, minH: 6 },
 ]
 
 export default function DashboardPage() {
@@ -146,6 +149,7 @@ export default function DashboardPage() {
       />
     ),
     bilan: <PanneauBilan />,
+    attentes: <PanneauAttentes />,
     /*
      * ⚠️ La colonne des catégories DOIT être enveloppée dans un <Panneau>.
      *

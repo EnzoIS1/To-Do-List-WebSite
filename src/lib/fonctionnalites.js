@@ -95,6 +95,14 @@ export const FONCTIONNALITES = [
   },
   /* ── Vie professionnelle ── */
   {
+    id: 'delegation', nom: 'Suivi des délégations', metiers: ['salarie', 'cadre', 'independant'],
+    resume: 'Ce que tu attends de quelqu\'un, et depuis combien de temps.',
+    detail: 'Une tâche confiée à quelqu\'un n\'est ni à faire ni faite : elle est en suspens. '
+      + 'Note qui tu attends, et le site compte les jours et te relance au bout du délai que tu choisis. '
+      + 'Le panneau « En attente » classe les personnes par ce qui traîne le plus. '
+      + 'Sert aussi bien à relancer un collègue qu\'un client.',
+  },
+  {
     id: 'bilan', nom: 'Bilan de la semaine', metiers: ['salarie', 'cadre', 'independant'],
     resume: 'Ce que tu as terminé cette semaine, prêt à copier.',
     detail: 'Pour un point hebdomadaire ou un entretien annuel. Le travail fait est toujours plus difficile à se rappeler que le travail à faire.',

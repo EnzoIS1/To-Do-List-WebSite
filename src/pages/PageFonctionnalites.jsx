@@ -57,9 +57,19 @@ export default function PageFonctionnalites() {
     appliquer(choisirMetier(id))
   }
 
+  /*
+   * Ce qui se règle vient EN PREMIER.
+   *
+   * La base était en tête parce qu'elle décrit le produit — mais c'est
+   * une lecture qu'on fait une fois. Les fonctionnalités optionnelles,
+   * elles, sont la raison pour laquelle on revient sur cette page :
+   * ce sont les seules qui aient un bouton. Les faire chercher sous six
+   * cartes qu'on ne peut pas toucher, c'est ranger l'outil au fond du
+   * tiroir.
+   */
   const groupes = [
-    { titre: 'Toujours incluses', aide: 'Le cœur du site. Rien à régler, rien à éteindre.', liste: FONCTIONNALITES.filter((f) => f.base) },
     { titre: 'Selon ce que tu fais', aide: 'Allumées par défaut selon ton métier, réglables une par une.', liste: FONCTIONNALITES.filter((f) => !f.base) },
+    { titre: 'Toujours incluses', aide: 'Le cœur du site. Rien à régler, rien à éteindre.', liste: FONCTIONNALITES.filter((f) => f.base) },
   ]
 
   return (

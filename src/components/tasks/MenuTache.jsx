@@ -3,6 +3,7 @@ import MenuFlottant from '../ui/MenuFlottant'
 import SelecteurListe from '../ui/SelecteurListe'
 import PanneauRevision from './PanneauRevision'
 import PanneauRecurrence from './PanneauRecurrence'
+import PanneauAttente from './PanneauAttente'
 import { useDonnees } from '../../data/DonneesProvider'
 import { DECALAGES_RAPPEL, jourDuRappel, libelleRappel } from '../../lib/rappels'
 import { formatLong, formatRelative, isPast, today } from '../../lib/dates'
@@ -246,6 +247,9 @@ export default function MenuTache({ tache, ancre, onFermer }) {
             </ul>
           )}
         </div>
+
+        {/* ── En attente de quelqu'un : voir PanneauAttente ── */}
+        {fonctionActive('delegation') && <PanneauAttente tache={tache} />}
 
         {/* ── Répétition : le même moteur sert les courses et les tâches ── */}
         {!tache.revision_of && <PanneauRecurrence tache={tache} />}
