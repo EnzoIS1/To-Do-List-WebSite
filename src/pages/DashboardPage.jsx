@@ -68,7 +68,8 @@ export default function DashboardPage() {
   const {
     tasks, loading, creer, modifier, cocher, supprimer,
     choixCategories, categorieCourses, arbre, arbreSansCourses, couleurDe,
-    creerCategorie, modifierCategorie, supprimerCategorie, fonctionActive,
+    creerCategorie, modifierCategorie, supprimerCategorie,
+    fonctionActive, emplacementDe,
   } = useDonnees()
 
   /*
@@ -78,7 +79,14 @@ export default function DashboardPage() {
    * Les panneaux de base — calendrier, courses, notes, catégories — ne
    * dépendent que du premier.
    */
-  const visible = (id) => !masques.includes(id) && (!PANNEAUX_OPTIONNELS[id] || fonctionActive(PANNEAUX_OPTIONNELS[id]))
+  const visible = (id) => {
+    if (masques.includes(id)) return false
+    const fonction = PANNEAUX_OPTIONNELS[id]
+    if (!fonction) return true
+    // Éteinte, ou placée ailleurs : dans les deux cas elle ne s'affiche
+    // pas ici. Ce sont deux réglages distincts, volontairement.
+    return fonctionActive(fonction) && emplacementDe(fonction) === 'tableau'
+  }
   const tachesFiltrees = useMemo(
     () => filtrer(tasks, categoriesActives, arbre),
     [tasks, categoriesActives, arbre]

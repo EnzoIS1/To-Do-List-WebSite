@@ -3,6 +3,7 @@ import Icone from './Icones'
 import BoutonAjout from '../capture/BoutonAjout'
 import { useAuth } from '../../auth/AuthProvider'
 import { useDonnees } from '../../data/DonneesProvider'
+import { AVEC_EMPLACEMENT } from '../../lib/fonctionnalites'
 
 /**
  * Le rail de gauche, redessiné d'après la référence d'Enzo.
@@ -44,7 +45,14 @@ function initiales(email) {
 
 export default function Rail({ dateParDefaut = null }) {
   const { user } = useAuth()
-  const { rappelsEchus, tasks } = useDonnees()
+  const { rappelsEchus, tasks, fonctionActive, emplacementDe } = useDonnees()
+
+  // Les fonctionnalités que l'utilisateur a sorties du tableau de bord
+  // pour leur donner leur propre page arrivent ici, à la suite des
+  // destinations fixes.
+  const pagesDeFonctions = AVEC_EMPLACEMENT.filter(
+    (f) => fonctionActive(f.id) && emplacementDe(f.id) === 'page'
+  )
 
   // Le compte n'annonce que ce qui est réellement à faire : un rappel dont
   // la tâche est cochée gonflerait la pastille sans rien vouloir dire.
@@ -58,7 +66,10 @@ export default function Rail({ dateParDefaut = null }) {
         <BoutonAjout dateParDefaut={dateParDefaut} />
 
         <div className="rail-groupe">
-          {DESTINATIONS.map((d) => (
+          {[
+            ...DESTINATIONS,
+            ...pagesDeFonctions.map((f) => ({ to: `/f/${f.id}`, nom: f.nom, icone: 'liste' })),
+          ].map((d) => (
             <NavLink
               key={d.to}
               to={d.to}

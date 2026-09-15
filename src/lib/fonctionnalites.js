@@ -96,6 +96,9 @@ export const FONCTIONNALITES = [
   /* ── Vie professionnelle ── */
   {
     id: 'delegation', nom: 'Suivi des délégations', metiers: ['salarie', 'cadre', 'independant'],
+    // `panneau` : l'identifiant du panneau du tableau de bord, donc la
+    // fonctionnalité dont on peut choisir l'emplacement.
+    panneau: 'attentes',
     resume: 'Ce que tu attends de quelqu\'un, et depuis combien de temps.',
     detail: 'Une tâche confiée à quelqu\'un n\'est ni à faire ni faite : elle est en suspens. '
       + 'Note qui tu attends, et le site compte les jours et te relance au bout du délai que tu choisis. '
@@ -104,10 +107,14 @@ export const FONCTIONNALITES = [
   },
   {
     id: 'bilan', nom: 'Bilan de la semaine', metiers: ['salarie', 'cadre', 'independant'],
+    panneau: 'bilan',
     resume: 'Ce que tu as terminé cette semaine, prêt à copier.',
     detail: 'Pour un point hebdomadaire ou un entretien annuel. Le travail fait est toujours plus difficile à se rappeler que le travail à faire.',
   },
 ]
+
+/** Celles dont on peut choisir l'emplacement : elles ont un panneau. */
+export const AVEC_EMPLACEMENT = FONCTIONNALITES.filter((f) => f.panneau)
 
 /** Les fonctionnalités de base, celles qu'on n'éteint pas. */
 export const estDeBase = (f) => Boolean(f.base)

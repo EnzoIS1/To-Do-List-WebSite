@@ -1,43 +1,126 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDonnees } from '../../data/DonneesProvider'
+import SelecteurListe from '../ui/SelecteurListe'
 import { FONCTIONNALITES } from '../../lib/fonctionnalites'
+import {
+  EMPLACEMENTS, JOURS_SEMAINE, TOUS_LES_JOURS, EN_SEMAINE, resumeDesJours,
+} from '../../lib/reglages'
 
 /**
  * La configuration des fonctionnalités actives.
  *
  * ─────────────────────────────────────────────────────────────────────
- * ⚠️ CE BLOC EST VOLONTAIREMENT VIDE, ET C'EST ASSUMÉ
+ * DEUX SORTES DE RÉGLAGES, ET ILS N'ONT PAS LE MÊME STATUT
  *
- * Enzo a demandé de créer l'onglet et les boutons sans rien mettre
- * dedans, pour qu'on décide ensemble de ce qui mérite d'être réglable.
- * C'est la bonne façon de procéder : inventer des réglages pour remplir
- * un écran donne des options que personne n'ouvre et que tout le monde
- * doit ensuite maintenir.
+ * 1. L'EMPLACEMENT, commun à toutes celles qui ont un panneau. Un seul
+ *    mécanisme, qui sert chaque fonctionnalité présente et future.
+ * 2. LES RÉGLAGES PROPRES, écrits au cas par cas dans `REGLAGES`.
  *
- * Chaque fonctionnalité active a donc son bloc, qui dit franchement
- * qu'il n'y a rien à régler pour l'instant. Pas de faux curseurs, pas de
- * champs désactivés qui laisseraient croire à une fonctionnalité à
- * venir : quand un réglage existera, il apparaîtra ici.
- *
- * OÙ BRANCHER UN VRAI RÉGLAGE, LE MOMENT VENU
- *
- * Ajouter une entrée dans `REGLAGES` ci-dessous, avec l'identifiant de
- * la fonctionnalité pour clé et un composant pour valeur. Le reste — le
- * repli, le titre, l'ordre — suit tout seul.
- *
- * Deux réglages existent déjà mais vivent ailleurs, et c'est normal :
- * l'heure du résumé appartient aux notifications, le délai d'archivage
- * aux tâches terminées. Ils n'ont pas à être déplacés ici juste pour
- * remplir la section.
+ * Un bloc sans réglage propre le DIT, au lieu d'afficher des options
+ * inventées pour remplir l'écran. Quand un réglage existera, il
+ * apparaîtra ici — pas avant.
  * ─────────────────────────────────────────────────────────────────────
  */
 
-/** Les réglages réellement écrits, par fonctionnalité. Vide pour l'instant. */
-const REGLAGES = {}
+/* ── Les jours du résumé ────────────────────────────────────────────
+   ⚠️ Ce réglage-là n'est pas un confort d'affichage : il est lu CÔTÉ
+   SERVEUR par resumes_a_envoyer() (migration 0014). Décocher samedi et
+   dimanche empêche réellement l'envoi, ce n'est pas un masquage. */
+function ReglageJoursResume() {
+  const { joursResume: jours, definirReglage } = useDonnees()
+
+  const basculer = (n) => definirReglage(
+    'joursResume',
+    jours.includes(n) ? jours.filter((x) => x !== n) : [...jours, n].sort((a, b) => a - b)
+  )
+
+  return (
+    <>
+      <p className="aide">
+        Les jours où le résumé du matin est envoyé. Recevoir une
+        notification à 7 h le dimanche est l'une des meilleures façons de
+        se faire couper les notifications pour de bon.
+      </p>
+
+      <div className="menu-puces" style={{ padding: '4px 0' }}>
+        {JOURS_SEMAINE.map((j) => (
+          <button
+            key={j.n}
+            type="button"
+            className={`puce${jours.includes(j.n) ? ' posee' : ''}`}
+            aria-pressed={jours.includes(j.n)}
+            aria-label={j.nom}
+            onClick={() => basculer(j.n)}
+          >{j.court}</button>
+        ))}
+      </div>
+
+      <div className="menu-puces" style={{ padding: '0 0 4px' }}>
+        <button type="button" className="bouton-fin"
+          onClick={() => definirReglage('joursResume', TOUS_LES_JOURS)}>
+          Tous les jours
+        </button>
+        <button type="button" className="bouton-fin"
+          onClick={() => definirReglage('joursResume', EN_SEMAINE)}>
+          En semaine seulement
+        </button>
+      </div>
+
+      <p className="aide">
+        Actuellement : <strong>{resumeDesJours(jours)}</strong>.
+        {jours.length === 0 && ' Tout décocher revient à tous les jours — pour couper le résumé, utilise l\'interrupteur des notifications.'}
+      </p>
+    </>
+  )
+}
+
+/* ── Quelle catégorie sert de liste de courses ──────────────────────
+   Ce réglage corrige un piège : la catégorie était devinée par son NOM,
+   et la renommer vidait le panneau sans le moindre message. */
+function ReglageCategorieCourses() {
+  const { choixCategories, categorieCourses, definirReglage } = useDonnees()
+
+  return (
+    <>
+      <p className="aide">
+        Quelle catégorie s'affiche dans le panneau « Liste de courses ».
+        Sans choix, le site prend la première dont le nom commence par
+        « course » — et la renommer suffisait à vider le panneau, sans
+        explication. C'est ce piège que ce réglage supprime.
+      </p>
+
+      <div className="menu-champ">
+        <span>Ma liste de courses</span>
+        <SelecteurListe
+          etiquette="Catégorie de la liste de courses"
+          valeur={categorieCourses?.id ?? ''}
+          options={[
+            { id: '', nom: 'Détection automatique', detail: 'par le nom « Courses »' },
+            ...choixCategories.map((c) => ({ id: c.id, nom: c.chemin ?? c.name })),
+          ]}
+          onChoisir={(id) => definirReglage('categorieCourses', id || null)}
+        />
+      </div>
+
+      {!categorieCourses && (
+        <p className="aide erreur">
+          Aucune catégorie trouvée : le panneau des courses est vide. Choisis-en
+          une ci-dessus, ou crée une catégorie « Courses ».
+        </p>
+      )}
+    </>
+  )
+}
+
+/** Les réglages propres, par fonctionnalité. */
+const REGLAGES = {
+  rappels: ReglageJoursResume,
+  courses: ReglageCategorieCourses,
+}
 
 export default function SectionConfiguration() {
-  const { fonctionActive } = useDonnees()
+  const { fonctionActive, emplacementDe, definirEmplacement } = useDonnees()
   const [ouvert, setOuvert] = useState(null)
 
   const actives = FONCTIONNALITES.filter((f) => fonctionActive(f.id))
@@ -53,7 +136,10 @@ export default function SectionConfiguration() {
       <ul className="liste-config">
         {actives.map((f) => {
           const Reglage = REGLAGES[f.id]
+          const deplacable = Boolean(f.panneau)
           const deplie = ouvert === f.id
+          const rien = !Reglage && !deplacable
+
           return (
             <li key={f.id} className="ligne-config">
               <div className="config-tete">
@@ -73,7 +159,23 @@ export default function SectionConfiguration() {
 
               {deplie && (
                 <div className="config-corps">
-                  {Reglage ? <Reglage /> : (
+                  {deplacable && (
+                    <div className="menu-champ">
+                      <span>Où l'afficher</span>
+                      <SelecteurListe
+                        etiquette={`Emplacement de ${f.nom}`}
+                        valeur={emplacementDe(f.id)}
+                        options={EMPLACEMENTS.map((e) => ({
+                          id: e.id, nom: e.nom, detail: e.aide,
+                        }))}
+                        onChoisir={(v) => definirEmplacement(f.id, v)}
+                      />
+                    </div>
+                  )}
+
+                  {Reglage && <Reglage />}
+
+                  {rien && (
                     <p className="aide">
                       Rien à régler ici pour l'instant. Dis-moi ce que tu
                       voudrais pouvoir changer sur « {f.nom} » et je

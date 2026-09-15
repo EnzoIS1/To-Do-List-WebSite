@@ -6,6 +6,10 @@ import { useRecurrences } from './useRecurrences'
 import { useProfil } from './useProfil'
 import { occurrencesDues } from '../lib/recurrence'
 import { fonctionActive, defautsDuMetier } from '../lib/fonctionnalites'
+import {
+  joursResume, categorieCoursesChoisie, emplacementDe,
+  avecEmplacement, avecReglage,
+} from '../lib/reglages'
 import { useReglage, joursDArchivage } from '../lib/useReglage'
 import {
   planifierRevisions, replanifierRevisions, planComplet, bornesDuPlan,
@@ -270,7 +274,19 @@ export function DonneesProvider({ children }) {
       categories: plates,
       arbre,
       choixCategories: choix,
-      categorieCourses: plates.find(estCategorieCourses) ?? null,
+      /*
+       * La catégorie de courses : le CHOIX explicite d'abord, la
+       * détection par le nom en repli.
+       *
+       * Deviner par le nom était un piège documenté dans le code :
+       * renommer « Courses » en « Supermarché » vidait le panneau, sans
+       * message. Le repli reste pour que les comptes existants continuent
+       * de marcher sans rien régler.
+       */
+      categorieCourses:
+        plates.find((c) => c.id === categorieCoursesChoisie(profil?.reglages))
+        ?? plates.find(estCategorieCourses)
+        ?? null,
       arbreSansCourses: arbre.filter((c) => !estCategorieCourses(c)),
       creerCategorie: categories.creer,
       modifierCategorie: categories.modifier,
@@ -317,6 +333,17 @@ export function DonneesProvider({ children }) {
       choisirMetier: (id) => modifierProfil({ metier: id, modules: defautsDuMetier(id) }),
       basculerFonction: (id, actif) => modifierProfil({
         modules: { ...(profil?.modules ?? {}), [id]: actif },
+      }),
+
+      /* ── Les réglages libres (migration 0014) ── */
+      reglages: profil?.reglages ?? {},
+      joursResume: joursResume(profil?.reglages),
+      emplacementDe: (id) => emplacementDe(profil?.reglages, id),
+      definirEmplacement: (id, emplacement) => modifierProfil({
+        reglages: avecEmplacement(profil?.reglages, id, emplacement),
+      }),
+      definirReglage: (cle, valeur) => modifierProfil({
+        reglages: avecReglage(profil?.reglages, cle, valeur),
       }),
       /*
        * Le rappel automatique se refuse sur la TÂCHE, pas en effaçant la

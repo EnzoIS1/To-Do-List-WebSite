@@ -1112,6 +1112,13 @@ input[type="color"] {
 }
 .aide.erreur { color: var(--alerte); }
 
+/* ══ La page dédiée d'une fonctionnalité ══
+   Le panneau y est le MÊME que sur le tableau de bord : il a seulement
+   toute la largeur au lieu d'une colonne de quatre unités. */
+.page-fonction { padding: var(--gap-l); display: flex; flex-direction: column; gap: var(--gap-m); height: 100%; min-height: 0; }
+.fonction-pleine-page { flex: 1; min-height: 0; display: flex; }
+.fonction-pleine-page > .panneau { flex: 1; min-width: 0; }
+
 /* ══ Le suivi de délégation ══ */
 .menu-etiquette {
   display: block; padding: 4px 10px 2px; font-size: 12px; color: var(--texte-doux);
