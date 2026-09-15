@@ -24,7 +24,7 @@ export default function MenuTache({ tache, ancre, onFermer }) {
   const {
     choixCategories, modifier, supprimer,
     rappelsDe, creerRappel, supprimerRappel, basculerRappelAuto,
-    revisionsDe, tasks, moduleActif,
+    revisionsDe, tasks, fonctionActive,
   } = useDonnees()
 
   const mesRappels = rappelsDe(tache.id)
@@ -248,10 +248,10 @@ export default function MenuTache({ tache, ancre, onFermer }) {
         </div>
 
         {/* ── Répétition : le même moteur sert les courses et les tâches ── */}
-        {!tache.revision_of && moduleActif('recurrence') && <PanneauRecurrence tache={tache} />}
+        {!tache.revision_of && <PanneauRecurrence tache={tache} />}
 
         {/* ── Révisions : le rythme est réglable, voir PanneauRevision ── */}
-        {!tache.revision_of && moduleActif('revision') && <PanneauRevision tache={tache} />}
+        {!tache.revision_of && fonctionActive('revision') && <PanneauRevision tache={tache} />}
 
         <hr className="menu-trait" />
 

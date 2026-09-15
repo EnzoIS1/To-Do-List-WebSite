@@ -7,6 +7,7 @@ import { useReglage } from '../lib/useReglage'
 import CalendarPanel from '../components/dashboard/CalendarPanel'
 import SoirPanel from '../components/dashboard/SoirPanel'
 import ShoppingPanel from '../components/dashboard/ShoppingPanel'
+import PanneauBilan from '../components/dashboard/PanneauBilan'
 import InboxPanel from '../components/dashboard/InboxPanel'
 import CategoryColumn from '../components/categories/CategoryColumn'
 import Panneau from '../components/dashboard/Panneau'
@@ -22,7 +23,14 @@ export const PANNEAUX = [
   { id: 'courses', nom: 'Liste de courses' },
   { id: 'notes', nom: 'Prise de note' },
   { id: 'categories', nom: 'Catégories' },
+  { id: 'bilan', nom: 'Bilan de la semaine' },
 ]
+
+/**
+ * Les panneaux qui dépendent d'une fonctionnalité optionnelle.
+ * Ceux qui n'y figurent pas sont de base et s'affichent toujours.
+ */
+const PANNEAUX_OPTIONNELS = { bilan: 'bilan' }
 
 /**
  * Disposition de départ, en 12 colonnes.
@@ -34,6 +42,7 @@ const DISPOSITION_DEFAUT = [
   { i: 'courses', x: 4, y: 15, w: 4, h: 6, minW: 2, minH: 4 },
   { i: 'notes', x: 4, y: 21, w: 4, h: 5, minW: 2, minH: 4 },
   { i: 'categories', x: 8, y: 0, w: 4, h: 26, minW: 3, minH: 8 },
+  { i: 'bilan', x: 0, y: 26, w: 8, h: 10, minW: 3, minH: 6 },
 ]
 
 export default function DashboardPage() {
@@ -56,17 +65,17 @@ export default function DashboardPage() {
   const {
     tasks, loading, creer, modifier, cocher, supprimer,
     choixCategories, categorieCourses, arbre, arbreSansCourses, couleurDe,
-    creerCategorie, modifierCategorie, supprimerCategorie, moduleActif,
+    creerCategorie, modifierCategorie, supprimerCategorie, fonctionActive,
   } = useDonnees()
 
   /*
    * Deux raisons de ne pas afficher un panneau, et elles ne se confondent
    * pas : `masques` est un choix de disposition (« pas sur CET écran »),
-   * le module est un choix de périmètre (« cette fonctionnalité ne me sert
-   * pas »). Les panneaux dont l'identifiant n'est pas un module — le
-   * calendrier, les catégories — passent toujours.
+   * tandis qu'une fonctionnalité éteinte est un choix de périmètre.
+   * Les panneaux de base — calendrier, courses, notes, catégories — ne
+   * dépendent que du premier.
    */
-  const visible = (id) => !masques.includes(id) && moduleActif(id)
+  const visible = (id) => !masques.includes(id) && (!PANNEAUX_OPTIONNELS[id] || fonctionActive(PANNEAUX_OPTIONNELS[id]))
   const tachesFiltrees = useMemo(
     () => filtrer(tasks, categoriesActives, arbre),
     [tasks, categoriesActives, arbre]
@@ -136,6 +145,7 @@ export default function DashboardPage() {
         ranger={modifier} creer={creer}
       />
     ),
+    bilan: <PanneauBilan />,
     /*
      * ⚠️ La colonne des catégories DOIT être enveloppée dans un <Panneau>.
      *

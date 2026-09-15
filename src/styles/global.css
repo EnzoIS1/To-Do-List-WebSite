@@ -1028,12 +1028,56 @@ input[type="color"] {
 .champ-et-action input { flex: 1; min-width: 0; }
 .champ-et-action .bouton-plein { flex: none; white-space: nowrap; }
 
-.sous-titre-reglage {
-  margin: var(--gap-l) 0 2px; font-size: 13px; font-weight: 700;
-  letter-spacing: .04em; color: var(--texte);
+/* ══ La page Fonctionnalités ══
+   Le métier en puces plutôt qu'en cartes : quatre cartes hautes pour
+   quatre mots prenaient un écran entier pour un choix qu'on fait une
+   fois. */
+.choix-metier { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--gap-s); }
+.puce-metier {
+  padding: 9px 14px; font-size: 13.5px; border-radius: 999px;
+  border: 1px solid var(--trait); background: var(--surface-2); color: var(--texte-doux);
 }
-.liste-modules { list-style: none; margin: var(--gap-s) 0 0; padding: 0; display: grid; gap: var(--gap-s); }
-.liste-modules .ligne-reglage { align-items: center; }
+.puce-metier:hover { border-color: var(--accent); color: var(--accent); }
+.puce-metier.actif {
+  background: var(--accent); border-color: var(--accent);
+  color: var(--fond); font-weight: 600;
+}
+.puce-metier.arme { border-color: var(--alerte); color: var(--alerte); background: var(--alerte-douce); }
+
+.liste-fonctions { list-style: none; margin: var(--gap-s) 0 0; padding: 0; display: grid; gap: var(--gap-s); }
+.carte-fonction {
+  padding: var(--gap-m); border: 1px solid var(--trait);
+  border-radius: var(--rayon-panneau, var(--rayon)); background: var(--surface);
+}
+/* Éteinte, la carte s'efface sans disparaître : on doit pouvoir la
+   retrouver pour la rallumer. */
+.carte-fonction.eteinte { opacity: .62; }
+.fonction-tete { display: flex; align-items: flex-start; gap: var(--gap-m); }
+.fonction-texte { flex: 1; min-width: 0; }
+.fonction-texte .aide { margin: 2px 0 0; }
+.fonction-detail { margin-top: 6px; }
+.fonction-explication { margin-top: 6px; }
+.jeton-incluse {
+  flex: none; padding: 4px 9px; font-size: 11px; font-weight: 600;
+  border-radius: 999px; background: var(--accent-doux); color: var(--accent);
+}
+.aide.erreur { color: var(--alerte); }
+
+/* ══ Le bilan de la semaine ══ */
+.bilan-navigation {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--gap-s); flex-wrap: wrap; padding: 0 var(--gap-m) var(--gap-s);
+}
+.bilan-periode { font-size: 12px; color: var(--discret); }
+.bilan-jours { list-style: none; margin: 0; padding: 0 var(--gap-m); }
+.bilan-jours > li + li { margin-top: var(--gap-s); }
+.bilan-jours h4 {
+  margin: 0 0 3px; font-size: 11px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--discret);
+}
+.bilan-jours ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.bilan-jours ul li { font-size: 13.5px; color: var(--texte); }
+.bilan-jours ul li em { color: var(--discret); font-style: normal; font-size: 12px; }
 
 .marque-recurrence {
   flex: none; font-size: 13px; line-height: 1; color: var(--accent);

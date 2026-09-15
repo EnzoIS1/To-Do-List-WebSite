@@ -29,8 +29,7 @@ const DESTINATIONS = [
   { to: '/calendrier', nom: 'Calendrier', icone: 'calendrier' },
   { to: '/rappels', nom: 'Rappels', icone: 'cloche', compteur: true },
   { to: '/listes', nom: 'Listes', icone: 'liste' },
-  // `module` : la destination disparaît si la fonctionnalité est éteinte.
-  { to: '/notes', nom: 'Prise de note', icone: 'note', module: 'notes' },
+  { to: '/notes', nom: 'Prise de note', icone: 'note' },
 ]
 
 /** Les initiales servent d'avatar tant qu'il n'y a pas de photo à afficher. */
@@ -45,7 +44,7 @@ function initiales(email) {
 
 export default function Rail({ dateParDefaut = null }) {
   const { user } = useAuth()
-  const { rappelsEchus, tasks, moduleActif } = useDonnees()
+  const { rappelsEchus, tasks } = useDonnees()
 
   // Le compte n'annonce que ce qui est réellement à faire : un rappel dont
   // la tâche est cochée gonflerait la pastille sans rien vouloir dire.
@@ -59,7 +58,7 @@ export default function Rail({ dateParDefaut = null }) {
         <BoutonAjout dateParDefaut={dateParDefaut} />
 
         <div className="rail-groupe">
-          {DESTINATIONS.filter((d) => !d.module || moduleActif(d.module)).map((d) => (
+          {DESTINATIONS.map((d) => (
             <NavLink
               key={d.to}
               to={d.to}
@@ -80,6 +79,13 @@ export default function Rail({ dateParDefaut = null }) {
       </div>
 
       <div className="rail-bas">
+        {/* Les fonctionnalités sont une page de DÉCOUVERTE, pas un réglage
+            quotidien : elle vit en bas, à côté des paramètres, et non dans
+            la navigation principale qu'on parcourt tous les jours. */}
+        <NavLink to="/fonctionnalites" className="rail-lien" title="Fonctionnalités" aria-label="Fonctionnalités">
+          <Icone nom="briques" />
+        </NavLink>
+
         <NavLink to="/reglages" className="rail-lien" title="Paramètres" aria-label="Paramètres">
           <Icone nom="reglages" />
         </NavLink>

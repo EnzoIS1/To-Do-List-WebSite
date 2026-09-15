@@ -4,7 +4,6 @@ import { useTheme } from '../theme/ThemeProvider'
 import { useDonnees } from '../data/DonneesProvider'
 import { DELAIS_ARCHIVAGE } from '../lib/useReglage'
 import SectionNotifications from '../components/reglages/SectionNotifications'
-import SectionMetier from '../components/reglages/SectionMetier'
 
 const OPTIONS_THEME = [
   { valeur: 'clair',   nom: 'Clair',   aide: 'Toujours le fond blanc.' },
@@ -76,7 +75,22 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <SectionMetier />
+      {/*
+        La SÉLECTION des fonctionnalités a sa propre page : empilée ici,
+        elle aurait allongé les paramètres à chaque ajout, et le réglage
+        utile se serait perdu entre deux descriptions. Ne restent ici que
+        les réglages de ce qui est actif.
+      */}
+      <section>
+        <h2>Fonctionnalités</h2>
+        <p className="aide">
+          Choisir ce que le site affiche — et découvrir ce qu'il sait faire —
+          se passe sur sa propre page.
+        </p>
+        <Link to="/fonctionnalites" className="bouton-plein">
+          Voir les fonctionnalités
+        </Link>
+      </section>
 
       <section>
         <h2>Ambiance</h2>

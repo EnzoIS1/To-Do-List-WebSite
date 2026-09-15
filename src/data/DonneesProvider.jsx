@@ -5,7 +5,7 @@ import { useReminders } from './useReminders'
 import { useRecurrences } from './useRecurrences'
 import { useProfil } from './useProfil'
 import { occurrencesDues } from '../lib/recurrence'
-import { moduleActif, defautsDuMetier } from '../lib/metiers'
+import { fonctionActive, defautsDuMetier } from '../lib/fonctionnalites'
 import { useReglage, joursDArchivage } from '../lib/useReglage'
 import {
   planifierRevisions, replanifierRevisions, planComplet, bornesDuPlan,
@@ -299,15 +299,23 @@ export function DonneesProvider({ children }) {
       modifierProfil,
       metier: profil?.metier ?? null,
       modules: profil?.modules ?? {},
-      /** Le seul test à utiliser dans les composants. Défaut : allumé. */
-      moduleActif: (id) => moduleActif(profil?.modules, id),
+      /**
+       * Le seul test à utiliser dans les composants.
+       * La base répond toujours oui ; le reste suit le choix explicite,
+       * puis le métier, puis « allumé » par défaut.
+       */
+      fonctionActive: (id) => fonctionActive(profil?.modules, profil?.metier ?? null, id),
       /**
        * Choisir un métier applique ses défauts. C'est une remise à zéro
-       * assumée des modules — d'où la confirmation côté réglages : sans
-       * elle, on perdrait sans prévenir les modules réglés à la main.
+       * assumée — d'où la confirmation sur la page Fonctionnalités : sans
+       * elle, on perdrait sans prévenir ce qu'on a réglé à la main.
+       *
+       * Les deux renvoient le { error } de la base, et ce n'est pas un
+       * détail : la version précédente l'avalait, donc un bouton qui
+       * échouait ne faisait « rien » sans jamais dire pourquoi.
        */
       choisirMetier: (id) => modifierProfil({ metier: id, modules: defautsDuMetier(id) }),
-      basculerModule: (id, actif) => modifierProfil({
+      basculerFonction: (id, actif) => modifierProfil({
         modules: { ...(profil?.modules ?? {}), [id]: actif },
       }),
       /*

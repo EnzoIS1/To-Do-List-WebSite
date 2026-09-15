@@ -14,6 +14,7 @@ import EcranCalendrier from './pages/mobile/EcranCalendrier'
 import EcranListes from './pages/mobile/EcranListes'
 import EcranRappels from './pages/mobile/EcranRappels'
 import SettingsPage from './pages/SettingsPage'
+import PageFonctionnalites from './pages/PageFonctionnalites'
 import AccountPage from './pages/AccountPage'
 import { useEstTelephone } from './lib/useEcran'
 
@@ -62,6 +63,7 @@ export default function App() {
               <Route path="rappels" element={<Rappels />} />
               <Route path="listes" element={<Listes />} />
               <Route path="notes" element={<Listes vue="notes" />} />
+              <Route path="fonctionnalites" element={<PageFonctionnalites />} />
               <Route path="reglages" element={<SettingsPage />} />
               <Route path="compte" element={<AccountPage />} />
             </Route>
