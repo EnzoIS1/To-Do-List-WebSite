@@ -6,27 +6,59 @@ const CLE_AMBIANCE = 'todo-ambiance'
 const THEMES = ['systeme', 'clair', 'sombre']
 
 /**
- * Les ambiances : trois habillages sombres, définis dans styles/ambiances.css.
+ * Les ambiances : trois habillages, définis dans styles/ambiances.css.
  *
  * Elles ne remplacent pas le thème, elles l'habillent : mêmes variables,
  * plus un fond et du verre dépoli. `null` = aucune, on retrouve exactement
  * l'apparence d'avant.
+ *
+ * CHAQUE AMBIANCE A DEUX VISAGES — un de jour, un de nuit — et c'est le
+ * thème qui décide lequel s'affiche. Une ambiance n'est donc plus un
+ * choix « au lieu du thème clair », mais un habillage qui suit le thème,
+ * comme le ferait une vraie fenêtre selon l'heure.
+ *
+ * Le nom change avec le visage : « Minuit » en plein jour n'aurait aucun
+ * sens. C'est la même famille de couleurs, pas le même moment.
  */
 export const AMBIANCES = [
   {
-    id: 'nebuleuse', nom: 'Nébuleuse',
-    aide: 'Bleu roi, lueur en haut à gauche.',
-    apercu: 'linear-gradient(135deg,#1b3bff 0%,#0a1128 55%,#060a17 100%)',
+    id: 'nebuleuse',
+    sombre: {
+      nom: 'Nébuleuse',
+      aide: 'Bleu roi, lueur en haut à gauche.',
+      apercu: 'linear-gradient(135deg,#1b3bff 0%,#0a1128 55%,#060a17 100%)',
+    },
+    clair: {
+      nom: 'Ciel',
+      aide: 'Blanc bleuté, même lueur au petit matin.',
+      apercu: 'linear-gradient(135deg,#7fa8ff 0%,#e9f0fd 55%,#dfe8fa 100%)',
+    },
   },
   {
-    id: 'minuit', nom: 'Minuit',
-    aide: 'Presque noir, halo violet.',
-    apercu: 'linear-gradient(135deg,#6d5bff 0%,#0a0b18 55%,#04050c 100%)',
+    id: 'minuit',
+    sombre: {
+      nom: 'Minuit',
+      aide: 'Presque noir, halo violet.',
+      apercu: 'linear-gradient(135deg,#6d5bff 0%,#0a0b18 55%,#04050c 100%)',
+    },
+    clair: {
+      nom: 'Aube',
+      aide: 'Lilas très pâle, rosé sur la droite.',
+      apercu: 'linear-gradient(135deg,#a98cff 0%,#f1ecfc 55%,#e8e2f8 100%)',
+    },
   },
   {
-    id: 'aurore', nom: 'Aurore',
-    aide: 'Vert-noir, turquoise et trame fine.',
-    apercu: 'linear-gradient(135deg,#10b981 0%,#07150f 55%,#030b08 100%)',
+    id: 'aurore',
+    sombre: {
+      nom: 'Aurore',
+      aide: 'Vert-noir, turquoise et trame fine.',
+      apercu: 'linear-gradient(135deg,#10b981 0%,#07150f 55%,#030b08 100%)',
+    },
+    clair: {
+      nom: 'Lagon',
+      aide: 'Eau claire, turquoise et trame fine.',
+      apercu: 'linear-gradient(135deg,#3fd3ac 0%,#e8f6f1 55%,#ddefe8 100%)',
+    },
   },
 ]
 
@@ -107,17 +139,23 @@ export function ThemeProvider({ children }) {
   }, [theme])
 
   /*
-   * L'ambiance ne s'écrit que si le thème rendu est sombre.
+   * DEUX attributs : laquelle, et sur quel ton.
    *
-   * Le verre dépoli suppose une lumière derrière : sur fond blanc, un
-   * panneau translucide ne se distingue plus de la page. Plutôt que de
-   * livrer un rendu raté, on retire l'attribut — le CSS des ambiances ne
-   * s'applique alors pas du tout, et « Clair » reste ce qu'il est.
+   * Le ton ne peut pas être déduit en CSS seul. Quand le thème vaut
+   * « Système », aucun `data-theme` n'est écrit sur la page — c'est la
+   * requête média qui tranche — donc une règle `:not([data-theme="dark"])`
+   * se tromperait une fois sur deux. C'est ici qu'on connaît le thème
+   * réellement rendu (`resolu`), donc c'est ici qu'on l'écrit.
    */
   useEffect(() => {
     const racine = document.documentElement
-    if (ambiance && resolu === 'sombre') racine.setAttribute('data-ambiance', ambiance)
-    else racine.removeAttribute('data-ambiance')
+    if (ambiance) {
+      racine.setAttribute('data-ambiance', ambiance)
+      racine.setAttribute('data-ambiance-ton', resolu === 'sombre' ? 'sombre' : 'clair')
+    } else {
+      racine.removeAttribute('data-ambiance')
+      racine.removeAttribute('data-ambiance-ton')
+    }
   }, [ambiance, resolu])
 
   // Pas d'accent choisi = aucune surcharge, la valeur du thème s'applique.
@@ -137,14 +175,18 @@ export function ThemeProvider({ children }) {
   }, [])
 
   /*
-   * Choisir une ambiance bascule en thème sombre — sans quoi on cliquerait
-   * sur « Nébuleuse » depuis le thème clair et il ne se passerait
-   * visiblement rien, ce qui passerait pour un bouton cassé.
+   * Choisir une ambiance NE TOUCHE PLUS au thème.
+   *
+   * Elle le forçait en sombre, parce qu'il n'existait pas de recette de
+   * verre clair : cliquer sur « Nébuleuse » depuis le thème clair
+   * n'aurait rien fait, ce qui passe pour un bouton cassé. Maintenant que
+   * chaque ambiance a un visage de jour, le thème et l'ambiance sont deux
+   * réglages indépendants — et c'est l'utilisateur qui garde la main sur
+   * le sien.
    */
   const setAmbiance = useCallback((v) => {
     const valide = AMBIANCES.some((a) => a.id === v) ? v : null
     setAmbianceInterne(valide); ecrire(CLE_AMBIANCE, valide)
-    if (valide) { setThemeInterne('sombre'); ecrire(CLE_THEME, 'sombre') }
   }, [])
 
   const value = useMemo(

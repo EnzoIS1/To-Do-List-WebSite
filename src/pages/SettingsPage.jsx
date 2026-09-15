@@ -17,7 +17,10 @@ const OPTIONS_THEME = [
  */
 export default function SettingsPage() {
   const { arbre, modifier, supprimer, creer } = useCategories()
-  const { theme, setTheme, accent, setAccent, accents, ambiance, setAmbiance, ambiances } = useTheme()
+  const {
+    theme, setTheme, accent, setAccent, accents,
+    ambiance, setAmbiance, ambiances, resolu,
+  } = useTheme()
   const { delaiArchivage, setDelaiArchivage } = useDonnees()
 
   function ajouter(parent = null) {
@@ -75,10 +78,11 @@ export default function SettingsPage() {
       <section>
         <h2>Ambiance</h2>
         <p className="aide">
-          Un habillage sombre complet : un fond dégradé derrière
-          l'application, des panneaux en verre dépoli et une couleur
-          d'accent assortie. Choisir une ambiance passe le site en thème
-          sombre — le verre a besoin d'une lumière derrière pour se voir.
+          Un habillage complet : un fond dégradé derrière l'application,
+          des panneaux en verre dépoli et une couleur d'accent assortie.
+          Chaque ambiance a un visage de jour et un visage de nuit — c'est
+          le thème choisi plus haut qui décide lequel s'affiche, et les
+          aperçus ci-dessous montrent celui en cours.
         </p>
 
         <div className="choix-ambiance" role="radiogroup" aria-label="Ambiance">
@@ -92,20 +96,29 @@ export default function SettingsPage() {
             <span className="carte-theme-aide">Le thème simple, sans fond ni verre.</span>
           </button>
 
-          {ambiances.map((a) => (
-            <button
-              key={a.id}
-              type="button" role="radio" aria-checked={ambiance === a.id}
-              className={`carte-ambiance${ambiance === a.id ? ' actif' : ''}`}
-              onClick={() => setAmbiance(a.id)}
-            >
-              <span className="apercu-ambiance" style={{ background: a.apercu }} aria-hidden="true">
-                <span className="apercu-verre" />
-              </span>
-              <span className="carte-theme-nom">{a.nom}</span>
-              <span className="carte-theme-aide">{a.aide}</span>
-            </button>
-          ))}
+          {/*
+            Le nom, l'aide et l'aperçu suivent le thème rendu : « Minuit »
+            en plein jour n'aurait aucun sens, et un aperçu sombre à côté
+            d'une interface claire ferait croire que le bouton bascule le
+            thème — ce qu'il ne fait plus.
+          */}
+          {ambiances.map((a) => {
+            const face = a[resolu === 'sombre' ? 'sombre' : 'clair']
+            return (
+              <button
+                key={a.id}
+                type="button" role="radio" aria-checked={ambiance === a.id}
+                className={`carte-ambiance${ambiance === a.id ? ' actif' : ''}`}
+                onClick={() => setAmbiance(a.id)}
+              >
+                <span className="apercu-ambiance" style={{ background: face.apercu }} aria-hidden="true">
+                  <span className="apercu-verre" />
+                </span>
+                <span className="carte-theme-nom">{face.nom}</span>
+                <span className="carte-theme-aide">{face.aide}</span>
+              </button>
+            )
+          })}
         </div>
       </section>
 

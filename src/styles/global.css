@@ -1437,10 +1437,27 @@ input[type="color"] {
   border: 1px solid var(--trait);
 }
 .apercu-ambiance.sans { background: var(--surface-2); }
+/* La petite plaque de verre dans l'aperçu.
+   Sur un aperçu sombre, c'est un voile blanc qui la fait exister ; sur un
+   aperçu clair, ce même voile blanc serait invisible — il faut l'inverser,
+   exactement comme dans les ambiances elles-mêmes. Les aperçus suivent
+   toujours le thème rendu, donc le voile aussi.
+   Les trois sélecteurs suivent la convention de tokens.css : valeur claire
+   par défaut, puis les deux façons d'être en sombre. */
+:root { --voile-apercu: rgba(18, 30, 60, .10); --voile-apercu-trait: rgba(18, 30, 60, .18); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --voile-apercu: rgba(255, 255, 255, .10); --voile-apercu-trait: rgba(255, 255, 255, .22);
+  }
+}
+:root[data-theme="dark"] {
+  --voile-apercu: rgba(255, 255, 255, .10); --voile-apercu-trait: rgba(255, 255, 255, .22);
+}
 .apercu-verre {
   position: absolute; left: 12%; right: 12%; top: 30%; bottom: 16%;
-  border-radius: 8px; border: 1px solid rgba(255, 255, 255, .22);
-  background: rgba(255, 255, 255, .10);
+  border-radius: 8px;
+  border: 1px solid var(--voile-apercu-trait);
+  background: var(--voile-apercu);
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
 

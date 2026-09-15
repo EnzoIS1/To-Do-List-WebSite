@@ -1,10 +1,10 @@
 /* ══════════════════════════════════════════════════════════════════════
    LES AMBIANCES
 
-   Trois habillages sombres, dans l'esprit des tableaux de bord que tu
-   m'as montrés : un fond qui vit derrière l'application, des panneaux en
-   verre dépoli plutôt qu'en aplat, des bords éclairés par un filet de
-   lumière plutôt que soulignés par un trait gris.
+   Trois habillages, chacun avec un VISAGE DE JOUR et un VISAGE DE NUIT :
+   un fond qui vit derrière l'application, des panneaux en verre dépoli
+   plutôt qu'en aplat, des bords éclairés plutôt que soulignés par un
+   trait gris.
 
    COMMENT C'EST CONSTRUIT
 
@@ -12,17 +12,35 @@
    variables que les deux thèmes existants — `--fond`, `--surface`,
    `--trait`, `--accent`… — et ajouter deux choses que le thème n'avait
    pas : un calque de fond (`--lueur`) et un flou de verre sur les grandes
-   surfaces. C'est ce qui permet d'en ajouter une quatrième en vingt
-   lignes, et surtout de revenir en arrière sans rien casser : sans
-   l'attribut `data-ambiance`, ce fichier ne s'applique pas du tout.
+   surfaces. Sans l'attribut `data-ambiance`, ce fichier ne s'applique pas
+   du tout : on revient exactement à l'apparence d'avant.
 
-   POURQUOI SEULEMENT EN SOMBRE
+   DEUX ATTRIBUTS, ET POURQUOI
 
-   Le verre dépoli suppose une lumière derrière : sur fond blanc, un
-   panneau translucide ne se distingue plus de la page, et les filets
-   clairs disparaissent. Les trois références que tu m'as envoyées sont
-   d'ailleurs toutes sombres. Choisir une ambiance bascule donc le thème
-   en sombre, et « Clair » reste ce qu'il est.
+   `data-ambiance` dit LAQUELLE (nebuleuse, minuit, aurore).
+   `data-ambiance-ton` dit CLAIR ou SOMBRE.
+
+   Les deux sont nécessaires, et le second ne peut pas être déduit du CSS
+   seul : quand le thème vaut « Système », aucun `data-theme` n'est écrit
+   sur la page — c'est la requête média qui tranche. Une règle du type
+   `:root:not([data-theme="dark"])` se tromperait donc une fois sur deux.
+   C'est le ThemeProvider qui résout le thème réel et écrit le ton, et
+   `theme-initial.js` fait le même calcul avant la première peinture pour
+   éviter le clignotement.
+
+   POURQUOI DEUX RECETTES ET NON UNE
+
+   Le verre sombre et le verre clair ne se fabriquent pas pareil. En
+   sombre, une plaque se voit parce qu'elle est PLUS CLAIRE que le fond :
+   un voile blanc, un filet lumineux sur l'arête haute, et le regard
+   comprend une vitre éclairée par-dessus. En clair, ce voile blanc est
+   invisible — la plaque a la couleur de la page. Il faut inverser la
+   logique : le verre devient un blanc laiteux posé sur un fond teinté,
+   et c'est l'OMBRE PORTÉE, pas la lumière, qui le décolle.
+
+   Tout ce qui est commun aux deux est écrit une seule fois, avec des
+   variables de voile (`--voile-*`) que chaque ton redéfinit. Ajouter une
+   quatrième ambiance ne demande donc que deux blocs de couleurs.
 
    LE COÛT, ANNONCÉ
 
@@ -32,18 +50,64 @@
    dégradé.
    ══════════════════════════════════════════════════════════════════════ */
 
-/* ── Ce que les trois partagent ── */
+/* ── Ce que les six partagent ── */
 :root[data-ambiance] {
-  color-scheme: dark;
-  --eclaircir: 55%;
-
   /* Des angles plus généreux : c'est ce qui fait « tableau de bord »
      plutôt que « formulaire ». */
   --rayon: 10px;
   --rayon-panneau: 16px;
+}
+
+/* ══ Le ton SOMBRE ══
+   Le voile est blanc : la plaque est plus claire que ce qu'il y a
+   derrière, et c'est ce qui la fait exister. */
+:root[data-ambiance-ton="sombre"] {
+  color-scheme: dark;
+  --eclaircir: 55%;
 
   --ombre: 0 24px 60px rgba(0, 0, 0, .55);
   --ombre-panneau: 0 8px 24px rgba(0, 0, 0, .28);
+  --ombre-carte: 0 40px 80px rgba(0, 0, 0, .5);
+
+  --voile-arete: rgba(255, 255, 255, .07);
+  --voile-arete-forte: rgba(255, 255, 255, .08);
+  --voile-creux: rgba(255, 255, 255, .05);
+  --voile-pose: rgba(255, 255, 255, .045);
+  --voile-actif: rgba(255, 255, 255, .12);
+  --voile-trait: rgba(255, 255, 255, .10);
+  --voile-trait-fin: rgba(255, 255, 255, .09);
+  --voile-tete: rgba(255, 255, 255, .055);
+
+  --grain-force: .5;
+  --grain-fusion: soft-light;
+  --vignette: rgba(0, 0, 0, .55);
+}
+
+/* ══ Le ton CLAIR ══
+   Le voile est sombre et l'arête haute devient un blanc franc : le verre
+   est une plaque laiteuse posée sur une page teintée, décollée par son
+   ombre. Les valeurs sont plus basses qu'en sombre parce qu'un même
+   pourcentage se voit beaucoup plus sur fond clair. */
+:root[data-ambiance-ton="clair"] {
+  color-scheme: light;
+  --eclaircir: 0%;
+
+  --ombre: 0 24px 60px rgba(28, 45, 90, .16);
+  --ombre-panneau: 0 6px 20px rgba(28, 45, 90, .09);
+  --ombre-carte: 0 30px 70px rgba(28, 45, 90, .14);
+
+  --voile-arete: rgba(255, 255, 255, .85);
+  --voile-arete-forte: rgba(255, 255, 255, .95);
+  --voile-creux: rgba(22, 40, 90, .045);
+  --voile-pose: rgba(22, 40, 90, .04);
+  --voile-actif: rgba(255, 255, 255, .92);
+  --voile-trait: rgba(22, 40, 90, .12);
+  --voile-trait-fin: rgba(22, 40, 90, .10);
+  --voile-tete: rgba(255, 255, 255, .55);
+
+  --grain-force: .28;
+  --grain-fusion: multiply;
+  --vignette: rgba(40, 60, 110, .16);
 }
 
 /*
@@ -70,8 +134,11 @@
  * Un dégradé pur, sur un grand écran, montre des anneaux — les fameuses
  * « bandes » dues aux 256 niveaux par canal. Un grain très fin (du bruit
  * SVG, donc aucun fichier à charger) casse ces anneaux, et la vignette
- * assombrit les bords, ce qui concentre le regard vers le centre de
- * l'écran là où se trouve l'application.
+ * assombrit les bords, ce qui concentre le regard vers le centre.
+ *
+ * Le mode de fusion change avec le ton : `soft-light` éclaircit autant
+ * qu'il assombrit, ce qui convient à un fond noir mais délave un fond
+ * clair. En clair, `multiply` ne fait que déposer une poussière.
  */
 :root[data-ambiance] body::after {
   content: '';
@@ -79,12 +146,12 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: .5;
+  opacity: var(--grain-force);
   background-image:
-    radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0, 0, 0, .55) 100%),
+    radial-gradient(120% 90% at 50% 50%, transparent 55%, var(--vignette) 100%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23b)' opacity='.35'/%3E%3C/svg%3E");
   background-size: cover, 160px 160px;
-  mix-blend-mode: soft-light;
+  mix-blend-mode: var(--grain-fusion);
 }
 
 /*
@@ -127,13 +194,13 @@
 :root[data-ambiance] .panneau,
 :root[data-ambiance] .barre-onglets {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .07),
+    inset 0 1px 0 var(--voile-arete),
     var(--ombre-panneau);
 }
 :root[data-ambiance] .carte-app {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .08),
-    0 40px 80px rgba(0, 0, 0, .5);
+    inset 0 1px 0 var(--voile-arete-forte),
+    var(--ombre-carte);
 }
 
 /* Le fond doit se voir AUTOUR de l'application, pas seulement dans un
@@ -160,15 +227,13 @@
 :root[data-ambiance] .segments,
 :root[data-ambiance] .bouton-fin,
 :root[data-ambiance] .bouton-doux {
-  background: rgba(255, 255, 255, .05);
-  border-color: rgba(255, 255, 255, .10);
+  background: var(--voile-creux);
+  border-color: var(--voile-trait);
 }
-:root[data-ambiance] .segment.actif { background: rgba(255, 255, 255, .12); }
+:root[data-ambiance] .segment.actif { background: var(--voile-actif); }
 
-/* Une tâche cochée, un séparateur, une ligne de liste : tout ce qui était
-   un gris plein devient une transparence, sinon les aplats trahissent le
-   verre. */
-:root[data-ambiance] .tache:hover { background: rgba(255, 255, 255, .045); }
+/* Une tâche survolée : une transparence, jamais un aplat gris. */
+:root[data-ambiance] .tache:hover { background: var(--voile-pose); }
 
 /*
  * LA SEMI-TRANSPARENCE, JUSQU'AUX PETITES PIÈCES
@@ -176,9 +241,9 @@
  * Le verre ne tient que s'il est cohérent. Une case de calendrier ou une
  * puce en aplat gris au milieu de panneaux translucides se voit tout de
  * suite : c'est le seul endroit où l'œil retrouve un rectangle « posé
- * dessus » au lieu d'une couche de la même matière. Ces surfaces reprennent
- * donc la même recette, en plus léger — elles sont DANS le verre, elles
- * n'ont pas à le refloutter.
+ * dessus » au lieu d'une couche de la même matière. Ces surfaces
+ * reprennent donc la même recette, en plus léger — elles sont DANS le
+ * verre, elles n'ont pas à le refloutter.
  */
 :root[data-ambiance] .case,
 :root[data-ambiance] .categorie-repliee,
@@ -191,8 +256,8 @@
 :root[data-ambiance] .menu-champ,
 :root[data-ambiance] .liste-options .option:hover {
   backdrop-filter: none; -webkit-backdrop-filter: none;
-  background: rgba(255, 255, 255, .045);
-  border-color: rgba(255, 255, 255, .09);
+  background: var(--voile-pose);
+  border-color: var(--voile-trait-fin);
 }
 :root[data-ambiance] .case.aujourdhui { border-color: var(--accent); }
 /*
@@ -206,7 +271,8 @@
   background: color-mix(in srgb, var(--accent) 16%, var(--fond));
   -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
 }
-:root[data-ambiance] .case.hors-mois { background: rgba(255, 255, 255, .015); }
+:root[data-ambiance-ton="sombre"] .case.hors-mois { background: rgba(255, 255, 255, .015); }
+:root[data-ambiance-ton="clair"] .case.hors-mois { background: rgba(22, 40, 90, .02); }
 
 /* Les panneaux : un peu plus transparents que la carte qui les porte,
    pour qu'on distingue les deux plans. */
@@ -220,15 +286,17 @@
 :root[data-ambiance] .panneau-tete,
 :root[data-ambiance] .carte-tete,
 :root[data-ambiance] .feuille-tete {
-  background: linear-gradient(180deg, rgba(255, 255, 255, .055), transparent);
-  border-color: rgba(255, 255, 255, .08);
+  background: linear-gradient(180deg, var(--voile-tete), transparent);
+  border-color: var(--voile-trait-fin);
 }
 
-/* ══ 1. Nébuleuse ══
-   Le bleu roi de ta première image : une grande lueur en haut à gauche,
-   une seconde plus violette à droite, et le fond qui s'assombrit vers le
-   bas comme un dégradé de nuit. */
-:root[data-ambiance="nebuleuse"] {
+/* ══════════════════════════════════════════════════════════════════════
+   1. NÉBULEUSE — le bleu roi
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Nuit : une grande lueur en haut à gauche, une seconde plus violette à
+   droite, et le fond qui s'assombrit vers le bas comme un ciel de nuit. */
+:root[data-ambiance="nebuleuse"][data-ambiance-ton="sombre"] {
   --fond-page: #070c1a;
   --lueur:
     radial-gradient(52% 42% at 10% -8%, rgba(64, 122, 255, .48), transparent 70%),
@@ -253,11 +321,40 @@
   --alerte-douce: rgba(255, 146, 118, .16);
 }
 
-/* ══ 2. Minuit ══
-   L'ambiance des deux tableaux de bord presque noirs : un fond profond,
-   une seule lueur violette au-dessus de l'en-tête, et des panneaux qui
-   se détachent par leur arête plus que par leur couleur. */
-:root[data-ambiance="minuit"] {
+/* Jour : le même ciel au petit matin. Les lueurs restent aux mêmes
+   endroits — c'est ce qui fait qu'on reconnaît l'ambiance en changeant
+   de thème — mais posées sur un blanc bleuté au lieu d'un bleu nuit. */
+:root[data-ambiance="nebuleuse"][data-ambiance-ton="clair"] {
+  --fond-page: #E4ECFB;
+  --lueur:
+    radial-gradient(52% 42% at 10% -8%, rgba(76, 130, 255, .42), transparent 70%),
+    radial-gradient(44% 38% at 92% 2%, rgba(142, 100, 255, .28), transparent 70%),
+    radial-gradient(38% 34% at 72% 46%, rgba(0, 170, 255, .13), transparent 72%),
+    radial-gradient(60% 45% at 45% 116%, rgba(60, 110, 238, .26), transparent 70%),
+    linear-gradient(165deg, #EDF3FF 0%, #DFE9FB 55%, #CFDDF5 100%);
+
+  --fond: #FFFFFF;
+  --surface: rgba(255, 255, 255, .56);
+  --verre: rgba(255, 255, 255, .56);
+  --surface-2: rgba(22, 40, 90, .055);
+  --surface-rail: rgba(255, 255, 255, .74);
+  --texte: #101A33;
+  --texte-doux: #3F4B69;
+  --discret: #646E8C;
+  --trait: rgba(22, 40, 90, .13);
+  --accent: #2F5FD6;
+  --accent-doux: color-mix(in srgb, var(--accent) 14%, transparent);
+  --alerte: #C0462C;
+  --alerte-douce: rgba(192, 70, 44, .12);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   2. MINUIT — le violet
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Nuit : un fond profond, une seule lueur violette au-dessus de l'en-tête,
+   des panneaux qui se détachent par leur arête plus que par leur couleur. */
+:root[data-ambiance="minuit"][data-ambiance-ton="sombre"] {
   --fond-page: #05060e;
   --lueur:
     radial-gradient(48% 36% at 50% -14%, rgba(120, 100, 255, .38), transparent 70%),
@@ -281,11 +378,38 @@
   --alerte-douce: rgba(255, 128, 149, .16);
 }
 
-/* ══ 3. Aurore ══
-   Le vert-noir de ta capture CoinLytix : une lueur turquoise, un fond
-   presque noir, et une trame très légère qui donne la profondeur sans
-   qu'on la remarque vraiment. */
-:root[data-ambiance="aurore"] {
+/* Jour : la même lueur violette, mais à l'aube — un lilas très pâle qui
+   vire au rosé sur la droite. */
+:root[data-ambiance="minuit"][data-ambiance-ton="clair"] {
+  --fond-page: #EBE5F9;
+  --lueur:
+    radial-gradient(48% 36% at 50% -14%, rgba(138, 108, 255, .38), transparent 70%),
+    radial-gradient(40% 34% at 96% 10%, rgba(255, 138, 188, .26), transparent 70%),
+    radial-gradient(46% 40% at 0% 92%, rgba(118, 86, 234, .24), transparent 72%),
+    linear-gradient(170deg, #F5F0FF 0%, #EBE4FA 55%, #DED4F4 100%);
+
+  --fond: #FFFFFF;
+  --surface: rgba(255, 255, 255, .56);
+  --verre: rgba(255, 255, 255, .56);
+  --surface-2: rgba(50, 30, 90, .055);
+  --surface-rail: rgba(255, 255, 255, .74);
+  --texte: #1B1433;
+  --texte-doux: #494169;
+  --discret: #6F6790;
+  --trait: rgba(50, 30, 90, .13);
+  --accent: #5B3FCC;
+  --accent-doux: color-mix(in srgb, var(--accent) 14%, transparent);
+  --alerte: #B93F5C;
+  --alerte-douce: rgba(185, 63, 92, .12);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   3. AURORE — le vert turquoise
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Nuit : un vert-noir, une lueur turquoise, et une trame très légère qui
+   donne la profondeur sans qu'on la remarque vraiment. */
+:root[data-ambiance="aurore"][data-ambiance-ton="sombre"] {
   --fond-page: #04100c;
   --lueur:
     radial-gradient(46% 38% at 14% -8%, rgba(20, 210, 150, .34), transparent 70%),
@@ -310,6 +434,34 @@
   --alerte-douce: rgba(255, 160, 92, .16);
 }
 
+/* Jour : le même turquoise en eau peu profonde. La trame est conservée —
+   c'est la signature de cette ambiance — mais en gris-vert au lieu de
+   blanc, sans quoi elle disparaîtrait complètement. */
+:root[data-ambiance="aurore"][data-ambiance-ton="clair"] {
+  --fond-page: #DDF0E8;
+  --lueur:
+    radial-gradient(46% 38% at 14% -8%, rgba(16, 190, 138, .38), transparent 70%),
+    radial-gradient(42% 34% at 90% 4%, rgba(14, 158, 214, .26), transparent 70%),
+    radial-gradient(50% 40% at 60% 110%, rgba(10, 148, 116, .24), transparent 72%),
+    repeating-linear-gradient(0deg, rgba(10, 60, 45, .030) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(90deg, rgba(10, 60, 45, .030) 0 1px, transparent 1px 46px),
+    linear-gradient(168deg, #EBF9F4 0%, #DEF1EA 55%, #CBE7DD 100%);
+
+  --fond: #FFFFFF;
+  --surface: rgba(255, 255, 255, .56);
+  --verre: rgba(255, 255, 255, .56);
+  --surface-2: rgba(10, 60, 45, .05);
+  --surface-rail: rgba(255, 255, 255, .74);
+  --texte: #0D241E;
+  --texte-doux: #38524A;
+  --discret: #5F7970;
+  --trait: rgba(10, 60, 45, .13);
+  --accent: #0A7E65;
+  --accent-doux: color-mix(in srgb, var(--accent) 14%, transparent);
+  --alerte: #B3541F;
+  --alerte-douce: rgba(179, 84, 31, .12);
+}
+
 /* Sur téléphone, la marge du bureau mangerait l'écran. */
 @media (max-width: 720px) {
   :root[data-ambiance] .coque { margin: 10px; height: calc(100% - 20px); }
@@ -321,9 +473,10 @@
  * rectangles semi-transparents illisibles : on rend alors le verre opaque.
  */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  :root[data-ambiance="nebuleuse"] { --verre: #141c34; --surface: #141c34; }
-  :root[data-ambiance="minuit"] { --verre: #13152a; --surface: #13152a; }
-  :root[data-ambiance="aurore"] { --verre: #0d1e19; --surface: #0d1e19; }
+  :root[data-ambiance="nebuleuse"][data-ambiance-ton="sombre"] { --verre: #141c34; --surface: #141c34; }
+  :root[data-ambiance="minuit"][data-ambiance-ton="sombre"] { --verre: #13152a; --surface: #13152a; }
+  :root[data-ambiance="aurore"][data-ambiance-ton="sombre"] { --verre: #0d1e19; --surface: #0d1e19; }
+  :root[data-ambiance-ton="clair"] { --verre: #FFFFFF; --surface: #FFFFFF; }
 }
 
 /* Le fond est décoratif : quand l'utilisateur demande moins d'animation et
