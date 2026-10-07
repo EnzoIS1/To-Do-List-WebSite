@@ -4,7 +4,7 @@ import { useDonnees } from '../../data/DonneesProvider'
 import {
   notificationsPossibles, installeSurEcranAccueil, estAppareilApple,
   etatAutorisation, activerNotifications, desactiverNotifications,
-  dernierEnvoi, envoyerUnEssai, abonnementActuel,
+  dernierEnvoi, envoyerUnEssai, renvoyerLeJour, abonnementActuel,
   cleVapidValide, CLE_VAPID, cleDeLAbonnement, reabonner,
 } from '../../lib/push'
 import { formatLong } from '../../lib/dates'
@@ -68,7 +68,11 @@ export default function SectionNotifications() {
     setOccupe(true); setMessage(null)
     const r = await action()
     await rafraichir()
-    setMessage(r?.ok ? { ton: 'ok', texte: succes } : { ton: 'erreur', texte: r?.raison })
+    // `succes` peut être une fonction : le renvoi a besoin du résultat
+    // pour dire combien de rappels sont partis — ou qu'il n'y en avait
+    // aucun, ce qui est une bonne nouvelle et pas une erreur.
+    const texte = typeof succes === 'function' ? succes(r) : succes
+    setMessage(r?.ok ? { ton: 'ok', texte } : { ton: 'erreur', texte: r?.raison })
     setOccupe(false)
   }
 
@@ -193,6 +197,31 @@ export default function SectionNotifications() {
           onClick={() => lancer(envoyerUnEssai,
             'Envoyé. La notification devrait arriver dans quelques secondes.')}>
           Envoyer un essai
+        </button>
+      </div>
+
+      {/*
+        LE RENVOI DU JOUR
+        Différent de l'essai : celui-ci envoie les VRAIS rappels dus, pas
+        un message fixe. Il ne s'inscrit pas au journal d'envois, donc il
+        ne consomme pas le résumé du lendemain matin.
+      */}
+      <div className="ligne-reglage">
+        <div>
+          <strong>Renvoyer les notifications du jour</strong>
+          <p className="aide">
+            Renvoie le résumé du matin, maintenant. Pour quand on l'a manqué,
+            balayé par erreur, ou reçu sur un appareil qu'on n'a plus en main.
+            Ça ne consomme pas l'envoi de demain.
+          </p>
+        </div>
+        <button className="bouton-doux" disabled={occupe || !active || !cleOk}
+          onClick={() => lancer(renvoyerLeJour, (r) => (
+            r.rien
+              ? "Aucun rappel en attente aujourd'hui — rien à renvoyer."
+              : `Renvoyé : ${r.nb} rappel${r.nb > 1 ? 's' : ''}.`
+          ))}>
+          Renvoyer
         </button>
       </div>
 

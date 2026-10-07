@@ -5,7 +5,7 @@ import PanneauRevision from './PanneauRevision'
 import PanneauRecurrence from './PanneauRecurrence'
 import PanneauAttente from './PanneauAttente'
 import { useDonnees } from '../../data/DonneesProvider'
-import { DECALAGES_RAPPEL, jourDuRappel, libelleRappel } from '../../lib/rappels'
+import { DECALAGES_RAPPEL, jourDuRappel, libelleRappel, weekEndAvant } from '../../lib/rappels'
 import { formatLong, formatRelative, isPast, today } from '../../lib/dates'
 
 /**
@@ -59,6 +59,41 @@ export default function MenuTache({ tache, ancre, onFermer }) {
    */
   const [jourChoisi, setJourChoisi] = useState('')
   const dejaPose = mesRappels.some((r) => r.remind_on === jourChoisi)
+
+  /*
+   * LE WEEK-END D'AVANT : DEUX RAPPELS, UN SEUL BOUTON
+   *
+   * Un décalage fixe ne peut pas l'exprimer : le week-end est à trois
+   * jours d'un rendu le mardi et à six d'un rendu le vendredi. C'est
+   * pourtant le moment où on a réellement le temps de s'y mettre — bien
+   * plus que « 3 jours avant », qui tombe en plein cours.
+   *
+   * Le bouton est un interrupteur comme les autres : il pose les deux
+   * jours, et un second clic retire ceux qui restent. Les jours déjà
+   * passés sont ignorés — poser un rappel dans le passé ne sert à rien.
+   */
+  const we = tache.due_date ? weekEndAvant(tache.due_date) : null
+  const joursWe = we ? [we.samedi, we.dimanche] : []
+  const poseWe = joursWe.filter((j) => mesRappels.some((r) => r.remind_on === j))
+  const weUtiles = joursWe.filter((j) => !isPast(j))
+  const weComplet = poseWe.length === joursWe.filter((j) => !isPast(j) || poseWe.includes(j)).length
+    && poseWe.length > 0
+
+  async function basculerWeekEnd() {
+    if (poseWe.length > 0) {
+      // On ne retire que ce qu'on a posé, jamais un rappel automatique.
+      for (const jour of poseWe) {
+        const r = mesRappels.find((x) => x.remind_on === jour)
+        if (r && !r.auto) await supprimerRappel(r.id)
+      }
+      return
+    }
+    for (const jour of weUtiles) {
+      if (!mesRappels.some((r) => r.remind_on === jour)) {
+        await creerRappel({ taskId: tache.id, remindOn: jour })
+      }
+    }
+  }
 
   function poserLeJour() {
     if (!jourChoisi || dejaPose) return
@@ -191,6 +226,24 @@ export default function MenuTache({ tache, ancre, onFermer }) {
                   </button>
                 )
               })}
+
+              {/* Le week-end d'avant : deux jours, un bouton. */}
+              <button
+                type="button"
+                className={`puce${poseWe.length > 0 ? ' posee' : ''}`}
+                aria-pressed={poseWe.length > 0}
+                disabled={poseWe.length === 0 && weUtiles.length === 0}
+                title={
+                  poseWe.length > 0
+                    ? 'Posé le samedi et le dimanche précédents — cliquer pour retirer'
+                    : weUtiles.length === 0
+                      ? "Le week-end précédent est déjà passé"
+                      : `Samedi ${formatLong(we.samedi)} et dimanche ${formatLong(we.dimanche)}`
+                }
+                onClick={basculerWeekEnd}
+              >
+                {poseWe.length > 0 ? '✓ ' : ''}Le week-end d'avant
+              </button>
             </div>
           ) : (
             <p className="menu-note">

@@ -62,7 +62,10 @@ export default function App() {
               <Route index element={<Accueil />} />
               <Route path="calendrier" element={<Calendrier />} />
               <Route path="rappels" element={<Rappels />} />
-              <Route path="listes" element={<Listes />} />
+              {/* L'onglet « Listes » a été retiré. La route reste, en
+                  redirection : un favori ou un historique ne doit pas
+                  tomber sur une page blanche. */}
+              <Route path="listes" element={<Navigate to="/" replace />} />
               <Route path="notes" element={<Listes vue="notes" />} />
               <Route path="fonctionnalites" element={<PageFonctionnalites />} />
               {/* Une seule route pour toutes les fonctionnalités déplaçables. */}

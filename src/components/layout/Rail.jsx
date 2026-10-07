@@ -29,7 +29,6 @@ const DESTINATIONS = [
   { to: '/', fin: true, nom: 'Tableau de bord', icone: 'tableau' },
   { to: '/calendrier', nom: 'Calendrier', icone: 'calendrier' },
   { to: '/rappels', nom: 'Rappels', icone: 'cloche', compteur: true },
-  { to: '/listes', nom: 'Listes', icone: 'liste' },
   // `module` : la destination disparaît si la fonctionnalité est éteinte.
   { to: '/notes', nom: 'Prise de note', icone: 'note', module: 'notes' },
 ]

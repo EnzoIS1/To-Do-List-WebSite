@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import Icone from './Icones'
 import { useDonnees } from '../../data/DonneesProvider'
+import { AVEC_EMPLACEMENT } from '../../lib/fonctionnalites'
 
 /**
  * La barre d'onglets du téléphone, en bas de l'écran.
@@ -29,12 +30,32 @@ const ONGLETS = [
   { to: '/', fin: true, nom: 'Tâches', icone: 'check' },
   { to: '/calendrier', nom: 'Calendrier', icone: 'calendrier' },
   { to: '/rappels', nom: 'Rappels', icone: 'cloche', compteur: true },
-  { to: '/listes', nom: 'Listes', icone: 'liste' },
+  // Remplace l'ancien onglet « Listes » : la page qui permet de
+  // choisir ses fonctionnalités n'était atteignable que par un lien
+  // au fond des paramètres, donc en pratique introuvable sur téléphone.
+  { to: '/fonctionnalites', nom: 'Fonctionnalités', icone: 'briques' },
   { to: '/reglages', nom: 'Réglages', icone: 'reglages' },
 ]
 
 export default function BarreOnglets() {
-  const { rappelsEchus, tasks } = useDonnees()
+  const { rappelsEchus, tasks, fonctionActive, emplacementDe } = useDonnees()
+
+  /*
+   * ⚠️ CE QUE LE RETRAIT DE « LISTES » COÛTE SUR TÉLÉPHONE
+   *
+   * Sur ordinateur, les courses et les notes ont leurs panneaux sur le
+   * tableau de bord. Sur téléphone, l'accueil ne montre que les tâches du
+   * jour : sans l'onglet « Listes », elles n'étaient plus atteignables du
+   * tout.
+   *
+   * Le rail le résolvait déjà pour le bureau : une fonctionnalité réglée
+   * sur « page dédiée » y apparaît. On applique la même règle ici. Deux
+   * au maximum — la barre n'a que cinq places, et sept icônes de 9 px de
+   * large ne se visent plus au pouce.
+   */
+  const pagesDeFonctions = AVEC_EMPLACEMENT
+    .filter((f) => fonctionActive(f.id) && emplacementDe(f.id) === 'page')
+    .slice(0, 2)
 
   // Le compte n'annonce que ce qui est réellement à faire : un rappel dont
   // la tâche est cochée gonflerait la pastille sans rien vouloir dire.
@@ -45,7 +66,13 @@ export default function BarreOnglets() {
 
   return (
     <nav className="barre-onglets" aria-label="Navigation">
-      {ONGLETS.map((o) => (
+      {[
+        ...ONGLETS.filter((o) => o.to !== '/reglages'),
+        ...pagesDeFonctions.map((f) => ({ to: `/f/${f.id}`, nom: f.nom, icone: 'liste' })),
+        // Les réglages restent le dernier onglet, quoi qu'il arrive : on
+        // les cherche toujours au même endroit.
+        ONGLETS.find((o) => o.to === '/reglages'),
+      ].map((o) => (
         <NavLink
           key={o.to}
           to={o.to}

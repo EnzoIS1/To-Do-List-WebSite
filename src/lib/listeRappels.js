@@ -1,4 +1,5 @@
 import { today } from './dates.js'
+import { sansDoublonsDeTache } from './rappels.js'
 
 /**
  * Le tri des rappels en trois paquets, une bonne fois pour toutes.
@@ -30,8 +31,21 @@ export function grouperRappels(rappels, taches, jour = today()) {
 
   const parDate = (a, b) => a.rappel.remind_on.localeCompare(b.rappel.remind_on)
 
-  const enRetard = vivants.filter((v) => v.rappel.remind_on < jour).sort(parDate)
-  const aujourdhui = vivants.filter((v) => v.rappel.remind_on === jour).sort(parDate)
+  /*
+   * Les paquets DÉJÀ DUS sont dédoublonnés par tâche : une tâche qui
+   * porte « une semaine avant » et « la veille » apparaissait deux fois
+   * dès qu'on avait quelques jours de retard.
+   *
+   * « À venir » ne l'est pas, et c'est délibéré : deux dates futures
+   * différentes sont deux informations différentes, et en masquer une
+   * reviendrait à cacher un rappel que l'utilisateur a demandé.
+   */
+  const enRetard = sansDoublonsDeTache(
+    vivants.filter((v) => v.rappel.remind_on < jour).sort(parDate)
+  )
+  const aujourdhui = sansDoublonsDeTache(
+    vivants.filter((v) => v.rappel.remind_on === jour).sort(parDate)
+  )
 
   // Les jours à venir sont groupés : « jeudi 10 septembre » puis ses lignes,
   // comme un agenda. Une liste plate de trente entrées ne se lit pas.

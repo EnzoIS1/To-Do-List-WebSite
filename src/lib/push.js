@@ -306,6 +306,24 @@ export async function dernierEnvoi() {
 
 /** Demande au serveur un envoi d'essai, tout de suite, sur cet appareil. */
 export async function envoyerUnEssai() {
+  return appelerLaFonction(null)
+}
+
+/**
+ * Renvoie le VRAI résumé du jour, maintenant.
+ *
+ * Pour qui l'a manqué, balayé par erreur, ou reçu sur un appareil qu'il
+ * n'a plus sous la main. Côté serveur, ce renvoi n'est pas journalisé :
+ * il ne consomme donc pas l'envoi du lendemain matin.
+ *
+ * @returns {{ok: boolean, nb?: number, rien?: boolean, raison?: string}}
+ */
+export async function renvoyerLeJour() {
+  return appelerLaFonction({ renvoi: true })
+}
+
+/** Le corps commun aux deux appels ci-dessus. */
+async function appelerLaFonction(corpsJson) {
   const base = import.meta.env.VITE_SUPABASE_URL
   if (!base) {
     return { ok: false, raison: 'VITE_SUPABASE_URL manque à la compilation du site.' }
@@ -318,12 +336,17 @@ export async function envoyerUnEssai() {
   try {
     const r = await fetch(url, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${session.access_token}` },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        ...(corpsJson ? { 'Content-Type': 'application/json' } : {}),
+      },
+      ...(corpsJson ? { body: JSON.stringify(corpsJson) } : {}),
     })
     const corps = await r.json().catch(() => ({}))
-    return r.ok
-      ? { ok: true }
-      : { ok: false, raison: corps.detail ?? corps.erreur ?? `Erreur ${r.status}` }
+    if (!r.ok) return { ok: false, raison: corps.detail ?? corps.erreur ?? `Erreur ${r.status}` }
+    // « rien » n'est pas un échec : il n'y avait simplement aucun rappel
+    // du jour à renvoyer, et une notification vide serait pire que rien.
+    return { ok: true, nb: corps.nb ?? 0, rien: corps.statut === 'rien' }
   } catch (e) {
     /*
      * « Failed to fetch » est le message du navigateur quand la requête n'a

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useDonnees } from '../../data/DonneesProvider'
 import { formatRelative } from '../../lib/dates'
-import { detailRappel } from '../../lib/rappels'
+import { detailRappel, sansDoublonsDeTache } from '../../lib/rappels'
 
 /**
  * Les rappels dont le jour est arrivé.
@@ -47,9 +47,13 @@ export default function BandeauRappels() {
 
   // Un rappel dont la tâche est cochée — ou effacée par l'archivage — n'a
   // plus rien à annoncer.
-  const vivants = rappelsEchus
-    .map((r) => ({ rappel: r, tache: tasks.find((t) => t.id === r.task_id) }))
-    .filter(({ tache }) => tache && !tache.is_done)
+  // Dédoublonné par tâche : voir sansDoublonsDeTache. Une tâche qui porte
+  // deux rappels échus n'a pas à occuper deux lignes du bandeau.
+  const vivants = sansDoublonsDeTache(
+    rappelsEchus
+      .map((r) => ({ rappel: r, tache: tasks.find((t) => t.id === r.task_id) }))
+      .filter(({ tache }) => tache && !tache.is_done)
+  )
 
   if (vivants.length === 0) return null
 

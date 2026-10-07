@@ -42,10 +42,18 @@ const DESSINS = {
       <path d="M13.7 19a2 2 0 0 1-3.4 0" />
     </>
   ),
+  /*
+   * L'engrenage, avec de vraies dents.
+   *
+   * L'ancienne version était un cercle entouré de huit traits radiaux :
+   * dessinée petite, elle se lisait comme un soleil, pas comme un
+   * réglage. Les dents sont ici des créneaux refermés sur le contour,
+   * ce qui donne la silhouette qu'on reconnaît même à 20 px.
+   */
   reglages: (
     <>
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M12 3v2.4M12 18.6V21M21 12h-2.4M5.4 12H3M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3L5.6 5.6" />
+      <circle cx="12" cy="12" r="3.1" />
+      <path d="M19.4 14.6a1.6 1.6 0 0 0 .32 1.77l.06.06a1.95 1.95 0 1 1-2.76 2.76l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-.97 1.47v.17a1.95 1.95 0 0 1-3.9 0v-.09a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.77.32l-.06.06a1.95 1.95 0 1 1-2.76-2.76l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.47-.97h-.17a1.95 1.95 0 0 1 0-3.9h.09a1.6 1.6 0 0 0 1.47-1.05 1.6 1.6 0 0 0-.32-1.77l-.06-.06a1.95 1.95 0 1 1 2.76-2.76l.06.06a1.6 1.6 0 0 0 1.77.32h.08a1.6 1.6 0 0 0 .97-1.47v-.17a1.95 1.95 0 0 1 3.9 0v.09a1.6 1.6 0 0 0 .97 1.47 1.6 1.6 0 0 0 1.77-.32l.06-.06a1.95 1.95 0 1 1 2.76 2.76l-.06.06a1.6 1.6 0 0 0-.32 1.77v.08a1.6 1.6 0 0 0 1.47.97h.17a1.95 1.95 0 0 1 0 3.9h-.09a1.6 1.6 0 0 0-1.47.97z" />
     </>
   ),
   compte: (

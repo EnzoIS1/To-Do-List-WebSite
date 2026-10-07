@@ -297,6 +297,42 @@ Deno.serve(async (requete) => {
           'Reconnecte-toi ; si ça persiste, vérifie les secrets de la fonction.',
       }, 401)
     }
+    /*
+     * Deux usages pour un même jeton.
+     *
+     *   { } ou rien        → un essai : un message fixe, pour vérifier
+     *                        que la chaîne de notification fonctionne.
+     *   { "renvoi": true } → le VRAI résumé du jour, renvoyé maintenant.
+     *                        Pour qui l'a manqué, balayé par erreur, ou
+     *                        reçu sur un appareil qu'il n'a plus en main.
+     */
+    let demande: Record<string, unknown> = {}
+    try { demande = await requete.json() } catch { /* corps vide = essai */ }
+
+    if (demande?.renvoi === true) {
+      const rep = await rest('rpc/resume_du_jour', {
+        method: 'POST',
+        body: JSON.stringify({ p_user: userId }),
+      })
+      if (!rep.ok) {
+        return repondre({ erreur: 'résumé indisponible', detail: await rep.text() }, 500)
+      }
+      const lignes = await rep.json()
+      const titres: string[] = lignes?.[0]?.titres ?? []
+      if (titres.length === 0) {
+        // Rien à renvoyer n'est pas une erreur : c'est une bonne nouvelle,
+        // et envoyer une notification vide serait pire que rien.
+        return repondre({ renvoi: true, statut: 'rien', nb: 0 }, 200)
+      }
+      const r = await envoyerA(userId, titres, lignes?.[0]?.mode ?? 'resume')
+      /*
+       * ⚠️ Pas de journalisation, pour la même raison que l'essai : un
+       * renvoi n'est pas l'envoi du jour. S'il comptait comme tel, un
+       * renvoi à midi empêcherait le vrai résumé du lendemain matin.
+       */
+      return repondre({ renvoi: true, nb: titres.length, ...r }, r.statut === 'ok' ? 200 : 502)
+    }
+
     const resultat = await envoyerA(userId, ['Ceci est un essai — les notifications fonctionnent.'])
     // Un essai ne s'inscrit PAS au journal : sinon il compterait comme
     // l'envoi du jour et bloquerait le vrai résumé du lendemain matin.
