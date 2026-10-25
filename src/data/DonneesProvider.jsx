@@ -350,12 +350,23 @@ export function DonneesProvider({ children }) {
       confirmerSuppression: confirmerSuppression(profil?.reglages),
       nombreRevisionsDefaut: nombreRevisionsDefaut(profil?.reglages),
       emplacementDe: (id) => emplacementDe(profil?.reglages, id),
-      definirEmplacement: (id, emplacement) => modifierProfil({
-        reglages: avecEmplacement(profil?.reglages, id, emplacement),
-      }),
-      definirReglage: (cle, valeur) => modifierProfil({
-        reglages: avecReglage(profil?.reglages, cle, valeur),
-      }),
+      /*
+       * ⚠️ Ces deux écritures RÉÉCRIVENT tout l'objet `reglages` à partir
+       * de la copie en mémoire. Si cette copie n'est pas chargée, on
+       * écraserait en base tous les autres réglages par un objet presque
+       * vide — c'est ce qui arrivait quand `reglages` manquait au select
+       * (bug du 25 octobre 2026). On refuse donc d'écrire sans elle.
+       */
+      definirEmplacement: (id, emplacement) => (
+        profil?.reglages && typeof profil.reglages === 'object'
+          ? modifierProfil({ reglages: avecEmplacement(profil.reglages, id, emplacement) })
+          : Promise.resolve({ error: { message: 'Réglages pas encore chargés, réessaie dans un instant.' } })
+      ),
+      definirReglage: (cle, valeur) => (
+        profil?.reglages && typeof profil.reglages === 'object'
+          ? modifierProfil({ reglages: avecReglage(profil.reglages, cle, valeur) })
+          : Promise.resolve({ error: { message: 'Réglages pas encore chargés, réessaie dans un instant.' } })
+      ),
       /*
        * Le rappel automatique se refuse sur la TÂCHE, pas en effaçant la
        * ligne du rappel.

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
+import { SELECT_PROFIL } from './colonnesProfil'
 
 /**
  * Le profil : les réglages qui doivent vivre en BASE et non dans le navigateur.
@@ -19,7 +20,10 @@ export function useProfil() {
     if (!user) { setProfil(null); setLoading(false); return }
     const { data } = await supabase
       .from('profiles')
-      .select('id, display_name, resume_actif, heure_resume, fuseau, mode_notif, metier, modules')
+      // ⚠️ La liste vit dans colonnesProfil.js, protégée par un test :
+      // `reglages` y manquait, et tous les réglages retombaient sur leur
+      // défaut à chaque ouverture.
+      .select(SELECT_PROFIL)
       .eq('id', user.id)
       .maybeSingle()
     setProfil(data ?? null)
